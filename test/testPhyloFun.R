@@ -21,7 +21,5 @@ src.project.file('src','loadUniprotKBEntries.R')
 src.project.file('src','phyloFun.R')
 
 phylo.tree <- read.tree(project.file.path('test', 'test_tree.newick'))
-print(phylo.tree$edge)
-annotation.matrix <- read.table(project.file.path('test', 'test_annotations.tbl'))
-print(annotation.matrix)
+annotation.matrix <- unserialize(file("test/test_annotations.tbl","r"))
 
