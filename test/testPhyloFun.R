@@ -1,19 +1,27 @@
 library(RUnit)
 library(tools)
+library(ape)
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
 # This method ONLY works for project files in depth one sub dirs!
-src.project.file <- function(...) {
+project.file.path <- function(...) {
   initial.options <- commandArgs(trailingOnly = FALSE)
   file.arg.name <- "--file="
   script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
   script.dir <- dirname(file_path_as_absolute(script.name))
   project.dir <- sub(basename(script.dir),'',script.dir)
-  source(normalizePath(file.path(project.dir,...)))
+  normalizePath(file.path(project.dir,...))
+}
+src.project.file <- function(...) {
+  source(project.file.path(...))
 }
 # We set-up required libraries in the test case, not in the R file, as path
 # problems will be resolved, as soon as this R package is loaded as such.
 src.project.file('src','loadUniprotKBEntries.R')
 src.project.file('src','phyloFun.R')
 
-tree.newick <- "(A0PKB2:0.74818,Protein_1:0.61787,((A0AEI7:0.31399,A0Q3U6:0.26998)0.986:0.15825,((A0L3I7:0.56563,((A0K2M8:0.58627,(A0KEC3:0.14404,A0KR35:0.07431)0.998:0.23421)0.989:0.20066,A0Q3U7:0.67400)0.924:0.10097)0.975:0.16149,(A0LE53:1.16654,A0RLX8:0.89904)0.630:0.13983)0.953:0.13417)0.862:0.10573);"
+phylo.tree <- read.tree(project.file.path('test', 'test_tree.newick'))
+print(phylo.tree$edge)
+annotation.matrix <- read.table(project.file.path('test', 'test_annotations.tbl'))
+print(annotation.matrix)
+
