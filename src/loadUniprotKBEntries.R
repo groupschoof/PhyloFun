@@ -43,3 +43,7 @@ retrieve.annotations.parallel <- function(accessions, ...) {
     mc.preschedule=F, mc.cores=50)
   )
 }
+
+uniq.annotations <- function(annotation.matrix, type) {
+  sort(unique(do.call('c',(annotation.matrix[,type]))))
+}

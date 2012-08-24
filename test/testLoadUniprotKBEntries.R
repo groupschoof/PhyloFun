@@ -3,13 +3,16 @@ library(tools)
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
 # This method ONLY works for project files in depth one sub dirs!
-src.project.file <- function(...) {
+project.file.path <- function(...) {
   initial.options <- commandArgs(trailingOnly = FALSE)
   file.arg.name <- "--file="
   script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
   script.dir <- dirname(file_path_as_absolute(script.name))
   project.dir <- sub(basename(script.dir),'',script.dir)
-  source(normalizePath(file.path(project.dir,...)))
+  normalizePath(file.path(project.dir,...))
+}
+src.project.file <- function(...) {
+  source(project.file.path(...))
 }
 src.project.file('src','loadUniprotKBEntries.R')
 
@@ -56,3 +59,12 @@ checkTrue(is.matrix(res))
 checkTrue(nrow(res)==4)
 checkTrue(ncol(res)==2)
 checkEquals(colnames(res),c('GO','Pfam'))
+
+# Test uniq.annotations
+print("Testing uniq.annotations(...)")
+fl <- file(project.file.path('test','test_annotations.tbl'),'r')
+an.ma <- unserialize(fl)
+close(fl)
+u.an.ma <- uniq.annotations(an.ma, 'GO')
+checkEquals(u.an.ma, c(NA,"GO:0003688","GO:0005524",
+    "GO:0005737", "GO:0006270", "GO:0006275","GO:0017111"))

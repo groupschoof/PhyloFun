@@ -20,6 +20,53 @@ src.project.file <- function(...) {
 src.project.file('src','loadUniprotKBEntries.R')
 src.project.file('src','phyloFun.R')
 
+# Test tree is midpoint rooted!
 phylo.tree <- read.tree(project.file.path('test', 'test_tree.newick'))
-annotation.matrix <- unserialize(file("test/test_annotations.tbl","r"))
+fl <- file(project.file.path('test','test_annotations.tbl'),"r")
+annotation.matrix <- unserialize(fl)
+close(fl)
+
+# Test conditional.probs.tbl
+print("Testing conditional.probs.tbl(...)")
+err <- try(conditional.probs.tbl(0.45,NA,NA),silent=T)
+checkTrue(identical(class(err),"try-error"))
+# err <- try(conditional.probs.tbl(0.45,NA),silent=T)
+# checkTrue(identical(class(err),"try-error"))
+ua <- uniq.annotations(annotation.matrix,'GO')
+res <- conditional.probs.tbl(0.45,
+  uniq.annotations(annotation.matrix,'GO'))
+checkTrue(identical(dim(res),as.integer(c(length(ua),length(ua)))))
+checkEquals(rownames(res),ua)
+checkEquals(colnames(res),ua)
+
+# Test get.node.label
+print("Testing get.node.label(...)")
+checkEquals(get.node.label(phylo.tree,21),21L)
+checkTrue(identical(class(get.node.label(phylo.tree,11)),"character"))
+
+# Test edge.to.formula
+print("Testing edge.to.formula(...)")
+# Test a tip's formula
+indx <- which(phylo.tree$edge[,2] == 1)
+frml <- edge.to.formula(phylo.tree,indx)
+checkTrue(identical(class(frml),'formula'))
+checkTrue(length(as.character(frml)) == 2)
+checkTrue(grepl('[a-zA-Z]+',as.character(frml)[[2]],perl=T))
+indx <- which(phylo.tree$edge[,1] == (length(phylo.tree$tip.label)+1))[1]
+frml <- edge.to.formula(phylo.tree,indx)
+checkTrue(! grepl('[a-zA-Z]+',as.character(frml)[[2]],perl=T))
+
+# Test bayes.nodes
+print("Testing bayes.nodes(...)")
+bys.nds <- bayes.nodes(phylo.tree,annotation.matrix)
+checkTrue(length(bys.nds) == nrow(phylo.tree$edge)+1)
+root.bys.nd <- bys.nds[[1]]
+checkTrue(length(root.bys.nd$values) == length(ua))
+checkEquals(root.bys.nd$levels,ua)
+# print(bys.nds[[1]])
+
+# Test create bayesian Network
+print("Testing create bayesian Network(...)")
+grain(compileCPT(bys.nds))
+
 
