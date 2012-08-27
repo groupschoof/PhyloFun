@@ -5,14 +5,14 @@ library(Matrix)
 # in the first column whereas mustn't appear in the second column of the
 # phylTree's edge matrix.
 get.root.node <- function(phylTree) {
-  as.integer(
+  as.character(
     unique(phylTree$edge[!(phylTree$edge[,1] %in% phylTree$edge[,2]),][,1])[[1]]
     )
 }
 
 get.node.label <- function(phylTree,node.index) {
   res <- try(phylTree$tip.label[[node.index]],silent=T)
-  if(identical("try-error",class(res))) node.index else res
+  if(identical("try-error",class(res))) as.character(node.index) else res
 }
 
 edge.to.formula <- function(phyloTree,edge.index) {
@@ -44,7 +44,7 @@ bayes.nodes <- function(phylo.tree,annotation.matrix,annotation.type='GO') {
   no.evidence <- as.numeric(matrix(1.0,nrow=1,ncol=length(annotations)))
   nds <- list(
     cptable(
-      eval(bquote(~ .(as.integer(get.root.node(phylo.tree))))),
+      eval(bquote(~ .(get.root.node(phylo.tree)))),
       values=no.evidence,
       levels=annotations))
   for(i in 1:nrow(phylo.tree$edge)) {
