@@ -67,6 +67,29 @@ checkEquals(root.bys.nd$levels,ua)
 
 # Test create bayesian Network
 print("Testing create bayesian Network(...)")
-grain(compileCPT(bys.nds))
+grain.res <- try( grain(compileCPT(bys.nds)), silent=T)
+checkTrue(!identical('try-error',class(grain.res)))
+
+# Test getTipsWithNaAnnotation
+print("Testing getTipsWithNaAnnotation(...)")
+checkEquals(getTipsWithNaAnnotation(phylo.tree,annotation.matrix),
+  c("\"Protein_1\""))
+# Test multiple NA annotations
+am <- annotation.matrix
+am[3,1] <- NA
+checkEquals(getTipsWithNaAnnotation(phylo.tree,am),
+  c("\"Protein_1\"","\"A0AEI7\""))
+checkEquals(
+  getTipsWithNaAnnotation(phylo.tree,am,negate=T),
+  c("\"A0PKB2\"", "\"A0Q3U6\"", "\"A0L3I7\"", "\"A0K2M8\"", "\"A0KEC3\"",
+    "\"A0KR35\"", "\"A0Q3U7\"", "\"A0LE53\"", "\"A0RLX8\"")
+  )
+
+# Test queryPhylBayesNetwork
+print("Testing queryPhylBayesNetwork(...)")
+print(queryPhylBayesNetwork(phylo.tree,annotation.matrix))
+checkTrue(queryPhylBayesNetwork(phylo.tree,annotation.matrix),c())
+
+
 
 
