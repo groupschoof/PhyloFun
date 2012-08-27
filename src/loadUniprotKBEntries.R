@@ -44,6 +44,21 @@ retrieve.annotations.parallel <- function(accessions, ...) {
   )
 }
 
+retrieve.annotations.parallel.t <- function(accessions, ...) {
+  do.call('cbind',
+    mclapply(accessions,
+    function(acc) {
+      acc.annos <- retrieve.annotations(uniprotkb.url(acc),...)
+      matrix(acc.annos, nrow=length(acc.annos),
+        dimnames=list(names(acc.annos),c(acc)))
+    },
+    mc.preschedule=F, mc.cores=50)
+  )
+}
+
 uniq.annotations <- function(annotation.matrix, type) {
-  sort(unique(do.call('c',(annotation.matrix[,type]))))
+  sort(
+    unique(do.call('c', (annotation.matrix[, type]))),
+    na.last=F
+    )
 }

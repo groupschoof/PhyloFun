@@ -60,6 +60,10 @@ checkTrue(nrow(res)==4)
 checkTrue(ncol(res)==2)
 checkEquals(colnames(res),c('GO','Pfam'))
 
+# Test retrieve.annotations.parallel.t
+print("Testing retrieve.annotations.parallel.t(...)")
+print(retrieve.annotations.parallel.t(test.accessions))
+
 # Test uniq.annotations
 print("Testing uniq.annotations(...)")
 fl <- file(project.file.path('test','test_annotations.tbl'),'r')
