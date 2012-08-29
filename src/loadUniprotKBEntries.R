@@ -33,7 +33,7 @@ retrieve.annotations <- function(url, annotations=c('GO','InterPro','Pfam')) {
     USE.NAMES=F)
 }
 
-retrieve.annotations.parallel <- function(accessions, ...) {
+retrieve.annotations.parallel.t <- function(accessions, ...) {
   do.call('rbind',
     mclapply(accessions,
     function(acc) {
@@ -44,7 +44,7 @@ retrieve.annotations.parallel <- function(accessions, ...) {
   )
 }
 
-retrieve.annotations.parallel.t <- function(accessions, ...) {
+retrieve.annotations.parallel <- function(accessions, ...) {
   do.call('cbind',
     mclapply(accessions,
     function(acc) {
