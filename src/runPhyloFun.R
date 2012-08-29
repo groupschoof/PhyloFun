@@ -1,7 +1,8 @@
 print(paste("Usage: Rscript runPhyloFun.R input=myQueryProteins.fasta",
-"[jackhmmer.path=/path/to/hmmer3/binaries/jackhmmer]",
-"[fast.tree.path=/path/to/FastTreeMP] [jackhmmer.args='-E 1e-10 -N 2']",
-"[fast.tree.args='']"))
+    "search.jackhmmer.sequence.database=/path/to/uniprot_trembl.fasta",
+    "[jackhmmer.path=/path/to/hmmer3/binaries/jackhmmer]",
+    "[fast.tree.path=/path/to/FastTreeMP] [jackhmmer.args='-E 1e-10 -N 2']",
+    "[fast.tree.args='']"))
 
 argsToList <- function(args) {
   sapply(args, function(a) {
