@@ -23,14 +23,35 @@ edge.to.formula <- function(phyloTree,edge.index) {
   eval(bquote(~ .(child) | .(prnt) ))
 }
 
-conditional.probs.tbl <- function(
-  edge.length,
-  uniq.annotations,
-  base.transition.probs=matrix(0.03,
+baseTransitionProbs <- function(uniq.annotations,
+  func.mutation.prob=0.5) {
+  # On an edge of length 1.0 the probability of function mutation is 0.5
+  # as is the probability of function retainment. The probabilities of
+  # mutation to each possible new function are equally distributed.
+  # This method returns such a function mutation probability matrix.
+  #
+  # Args: 
+  #   uniq.annotations: A character vector of unique function
+  #   annotations in the currently processed proteins.
+  #   func.mutation.prob: The probability of function mutation on a
+  #   branch of length 1.0
+  #
+  # Returns:
+  #   A length(uniq.annotations)*length(uniq.annotations) probability matrix with
+  #   the m[i,j] := P(j | i), i = parent function, j = child function
+  btp <- matrix(func.mutation.prob/(length(uniq.annotations) - 1),
     nrow=length(uniq.annotations),
     ncol=length(uniq.annotations),
     dimnames=list(uniq.annotations,uniq.annotations)
-    )) {
+    )
+  btp[row(btp)==col(btp)] <- 0.5
+  btp
+}
+
+conditional.probs.tbl <- function(
+  edge.length,
+  uniq.annotations,
+  base.transition.probs=baseTransitionProbs(uniq.annotations)) {
   # Validate arguments:
   if(identical(uniq.annotations,NA) &&
     identical(base.transition.probs,NA))
@@ -62,9 +83,9 @@ bayes.nodes <- function(phylo.tree,annotation.matrix,annotation.type='GO') {
 # Returns the labels of phylo.tree's tips, that have no annotation of specified
 # annotation.type, or those that have non NA annotations, if negate=TRUE.
 getTipsWithNaAnnotation <- function(phylo.tree,annotation.matrix,annotation.type='GO',negate=F) {
-  bool.indxs <- is.na(annotation.matrix[,annotation.type])
+  bool.indxs <- is.na(annotation.matrix[annotation.type,])
   surroundEachWithQuotes(
-    rownames(annotation.matrix)[which( if(negate) ! bool.indxs else bool.indxs)]
+    colnames(annotation.matrix)[which( if(negate) ! bool.indxs else bool.indxs)]
   )
 }
 
@@ -89,10 +110,10 @@ queryPhylBayesNetwork <- function(
   # Provide diagnostic evidence matrix (true 'function annotation'):
   evidence.matrix <- annotation.matrix[!is.na(annotation.matrix[,annotation.type]),annotation.type]
   colnames(evidence.matrix) <- surroundEachWithQuotes(colnames(evidence.matrix))
-  print(evidence.matrix)
-  predict(bayes.netw,
+  list(prediction=predict(bayes.netw,
     getTipsWithNaAnnotation(phylo.tree,annotation.matrix,annotation.type),
     getTipsWithNaAnnotation(phylo.tree,annotation.matrix,annotation.type,negate=T),
     evidence.matrix,
-    type)
+    type),
+    bayesian.network=bayes.netw)
 }

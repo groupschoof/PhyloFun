@@ -8,3 +8,7 @@ In order to generate accurate phylogenetic trees that contain a maximum of funct
 
 We call this new phylogenomic workflow for protein function prediction *PhyloFun*.
 
+h2. Coding style guide
+
+PhyloFun's code mostly follows the google style guide for R:
+http://google-styleguide.googlecode.com/svn/trunk/google-r-style.html

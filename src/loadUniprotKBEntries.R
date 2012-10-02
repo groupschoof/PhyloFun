@@ -160,7 +160,7 @@ retrieve.annotations.parallel.t <- function(accessions, ...) {
 
 uniq.annotations <- function(annotation.matrix, type) {
   sort(
-    unique(do.call('c', (annotation.matrix[, type]))),
+    unique(do.call('c', (annotation.matrix[type,]))),
     na.last=F
     )
 }
