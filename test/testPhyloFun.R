@@ -22,7 +22,7 @@ src.project.file('src','phyloFun.R')
 
 # Test tree is midpoint rooted!
 phylo.tree <- read.tree(project.file.path('test', 'test_tree.newick'))
-fl <- file(project.file.path('test','test_annotations.tbl'),"r")
+fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
 annotation.matrix <- unserialize(fl)
 close(fl)
 
@@ -41,7 +41,7 @@ checkEquals(colnames(res),ua)
 
 # Test get.node.label
 print("Testing get.node.label(...)")
-checkEquals(get.node.label(phylo.tree,21),21L)
+checkEquals(get.node.label(phylo.tree,21),"21")
 checkTrue(identical(class(get.node.label(phylo.tree,11)),"character"))
 
 # Test edge.to.formula

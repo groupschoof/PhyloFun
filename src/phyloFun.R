@@ -87,7 +87,7 @@ queryPhylBayesNetwork <- function(
         annotation.type))),
   type='distribution') {
   # Provide diagnostic evidence matrix (true 'function annotation'):
-  evidence.matrix <- t(annotation.matrix[!is.na(annotation.matrix[,annotation.type]),annotation.type])
+  evidence.matrix <- annotation.matrix[!is.na(annotation.matrix[,annotation.type]),annotation.type]
   colnames(evidence.matrix) <- surroundEachWithQuotes(colnames(evidence.matrix))
   print(evidence.matrix)
   predict(bayes.netw,
