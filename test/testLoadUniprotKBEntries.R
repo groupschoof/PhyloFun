@@ -18,6 +18,24 @@ src.project.file <- function(...) {
 }
 src.project.file('src','loadUniprotKBEntries.R')
 
+# Accessions of Proteins involved in the following tests:
+test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
+
+# Test retrieveAnnotationsBiomart
+print("Testing retrieveAnnotationsBiomart(...)")
+bm.annos <- retrieveAnnotationsBiomart(test.accessions)
+print( bm.annos )
+checkEquals( class(bm.annos), 'matrix' )
+checkEquals( nrow(bm.annos), 2 )
+checkEquals( ncol(bm.annos), 4 )
+print(class(( bm.annos[ 'InterPro', 'Protein_1' ] ) ))
+checkEquals( length( unlist( bm.annos[ 'InterPro', 'Protein_1' ] ) ), 0 )
+checkEquals( length( unlist( bm.annos[ 'GO', 'Protein_1' ] ) ), 0 )
+# print( bm.annos['Q0KFR8', 'InterPro'] )
+checkTrue( 'IPR020591' %in% unlist( bm.annos[ 'InterPro', 'Q0KFR8' ] ) )
+# print( bm.annos['Q0KFR8', 'GO'] )
+checkTrue( 'GO:0005524' %in% unlist( bm.annos[ 'GO', 'Q0KFR8' ] ) )
+
 # Test uniprotkb.url
 print("Testing uniprotkb.url(...)")
 checkEquals(uniprotkb.url('Q0KFR8'),
@@ -65,7 +83,6 @@ checkEquals(colnames(res),c('GO','Pfam'))
 
 # Test retrieve.annotations.parallel
 print("Testing retrieve.annotations.parallel(...)")
-test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
 res <- retrieve.annotations.parallel(test.accessions)
 checkTrue(is.matrix(res))
 checkTrue(nrow(res)==3)
@@ -99,16 +116,3 @@ checkEquals(aa.seq,
 checkEquals( class(retrieveSequence('')), 'try-error' )
 checkEquals( class(retrieveSequence(NA)), 'try-error' )
 checkEquals( class(retrieveSequence(NULL)), 'try-error' )
-
-# Test retrieveAnnotationsBiomart
-print("Testing retrieveAnnotationsBiomart(...)")
-bm.annos <- retrieveAnnotationsBiomart(test.accessions)
-checkEquals( class(bm.annos), 'matrix' )
-checkEquals( nrow(bm.annos), 4 )
-checkEquals( ncol(bm.annos), 2 )
-checkEquals( length( unlist( bm.annos['Protein_1', 'InterPro'] ) ), 0 )
-checkEquals( length( unlist( bm.annos['Protein_1', 'GO'] ) ), 0 )
-# print( bm.annos['Q0KFR8', 'InterPro'] )
-checkTrue( 'IPR020591' %in% unlist( bm.annos['Q0KFR8', 'InterPro'] ) )
-# print( bm.annos['Q0KFR8', 'GO'] )
-checkTrue( 'GO:0005524' %in% unlist( bm.annos['Q0KFR8', 'GO'] ) )

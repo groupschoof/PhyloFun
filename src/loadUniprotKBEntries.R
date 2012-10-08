@@ -184,15 +184,15 @@ retrieveAnnotationsBiomart <- function( accs,
   #   
   annos <- getBM( c("accession", "interpro_id", "go_id"),
     filters=c("accession"), values=accs, mart=uni.mart )
-  do.call( 'rbind',
+  do.call( 'cbind',
     lapply( accs, function(a) {
       matrix(
         list( 
-          unique( annos[ annos["accession"] == a, "interpro_id" ] ),
-          unique( annos[ annos["accession"] == a, "go_id" ] )
+          'InterPro'=unique( annos[ annos["accession"] == a, "interpro_id" ] ),
+          'GO'=unique( annos[ annos["accession"] == a, "go_id" ] )
         ),
-        nrow=1, ncol=2,
-        dimnames=list( a, c('InterPro', 'GO') )
+        nrow=2, ncol=1,
+        dimnames=list( c('InterPro', 'GO'), a )
       )
     })
   )
