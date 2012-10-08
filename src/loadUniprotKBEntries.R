@@ -2,6 +2,7 @@ library(XML)
 library(utils)
 library(RCurl)
 library(parallel)
+library(biomaRt)
 
 uniprotkb.url <- function( accession ) {
   # Returns valid URL to access Uniprot's RESTful Web-Service to download
@@ -60,7 +61,7 @@ retrieve.annotations <- function(url, annotations=c('GO','InterPro','Pfam')) {
   # containing the annotated domain IDs of the corresponding types.
   # Exmpl:
   # $GO
-  #  [1] "GO:0005737" "GO:0005634" "GO:0005524" "GO:0008026" "GO:0003725"
+  # [1] "GO:0005737" "GO:0005634" "GO:0005524" "GO:0008026" "GO:0003725"
   # 
   # $InterPro
   # [1] "IPR005034" "IPR011545" "IPR001159" "IPR014001" "IPR001650" "IPR003100"
@@ -101,7 +102,7 @@ retrieveSequence <- function( doc, noverbose=T ) {
     silent=noverbose)
 }
 
-retrieve.annotations.parallel <- function(accessions, ...) {
+retrieve.annotations.parallel.t <- function(accessions, ...) {
   # Method invokes the function retrieve.annotations for each provided
   # accession in parallel. Resulting lists of annotated domain ids of the
   # various types are merged into a matrix. The annotated domain types
@@ -128,7 +129,7 @@ retrieve.annotations.parallel <- function(accessions, ...) {
   )
 }
 
-retrieve.annotations.parallel.t <- function(accessions, ...) {
+retrieve.annotations.parallel <- function(accessions, ...) {
   # Method invokes the function retrieve.annotations for each provided
   # accession in parallel. Resulting lists of annotated domain ids of the
   # various types are merged into a matrix. The annotated domain types
@@ -163,4 +164,36 @@ uniq.annotations <- function(annotation.matrix, type) {
     unique(do.call('c', (annotation.matrix[type,]))),
     na.last=F
     )
+}
+
+retrieveAnnotationsBiomart <- function( accs,
+    uni.mart=useDataset("uniprot",mart=useMart("unimart"))
+  ) {
+  # Uses library biomaRt to retrieve InterPro and Gene Ontology annotations for
+  # the Proteins referenced by their accessions in argument 'accs'. Results are
+  # returned as a matrix where the rows are the Protein accessions and the
+  # columns 'InterPro' and 'GO'. NOTE: This function cannot retrieve Pfam
+  # annotations.
+  #
+  # Args:
+  #  accs       : The accessions of the proteins to retrieve annotations for.
+  #  uni.mart   : The biomaRt mart object to use.
+  #
+  # Returns: A matrix with all InterPro and GO annotations for the query
+  # proteins. Rows are the protein accessions and columns 'InterPro' and 'GO'.
+  #   
+  annos <- getBM( c("accession", "interpro_id", "go_id"),
+    filters=c("accession"), values=accs, mart=uni.mart )
+  do.call( 'rbind',
+    lapply( accs, function(a) {
+      matrix(
+        list( 
+          unique( annos[ annos["accession"] == a, "interpro_id" ] ),
+          unique( annos[ annos["accession"] == a, "go_id" ] )
+        ),
+        nrow=1, ncol=2,
+        dimnames=list( a, c('InterPro', 'GO') )
+      )
+    })
+  )
 }
