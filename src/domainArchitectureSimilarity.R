@@ -120,7 +120,7 @@ domainArchitectureDistances <- function( domain.architecture.space.vectors ) {
   as.dist(m)
 }
 
-pairwiseSequenceDistance <- function(aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
+pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
   gap.open.pnlty=-10, gap.extension.pnlty=-0.1, distance.model="Dayhoff") {
   # For the two argument amino acid sequences this function computes first a
   # global pairwise alignment based on the supplied substitution matrix with
@@ -142,7 +142,9 @@ pairwiseSequenceDistance <- function(aa.seq.pattern, aa.seq.subject, sub.matrix=
   # Returns: The computed sequence distance for the two argument amino acid
   # sequences as instance of 'dist'. 
   #   
-  pa <- pairwiseAlignment( AAString(aa.seq.pattern), AAString(aa.seq.subject),
+  pa <- pairwiseAlignment(
+    AAString( replaceSelenocystein( aa.seq.pattern ) ),
+    AAString( replaceSelenocystein( aa.seq.subject ) ),
     substitutionMatrix=sub.matrix, gapOpening=gap.open.pnlty, gapExtension=gap.extension.pnlty )
   pd <- phyDat(
     list(
@@ -153,4 +155,48 @@ pairwiseSequenceDistance <- function(aa.seq.pattern, aa.seq.subject, sub.matrix=
   )
   # Return only the numeric distance value:
   as.matrix( dist.ml( pd, model=distance.model ) )[[ 1,2 ]]
+}
+
+replaceSelenocystein <- function( aa.seq ) {
+  # Function replaces all appearances of Selenocystein codes U and u with X and
+  # x respectively.
+  #
+  # Args:
+  #  aa.seq : amina acid sequence to sanitize
+  #
+  # Returns: Sanitized amino acid sequence where U or u is replaced with X and
+  # x respectively.
+  #  
+  aa.seq.sanitized <- gsub( "U", "X", aa.seq, fixed=T )
+  gsub( "u", "x", aa.seq.sanitized, fixed=T )
+}
+
+sequenceDistances <- function( protein.list ) {
+  # Function computes pairwise sequence distances between the argument
+  # proteins. It uses function 'pairwiseSequenceDistance' to achieve this. 
+  #
+  # Args:
+  #  protein.list : A _named_ list of Proteins.
+  #
+  # Returns: An object of class 'dist' holding the pairwise sequence distances
+  # for each pair of argument proteins.
+  #   
+  
+  ps <- names( protein.list )
+  # Iterativly compute cells of this distance matrix:
+  m <- matrix( nrow=length(ps), ncol=length(ps),
+    dimnames=list(ps, ps) )
+  lapply( ps, function( protein.acc ) {
+    # Proteins to compute distances to:
+    i <- which( ps == protein.acc )
+    ps2c <- ps[ i : length( ps ) ]
+    lapply( ps2c, function( p2c ) {
+      m[[ p2c, protein.acc ]] <<- pairwiseSequenceDistance(
+        as.character( protein.list[ protein.acc ] ),
+        as.character( protein.list[ p2c ] )
+      )
+    })
+  })
+  # Return an object of type 'dist':
+  as.dist(m)
 }
