@@ -1,3 +1,6 @@
+library(Biostrings)
+library(phangorn)
+
 constructVectorSpaceModel <- function( annotation.matrix, type='InterPro' ) {
   # Constructs a character vector of alphabetically sorted annotations IDs,
   # excluding NA annotations. Uses function 'uniq.annotations' to process the
@@ -6,8 +9,8 @@ constructVectorSpaceModel <- function( annotation.matrix, type='InterPro' ) {
   # Args:
   #  annotation.matrix : Rows are annotation types and columns the annotated
   #                      proteins, as returned by function
-  #                      'retrieve.annotations.parallel.'
-  #  type : Row name of 'annotation.matrix' to be processed.
+  #                      'retrieve.annotations.parallel'
+  #  type : Column of 'annotation.matrix' to be processed.
   #
   # Returns: A character vector of alphabetically sorted pairwise distinct
   # annotation IDs coerced from the 'annotation.matrix' corresponding row as
@@ -115,4 +118,39 @@ domainArchitectureDistances <- function( domain.architecture.space.vectors ) {
   })
   # Return an object of type 'dist':
   as.dist(m)
+}
+
+pairwiseSequenceDistance <- function(aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
+  gap.open.pnlty=-10, gap.extension.pnlty=-0.1, distance.model="Dayhoff") {
+  # For the two argument amino acid sequences this function computes first a
+  # global pairwise alignment based on the supplied substitution matrix with
+  # the argument gap opening and extension penalties. Then the sequence
+  # distance is computed based on the argument model. See libraries Biostrings
+  # and phangorn for details on functions pairwiseAlignment and dist.ml.
+  #
+  # Args:
+  #  aa.seq.pattern, aa.seq.subject : argument amino acid sequences
+  #  sub.matrix                     : substitution matrix to use in the global
+  #                                   alignment
+  #  gap.open.pnlty                 : score penalty to apply for opening a gap
+  #                                   in the global alignment
+  #  gap.extension.pnlty            : score penalty to apply for extending a
+  #                                   gap in the global alignment
+  #  distance.model                 : model to base the sequence distance
+  #                                   computation on
+  #
+  # Returns: The computed sequence distance for the two argument amino acid
+  # sequences as instance of 'dist'. 
+  #   
+  pa <- pairwiseAlignment( AAString(aa.seq.pattern), AAString(aa.seq.subject),
+    substitutionMatrix=sub.matrix, gapOpening=gap.open.pnlty, gapExtension=gap.extension.pnlty )
+  pd <- phyDat(
+    list(
+      "P1"=strsplit( toString( pattern(pa) ), NULL ),
+      "P2"=strsplit( toString( subject(pa) ), NULL )
+    ),
+    type="AA"
+  )
+  # Return only the numeric distance value:
+  as.matrix( dist.ml( pd, model=distance.model ) )[[ 1,2 ]]
 }

@@ -180,7 +180,7 @@ retrieveAnnotationsBiomart <- function( accs,
   #  uni.mart   : The biomaRt mart object to use.
   #
   # Returns: A matrix with all InterPro and GO annotations for the query
-  # proteins. Rows are the protein accessions and columns 'InterPro' and 'GO'.
+  # proteins. Columns are the protein accessions and rows 'InterPro' and 'GO'.
   #   
   annos <- getBM( c("accession", "interpro_id", "go_id"),
     filters=c("accession"), values=accs, mart=uni.mart )
