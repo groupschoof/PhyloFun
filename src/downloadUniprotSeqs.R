@@ -31,6 +31,18 @@ uris <- lapply( accs, uniprotkb.url )
 # Download docs
 docs <- getURL( uris )
 
+# Attempt to download 'Server Too Busy' docs again:
+busy.uris <- names( findServerBusyResults( docs ) )
+if ( length(busy.uris) > 0 ) {
+  # Wait a couple of seconds:
+  Sys.sleep( sample(1:90, 1) )
+  # Now try again:
+  docs <<- c(
+    docs[ names(docs) != busy.uris ],
+    getURL( busy.uris )
+  )
+}
+
 # Extract sequences
 seqs <- sapply( 
   docs, function(d) retrieveSequence( xmlInternalTreeParse(d) ),

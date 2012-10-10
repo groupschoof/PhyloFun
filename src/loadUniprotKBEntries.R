@@ -197,3 +197,31 @@ retrieveAnnotationsBiomart <- function( accs,
     })
   )
 }
+
+wasBusy <- function(doc) {
+  # Evaluates if the downloaded uniprot document just contains a "Server Busy"
+  # message.
+  #
+  # Args:
+  #  doc : downloaded and xmlInternalTreeParse'd document 
+  #
+  # Returns: TRUE if and only if the document 'd' contains 'Server Too Busy'
+  # message. FALSE otherwise.
+  #   
+  d <- if ( class(doc) == 'character' ) xmlInternalTreeParse(doc) else doc 
+  ns <- getNodeSet(d, "//h2")
+  (length(ns) == 1 && identical(xmlValue(ns[[1]]), "Server Too Busy"))
+}
+
+findServerBusyResults <- function(xml.docs) {
+  # Returns a vector of those documents where the Uniprot server had been too
+  # busy. Uses function 'wasBusy' to evaluate this.
+  #
+  # Args:
+  #  xml.docs : the downloaded and xmlInternalTreeParse'd Uniprot documents.
+  #
+  # Returns: The vector of documents that only contained the Uniprot 'Server
+  # Too Busy' error message.
+  #   
+  xml.docs[ as.logical( lapply(xml.docs, wasBusy) ) ]
+}
