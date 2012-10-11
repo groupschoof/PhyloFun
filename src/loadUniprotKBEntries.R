@@ -95,11 +95,19 @@ retrieveSequence <- function( doc, noverbose=T ) {
   # Returns: The content of the contained '<sequence>...</sequence>' tag.
   #   
   ns <- c(xmlns="http://uniprot.org/uniprot");
-  try(
+  s <- try(
     gsub("\\s", "",
       xmlValue( getNodeSet( doc, "//xmlns:entry/xmlns:sequence", ns )[[1]] )
       ),
-    silent=noverbose)
+    silent=noverbose
+  )
+  # Check for Errors:
+  if ( class(s) == "try-error" ) {
+    err.msg <- paste( "Could not parse Uniprot XML document.", toString(s) )
+    write( err.msg, stderr() )
+  }
+  # Return
+  s
 }
 
 retrieve.annotations.parallel.t <- function(accessions, ...) {
@@ -198,19 +206,27 @@ retrieveAnnotationsBiomart <- function( accs,
   )
 }
 
-wasBusy <- function(doc) {
-  # Evaluates if the downloaded uniprot document just contains a "Server Busy"
-  # message.
+wasBusy <- function(doc, noverbose=F) {
+  # Evaluates if the downloaded uniprot document has errors.
   #
   # Args:
-  #  doc : downloaded and xmlInternalTreeParse'd document 
+  #  doc : downloaded document as character vector
+  #  noverbose : switch indicating wether to print out error messages
   #
-  # Returns: TRUE if and only if the document 'd' contains 'Server Too Busy'
-  # message. FALSE otherwise.
-  #   
-  d <- if ( class(doc) == 'character' ) xmlInternalTreeParse(doc) else doc 
-  ns <- getNodeSet(d, "//h2")
-  (length(ns) == 1 && identical(xmlValue(ns[[1]]), "Server Too Busy"))
+  # Returns: TRUE, if and only if one of the error messages is matched.
+  
+  err.1 <- "Error : 1: Opening and ending tag mismatch"
+  err.11 <- "ERROR 11 Unable to connect to database [uniprotkb]"
+
+  parsed <- try( xmlInternalTreeParse(doc), silent=noverbose )
+
+  # Return
+  if ( identical( class(parsed), 'try-error' ) ) {
+    grepl( err.1, toString(parsed), fixed=T ) ||
+    grepl( err.11, toString(parsed), fixed=T )
+  } else {
+    FALSE
+  }
 }
 
 findServerBusyResults <- function(xml.docs) {
