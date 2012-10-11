@@ -225,3 +225,33 @@ findServerBusyResults <- function(xml.docs) {
   #   
   xml.docs[ as.logical( lapply(xml.docs, wasBusy) ) ]
 }
+
+downloadUniprotDocuments <- function( uniprot.uris, max.retries=10 ) {
+  # Downloads the documents from the RESTful Uniprot web service and retries
+  # downloading them, if the server returned a 'Too Busy' error document.
+  #
+  # Args:
+  #  uniprot.uris : A vector or list of uniprot URLs
+  #  max.retries  : The maximum number of retries
+  #
+  # Returns: Returns a named character vector of the downloaded XML documents.
+  # Names are the 'uniprot.uris'.
+
+  # Download docs
+  docs <- getURL( uniprot.uris )
+
+  # Attempt to download 'Server Too Busy' docs again:
+  busy.uris <- names( findServerBusyResults( docs ) )
+  if ( length(busy.uris) > 0 && max.retries > 0 ) {
+    # Wait a couple of seconds:
+    Sys.sleep( sample(1:90, 1) )
+    # Now try again:
+    docs <<- c(
+      docs[ names(docs) != busy.uris ],
+      downloadUniprotDocuments( busy.uris, (max.retries - 1) )
+      )
+  }
+  
+  # Return
+  docs
+}

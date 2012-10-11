@@ -29,19 +29,7 @@ accs <- scan( input.args[[1]], what=character(), sep="\n" )
 uris <- lapply( accs, uniprotkb.url )
 
 # Download docs
-docs <- getURL( uris )
-
-# Attempt to download 'Server Too Busy' docs again:
-busy.uris <- names( findServerBusyResults( docs ) )
-if ( length(busy.uris) > 0 ) {
-  # Wait a couple of seconds:
-  Sys.sleep( sample(1:90, 1) )
-  # Now try again:
-  docs <<- c(
-    docs[ names(docs) != busy.uris ],
-    getURL( busy.uris )
-  )
-}
+docs <- downloadUniprotDocuments( uris )
 
 # Extract sequences
 seqs <- sapply( 
