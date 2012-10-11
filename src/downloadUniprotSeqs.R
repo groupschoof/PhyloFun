@@ -32,10 +32,7 @@ uris <- lapply( accs, uniprotkb.url )
 docs <- downloadUniprotDocuments( uris )
 
 # Extract sequences
-seqs <- sapply( 
-  docs, function(d) retrieveSequence( xmlInternalTreeParse(d) ),
-  USE.NAMES=F
-)
+seqs <- retrieveSequences( docs )
 
 # Generate output
 o <- sapply( 1:length(accs), function(i) {
