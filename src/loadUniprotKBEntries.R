@@ -229,7 +229,7 @@ retrieveSequences <- function( downloaded.uniprot.docs,
   seqs <- sapply( downloaded.uniprot.docs, function( doc ) {
       try( retrieveSequence( doc ), silent=noverbose )
     })
-  err.uris <- names( seqs[ class(seqs[]) == 'try-error' ] )
+  err.uris <- names( seqs[ grepl("^Error", seqs[], perl=T) ] )
   if ( length(err.uris) > 0 && max.retries > 0 ) {
     Sys.sleep( sample(1:90, 1) )
     print( paste( "Retry number", as.character( 11 - max.retries) ) )
