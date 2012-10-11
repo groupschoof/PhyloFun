@@ -24,11 +24,11 @@ test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
 # Test retrieveAnnotationsBiomart
 print("Testing retrieveAnnotationsBiomart(...)")
 bm.annos <- retrieveAnnotationsBiomart(test.accessions)
-print( bm.annos )
+# print( bm.annos )
 checkEquals( class(bm.annos), 'matrix' )
 checkEquals( nrow(bm.annos), 2 )
 checkEquals( ncol(bm.annos), 4 )
-print(class(( bm.annos[ 'InterPro', 'Protein_1' ] ) ))
+# print(class(( bm.annos[ 'InterPro', 'Protein_1' ] ) ))
 checkEquals( length( unlist( bm.annos[ 'InterPro', 'Protein_1' ] ) ), 0 )
 checkEquals( length( unlist( bm.annos[ 'GO', 'Protein_1' ] ) ), 0 )
 # print( bm.annos['Q0KFR8', 'InterPro'] )
@@ -110,9 +110,23 @@ checkEquals(u.an.ma, c(NA,"GO:0003688","GO:0005524",
 
 # Test retrieveSequence
 print("Testing retrieveSequence(...)")
-aa.seq <- retrieveSequence(xmlInternalTreeParse(getURL('http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/Q3EBC8/xml')))
+aa.seq <- retrieveSequence( getURL('http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/Q3EBC8/xml') )
 checkEquals(aa.seq,
   'MTMDADAMETETTDQVSASPLHFARSYQVEALEKAIKQNTIVFLETGSGKTLIAIMLLRSYAYLFRKPSPCFCVFLVPQVVLVTQQAEALKMHTDLKVGMYWGDMGVDFWDSSTWKQEVDKYEVLVMTPAILLDALRHSFLSLSMIKVLIVDECHHAGGKHPYACIMREFYHKELNSGTSNVPRIFGMTASLVKTKGENLDSYWKKIHELETLMNSKVYTCENESVLAGFVPFSTPSFKYYQHIKIPSPKRASLVEKLERLTIKHRLSLGTLDLNSSTVDSVEKRLLRISSTLTYCLDDLGILLAQKAAQSLSASQNDSFLWGELNMFSVALVKKFCSDASQEFLAEIPQGLNWSVANINGNAEAGLLTLKTVCLIETLLGYSSLENIRCIIFVDRVITAIVLESLLAEILPNCNNWKTKYVAGNNSGLQNQTRKKQNEIVEDFRRGLVNIIVATSILEEGLDVQSCNLVIRFDPASNICSFIQSRGRARMQNSDYLMMVESGDLLTQSRLMKYLSGGKRMREESLDHSLVPCPPLPDDSDEPLFRVESTGATVTLSSSVSLIYHYCSRLPSDEYFKPAPRFDVNKDQGSCTLYLPKSCPVKEVKAEANNKVLKQAVCLKACIQLHKVGALSDHLVPDMVVAETVSQKLEKIQYNTEQPCYFPPELVSQFSAQPETTYHFYLIRMKPNSPRNFHLNDVLLGTRVVLEDDIGNTSFRLEDHRGTIAVTLSYVGAFHLTQEEVLFCRRFQITLFRVLLDHSVENLMEALNGLHLRDGVALDYLLVPSTHSHETSLIDWEVIRSVNLTSHEVLEKHENCSTNGASRILHTKDGLFCTCVVQNALVYTPHNGYVYCTKGVLNNLNGNSLLTKRNSGDQTYIEYYEERHGIQLNFVDEPLLNGRHIFTLHSYLHMAKKKKEKEHDREFVELPPELCHVILSPISVDMIYSYTFIPSVMQRIESLLIAYNLKKSIPKVNIPTIKVLEAITTKKCEDQFHLESLETLGDSFLKYAVCQQLFQHCHTHHEGLLSTKKDGMISNVMLCQFGCQQKLQGFIRDECFEPKGWMVPGQSSAAYSLVNDTLPESRNIYVASRRNLKRKSVADVVESLIGAYLSEGGELAALMFMNWVGIKVDFTTTKIQRDSPIQAEKLVNVGYMESLLNYSFEDKSLLVEALTHGSYMMPEIPRCYQRLEFLGDSVLDYLITKHLYDKYPCLSPGLLTDMRSASVNNECYALVAVKANLHKHILYASHHLHKHISRTVSEFEQSSLQSTFGWESDISFPKVLGDVIESLAGAIFVDSGYNKEVVFASIKPLLGCMITPETVKLHPVRELTELCQKWQFELSKAKDFDSFTVEVKAKEMSFAHTAKASDKKMAKKLAYKEVLNLLKNSLDY')
-checkEquals( class(retrieveSequence('')), 'try-error' )
-checkEquals( class(retrieveSequence(NA)), 'try-error' )
-checkEquals( class(retrieveSequence(NULL)), 'try-error' )
+# checkEquals( class(retrieveSequence('')), 'try-error' )
+# checkEquals( class(retrieveSequence(NA)), 'try-error' )
+# checkEquals( class(retrieveSequence(NULL)), 'try-error' )
+
+# Test retrieveSequences
+print("Testing retrieveSequences(...)")
+test.uris <- c( 
+  lapply( c('Q0KFR8','B2AFZ7','Q1LSI9'), uniprotkb.url ),
+  "http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/NonExistingAccession/xml"
+)
+uniprot.docs <- getURL( test.uris )
+seqs <- sapply( uniprot.docs, function( doc ) {
+      try( retrieveSequence( doc ), silent=T )
+    })
+err.uris <- names( seqs[ grepl("^Error", seqs[], perl=T) ] )
+checkEquals( length( err.uris ), 1 )
+
