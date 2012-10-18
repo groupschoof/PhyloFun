@@ -20,6 +20,46 @@ constructVectorSpaceModel <- function( annotation.matrix, type='InterPro' ) {
   uas[ ! is.na( uas[] ) ]
 }
 
+generateDomainArchitectureSpaceVectorsParallel <- function( vector.space.model,
+  annotation.matrix, domain.weights.table, annotation.type='InterPro' ) {
+  # All proteins as in the column names of 'annotation.matrix' are processed.
+  # For each of these proteins a list is generated where the list positions
+  # hold the domain weights as in table 'domain.weights.table' if the protein
+  # is annotated with the corresponding domain or 0.0 otherwise.
+  #
+  # Args:
+  #  vector.space.model : A alphabetically sorted character vector of all
+  #                       unique annotations. See function 'uniq.annotations'
+  #                       for details.
+  #  annotation.matrix  : Columns are the annotated proteins, cells hold each
+  #                       protein's annotations.
+  #  domain.weights.table : The matrix of domain weights. Rows are expected to
+  #                         be the annotated domains and cells expected to hold
+  #                         their corresponding domain weights. See project
+  #                         'generate_domain_weights' for details.
+  #  annotation.type    : The row of the annotation.matrix to access. If NULL
+  #                       row 1 is used.
+  #
+  # Returns: List of domain architecture space vectors one for each annotated
+  # protein.
+  #   
+  amr <- if ( is.null(annotation.type) ) 1 else annotation.type
+
+  mclapply( colnames(annotation.matrix), function( protein.id ) {
+      mclapply( vector.space.model, function( domain.id ) {
+          prot.annos <- annotation.matrix[[ amr, protein.id ]]
+          if ( domain.id %in% prot.annos ) {
+            dw <- domain.weights.table[ domain.id, 1 ]
+            # Domain IDs not present in the domain.weights.table will be
+            # ignored:
+            if ( is.na(dw) ) 0.0 else dw
+          } else {
+            0.0
+          }
+      }, mc.cores=detectCores(), mc.preschedule=T)
+  }, mc.cores=detectCores(), mc.preschedule=T)
+}
+
 generateDomainArchitectureSpaceVectors <- function( vector.space.model,
   annotation.matrix, domain.weights.table, annotation.type='InterPro' ) {
   # All proteins as in the column names of 'annotation.matrix' are processed.
@@ -120,6 +160,41 @@ domainArchitectureDistances <- function( domain.architecture.space.vectors ) {
   as.dist(m)
 }
 
+partialDomainArchitectureDistances <- function( domain.architecture.space.vectors,
+  accessions ) {
+  # Method computes pairwise distances of the domain architecture space vectors
+  # given in argument matrix 'domain.architecture.space.vectors'. Column names
+  # are expected to be the Proteins and row names the Domains, hence the ith
+  # column is the vector of protein i. 
+  #
+  # Args:
+  #  domain.architecture.space.vectors : The matrix of vectors in domain
+  #                                      architecture space.
+  #
+  # Returns: Returns an object of class 'matrix', holding the pairwise distances of
+  # the argument vectors.
+  #   
+  
+  # All proteins to compute pairwise distances for
+  ps <- colnames( domain.architecture.space.vectors )
+  # Iterativly compute cells of this distance matrix:
+  m <- matrix( nrow=length(ps), ncol=length(ps),
+    dimnames=list(ps, ps) )
+  lapply( accessions, function( protein.acc ) {
+    # Proteins to compute distances to:
+    i <- which( ps == protein.acc )
+    ps2c <- ps[ i : length( ps ) ]
+    lapply( ps2c, function( p2c ) {
+      m[[ p2c, protein.acc ]] <<- pairwiseDomainArchitectureDistance(
+        domain.architecture.space.vectors[ , protein.acc ],
+        domain.architecture.space.vectors[ , p2c ]
+        )
+    })
+  })
+  # Return an object of type 'matrix':
+  m
+}
+
 pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
   gap.open.pnlty=-10, gap.extension.pnlty=-0.1, distance.model="Dayhoff") {
   # For the two argument amino acid sequences this function computes first a
@@ -199,4 +274,36 @@ sequenceDistances <- function( protein.list ) {
   })
   # Return an object of type 'dist':
   as.dist(m)
+}
+
+partialSequenceDistances <- function( protein.list, accessions ) {
+  # Function computes pairwise sequence distances between the argument
+  # proteins. It uses function 'pairwiseSequenceDistance' to achieve this. 
+  # Only computes distances between proteins specified by accessions and all
+  # proteins in list.
+  #
+  # Args:
+  #  protein.list : A _named_ list of Proteins.
+  #
+  # Returns: An object of class 'matrix' holding the pairwise sequence distances
+  # for each pair of proteins where one member is in the argument 'accessions'.
+  #   
+  
+  ps <- names( protein.list )
+  # Iterativly compute cells of this distance matrix:
+  m <- matrix( nrow=length(accessions), ncol=length(ps),
+    dimnames=list(accessions, ps) )
+  lapply( accessions, function( protein.acc ) {
+    # Proteins to compute distances to:
+    i <- which( ps == protein.acc )
+    ps2c <- ps[ i : length( ps ) ]
+    lapply( ps2c, function( p2c ) {
+      m[[ protein.acc, p2c ]] <<- pairwiseSequenceDistance(
+        as.character( protein.list[ protein.acc ] ),
+        as.character( protein.list[ p2c ] )
+      )
+    })
+  })
+  # Return an object of type 'matrix':
+  m
 }
