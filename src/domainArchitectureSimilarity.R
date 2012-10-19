@@ -20,46 +20,6 @@ constructVectorSpaceModel <- function( annotation.matrix, type='InterPro' ) {
   uas[ ! is.na( uas[] ) ]
 }
 
-generateDomainArchitectureSpaceVectorsParallel <- function( vector.space.model,
-  annotation.matrix, domain.weights.table, annotation.type='InterPro' ) {
-  # All proteins as in the column names of 'annotation.matrix' are processed.
-  # For each of these proteins a list is generated where the list positions
-  # hold the domain weights as in table 'domain.weights.table' if the protein
-  # is annotated with the corresponding domain or 0.0 otherwise.
-  #
-  # Args:
-  #  vector.space.model : A alphabetically sorted character vector of all
-  #                       unique annotations. See function 'uniq.annotations'
-  #                       for details.
-  #  annotation.matrix  : Columns are the annotated proteins, cells hold each
-  #                       protein's annotations.
-  #  domain.weights.table : The matrix of domain weights. Rows are expected to
-  #                         be the annotated domains and cells expected to hold
-  #                         their corresponding domain weights. See project
-  #                         'generate_domain_weights' for details.
-  #  annotation.type    : The row of the annotation.matrix to access. If NULL
-  #                       row 1 is used.
-  #
-  # Returns: List of domain architecture space vectors one for each annotated
-  # protein.
-  #   
-  amr <- if ( is.null(annotation.type) ) 1 else annotation.type
-
-  mclapply( colnames(annotation.matrix), function( protein.id ) {
-      mclapply( vector.space.model, function( domain.id ) {
-          prot.annos <- annotation.matrix[[ amr, protein.id ]]
-          if ( domain.id %in% prot.annos ) {
-            dw <- domain.weights.table[ domain.id, 1 ]
-            # Domain IDs not present in the domain.weights.table will be
-            # ignored:
-            if ( is.na(dw) ) 0.0 else dw
-          } else {
-            0.0
-          }
-      }, mc.cores=detectCores(), mc.preschedule=T)
-  }, mc.cores=detectCores(), mc.preschedule=T)
-}
-
 generateDomainArchitectureSpaceVectors <- function( vector.space.model,
   annotation.matrix, domain.weights.table, annotation.type='InterPro' ) {
   # All proteins as in the column names of 'annotation.matrix' are processed.
