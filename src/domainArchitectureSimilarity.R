@@ -45,19 +45,24 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
   #   
   amr <- if ( is.null(annotation.type) ) 1 else annotation.type
 
-  sapply( colnames(annotation.matrix), function( protein.id ) {
-      sapply( vector.space.model, function( domain.id ) {
-          prot.annos <- annotation.matrix[[ amr, protein.id ]]
-          if ( domain.id %in% prot.annos ) {
-            dw <- domain.weights.table[ domain.id, 1 ]
-            # Domain IDs not present in the domain.weights.table will be
-            # ignored:
-            if ( is.na(dw) ) 0.0 else dw
-          } else {
-            0.0
-          }
-      })
-  })
+  do.call('cbind',
+    setNames(
+      mclapply( colnames(annotation.matrix), function( protein.id ) {
+          sapply( vector.space.model, function( domain.id ) {
+              prot.annos <- annotation.matrix[[ amr, protein.id ]]
+              if ( domain.id %in% prot.annos ) {
+                dw <- domain.weights.table[ domain.id, 1 ]
+                # Domain IDs not present in the domain.weights.table will be
+                # ignored:
+                if ( is.na(dw) ) 0.0 else dw
+              } else {
+                0.0
+              }
+            })
+        },
+      mc.cores=detectCores(), mc.preschedule=T),
+    colnames( annotation.matrix ))
+  )
 }
 
 pairwiseDomainArchitectureDistance <- function( dom.space.vector.one,
@@ -251,12 +256,12 @@ partialSequenceDistances <- function( protein.list, accessions ) {
   
   ps <- names( protein.list )
   # Iterativly compute cells of this distance matrix:
-  m <- matrix( nrow=length(accessions), ncol=length(ps),
+  m <- matrix( 0, nrow=length(accessions), ncol=length(ps),
     dimnames=list(accessions, ps) )
   lapply( accessions, function( protein.acc ) {
     # Proteins to compute distances to:
     i <- which( ps == protein.acc )
-    ps2c <- ps[ i : length( ps ) ]
+    ps2c <- ps[ ps != protein.acc ]
     lapply( ps2c, function( p2c ) {
       m[[ protein.acc, p2c ]] <<- pairwiseSequenceDistance(
         as.character( protein.list[ protein.acc ] ),

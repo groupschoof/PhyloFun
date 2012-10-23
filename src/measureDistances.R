@@ -19,7 +19,7 @@ src.project.file <- function(...) {
 src.project.file('src','domainArchitectureDistances.R')
 
 # Usage:
-print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/accession_per_line.txt path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl path/2/output.tbl")
+print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/accession_per_line.txt path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl path/2/output_name")
 print( "WARNING: Make sure the complete sequence names in the FASTA file are exactly the same as in the accession_per_line file!" )
 
 # Input
@@ -39,7 +39,3 @@ close( f )
 # Load domain weights table:
 dom.weights <- read.table( trailing.args[[4]] )
 
-# Vector space model:
-vsm <- constructVectorSpaceModel( annos )
-
-# 

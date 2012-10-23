@@ -50,6 +50,7 @@ exp.dasv <- unserialize( f )
 close(f)
 
 dasv <- generateDomainArchitectureSpaceVectors( vsm, am, dwd )
+# print( dasv )
 checkEquals( exp.dasv, dasv )
 
 # Test pairwiseDomainArchitectureDistance
@@ -125,6 +126,19 @@ prot.lst <- list( "P1"=p1, "P2"=p2, "P3"=p3 )
 prot.seq.dists <- sequenceDistances( prot.lst )
 checkEquals( class(prot.seq.dists), 'dist' )
 prot.seq.dists.mtrx <- round( as.matrix( prot.seq.dists ), 6 )
+checkEquals( prot.seq.dists.mtrx[[ 1, 1 ]], 0.0 )
+checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.813185 )
+checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.925284 )
+
+# Test partialSequenceDistances
+print("Testing partialSequenceDistances(...)")
+partial.accs <- c( "P1", "P2" )
+prot.seq.dists <- partialSequenceDistances( prot.lst, partial.accs )
+# print( prot.seq.dists )
+checkEquals( class(prot.seq.dists), 'matrix' )
+checkEquals( nrow(prot.seq.dists), length(partial.accs) )
+checkEquals( ncol(prot.seq.dists), length(prot.lst) )
+prot.seq.dists.mtrx <- round(  prot.seq.dists, 6 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 1 ]], 0.0 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.813185 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.925284 )
