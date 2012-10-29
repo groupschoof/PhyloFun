@@ -1,6 +1,6 @@
 library(tools)
-library(RCurl)
 library(Biostrings)
+library(parallel)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -39,3 +39,11 @@ close( f )
 # Load domain weights table:
 dom.weights <- read.table( trailing.args[[4]] )
 
+# Partial Sequence Distances:
+seq.dists <- partialSequenceDistances( aa.seqs, accs )
+
+# Partial Domain Architecture Distances:
+vsm <- constructVectorSpaceModel( annos )
+das.vects <- generateDomainArchitectureSpaceVectors( vsm, annos, dom.weights,
+  accs )
+dom.dists <- partialDomainArchitectureDistances( das.vects )

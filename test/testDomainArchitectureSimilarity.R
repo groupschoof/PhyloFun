@@ -53,6 +53,14 @@ dasv <- generateDomainArchitectureSpaceVectors( vsm, am, dwd )
 # print( dasv )
 checkEquals( exp.dasv, dasv )
 
+# Test partial generateDomainArchitectureSpaceVectors
+print("Testing partial generateDomainArchitectureSpaceVectors(...)")
+test.accs <- c('A0RLX8', 'Protein_1')
+part.dasv <- generateDomainArchitectureSpaceVectors( vsm, am, dwd,
+  vectors.4.accessions=test.accs )
+# print( part.dasv )
+checkEquals( exp.dasv[ , colnames(exp.dasv) %in% test.accs ], part.dasv )
+
 # Test pairwiseDomainArchitectureDistance
 print("Testing pairwiseDomainArchitectureDistance(...)")
 checkEquals(
@@ -102,6 +110,19 @@ exp.rslt <- matrix(
 # Protein_D 0.08712907 0.5007698 0.2238860 0.00000000
 rslt <- domainArchitectureDistances( dsvs )
 checkEquals( as.matrix(rslt), exp.rslt )
+
+# Test partialDomainArchitectureDistances
+print("Testing partialDomainArchitectureDistances(...)")
+# f <- file( project.file.path("test", "test_annotations.tbl"), "r" )
+# anno.mat <- unserialize( f )
+# close( f )
+anno.mat <- am[ , ( ! is.na( am[ 'InterPro', , drop=F ][] ) ), drop=F ]
+part.das.dists <- partialDomainArchitectureDistances( anno.mat, dwd, c('A0RLX8', 'A0KEC3') )
+warnings()
+print( part.das.dists )
+print( class(part.das.dists) )
+# check( am, dwt, c('A0RLX8', 'Protein_1') )
+
 
 # Test pairwiseSequenceDistance
 print("Testing pairwiseSequenceDistance(...)")

@@ -21,7 +21,8 @@ constructVectorSpaceModel <- function( annotation.matrix, type='InterPro' ) {
 }
 
 generateDomainArchitectureSpaceVectors <- function( vector.space.model,
-  annotation.matrix, domain.weights.table, annotation.type='InterPro' ) {
+  annotation.matrix, domain.weights.table, annotation.type='InterPro', 
+  vectors.4.accessions=colnames(annotation.matrix) ) {
   # All proteins as in the column names of 'annotation.matrix' are processed.
   # For each of these proteins a list is generated where the list positions
   # hold the domain weights as in table 'domain.weights.table' if the protein
@@ -39,6 +40,9 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
   #                         'generate_domain_weights' for details.
   #  annotation.type    : The row of the annotation.matrix to access. If NULL
   #                       row 1 is used.
+  #  vectors.4.accessions : Compute the DAS vectors for these accessions. This
+  #                         enables partial computation of DAS vectors. By default DAS vectors for all
+  #                         accessions are generated.
   #
   # Returns: List of domain architecture space vectors one for each annotated
   # protein.
@@ -47,7 +51,7 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
 
   do.call('cbind',
     setNames(
-      mclapply( colnames(annotation.matrix), function( protein.id ) {
+      mclapply( vectors.4.accessions, function( protein.id ) {
           sapply( vector.space.model, function( domain.id ) {
               prot.annos <- annotation.matrix[[ amr, protein.id ]]
               if ( domain.id %in% prot.annos ) {
@@ -61,7 +65,7 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
             })
         },
       mc.cores=detectCores(), mc.preschedule=T),
-    colnames( annotation.matrix ))
+    vectors.4.accessions )
   )
 }
 
@@ -125,39 +129,26 @@ domainArchitectureDistances <- function( domain.architecture.space.vectors ) {
   as.dist(m)
 }
 
-partialDomainArchitectureDistances <- function( domain.architecture.space.vectors,
-  accessions ) {
-  # Method computes pairwise distances of the domain architecture space vectors
-  # given in argument matrix 'domain.architecture.space.vectors'. Column names
-  # are expected to be the Proteins and row names the Domains, hence the ith
-  # column is the vector of protein i. 
-  #
-  # Args:
-  #  domain.architecture.space.vectors : The matrix of vectors in domain
-  #                                      architecture space.
-  #
-  # Returns: Returns an object of class 'matrix', holding the pairwise distances of
-  # the argument vectors.
-  #   
-  
-  # All proteins to compute pairwise distances for
-  ps <- colnames( domain.architecture.space.vectors )
-  # Iterativly compute cells of this distance matrix:
-  m <- matrix( nrow=length(ps), ncol=length(ps),
-    dimnames=list(ps, ps) )
-  lapply( accessions, function( protein.acc ) {
-    # Proteins to compute distances to:
-    i <- which( ps == protein.acc )
-    ps2c <- ps[ i : length( ps ) ]
-    lapply( ps2c, function( p2c ) {
-      m[[ p2c, protein.acc ]] <<- pairwiseDomainArchitectureDistance(
-        domain.architecture.space.vectors[ , protein.acc ],
-        domain.architecture.space.vectors[ , p2c ]
-        )
-    })
-  })
-  # Return an object of type 'matrix':
-  m
+partialDomainArchitectureDistances <- function( annotation.matrix,
+  domain.weights.table, accessions ) {
+  do.call( 'cbind', 
+    setNames(
+      lapply( colnames(annotation.matrix), function( acc.2.compare ) {
+          setNames(
+            lapply( accessions, function( acc ) {
+                accs <- c(acc, acc.2.compare)
+                vsm <- constructVectorSpaceModel(
+                  annotation.matrix[ , colnames(annotation.matrix) %in% accs, drop=F ] )
+                das.vects <- generateDomainArchitectureSpaceVectors( vsm,
+                  annotation.matrix, domain.weights.table, accs )
+                pairwiseDomainArchitectureDistance( das.vects[, acc],  das.vects[, acc.2.compare] )
+            }),
+            accessions
+          )
+      }),
+      colnames(annotation.matrix)
+    )
+  )
 }
 
 pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
