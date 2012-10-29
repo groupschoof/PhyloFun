@@ -39,8 +39,22 @@ close( f )
 # Load domain weights table:
 dom.weights <- read.table( trailing.args[[4]] )
 
+# Write output to files beginning with..
+out.head <- trailing.args[[ 5 ]]
+
 # Partial Sequence Distances:
-seq.dists <- partialSequenceDistances( aa.seqs, accs )
+write.table( partialSequenceDistances( aa.seqs, accs ),
+  paste( out.head, "_seq_dists.tbl", sep="" )
+)
 
 # Partial Domain Architecture Distances:
-dom.dists <- partialDomainArchitectureDistances( annos, dom.weights, accs )
+write.table( partialDomainArchitectureDistances( annos, dom.weights, accs ),
+  paste( out.head, "_das_dists.tbl", sep="" )
+)
+
+# Partial boolean 'shared function' matrix:
+write.table( sharedFunction( annos, accs ), 
+  paste( out.head, "_shrd_func.tbl", sep="" )
+)
+
+print( "DONE" )
