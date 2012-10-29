@@ -62,10 +62,10 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
               } else {
                 0.0
               }
-            })
+          })
         },
-      mc.cores=detectCores(), mc.preschedule=T),
-    vectors.4.accessions )
+        mc.cores=detectCores(), mc.preschedule=T ),
+      vectors.4.accessions )
   )
 }
 
@@ -130,17 +130,31 @@ domainArchitectureDistances <- function( domain.architecture.space.vectors ) {
 }
 
 partialDomainArchitectureDistances <- function( annotation.matrix,
-  domain.weights.table, accessions ) {
+  domain.weights.table, accessions, annotation.type="InterPro" ) {
+  # Computes pairwise distances between all proteins referenced by argument
+  # 'accessions' to all proteins in argument 'annotation.matrix'.
+  #
+  # Args:
+  #  annotation.matrix : Matrix of domain annotations
+  #  domain.weights.table : domain weight (column) for each annotated domain (row)
+  #  accessions : The proteins to compute distances to all proteins in argument 'annotation.matrix' to
+  #  annotation.type : The type of domain annotation to use, default 'InterPro'
+  #
+  # Returns: Returns domain architecture distance matrix with argument
+  # 'accessions' as row names and columns all protein accessions as in argument
+  # 'annotation.matrix'. 
+  #   
   do.call( 'cbind', 
     setNames(
-      lapply( colnames(annotation.matrix), function( acc.2.compare ) {
+      mclapply( colnames(annotation.matrix), function( acc.2.compare ) {
           setNames(
             lapply( accessions, function( acc ) {
                 accs <- c(acc, acc.2.compare)
                 vsm <- constructVectorSpaceModel(
                   annotation.matrix[ , colnames(annotation.matrix) %in% accs, drop=F ] )
                 das.vects <- generateDomainArchitectureSpaceVectors( vsm,
-                  annotation.matrix, domain.weights.table, accs )
+                  annotation.matrix, domain.weights.table,
+                  annotation.type=annotation.type, vectors.4.accessions=accs )
                 pairwiseDomainArchitectureDistance( das.vects[, acc],  das.vects[, acc.2.compare] )
             }),
             accessions

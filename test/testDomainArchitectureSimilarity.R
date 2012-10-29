@@ -113,16 +113,19 @@ checkEquals( as.matrix(rslt), exp.rslt )
 
 # Test partialDomainArchitectureDistances
 print("Testing partialDomainArchitectureDistances(...)")
-# f <- file( project.file.path("test", "test_annotations.tbl"), "r" )
-# anno.mat <- unserialize( f )
-# close( f )
-anno.mat <- am[ , ( ! is.na( am[ 'InterPro', , drop=F ][] ) ), drop=F ]
-part.das.dists <- partialDomainArchitectureDistances( anno.mat, dwd, c('A0RLX8', 'A0KEC3') )
-warnings()
-print( part.das.dists )
-print( class(part.das.dists) )
-# check( am, dwt, c('A0RLX8', 'Protein_1') )
-
+test.accessions <- c('A0RLX8', 'A0PKB2', 'Protein_1')
+part.das.dists <- partialDomainArchitectureDistances( am, dwd, test.accessions )
+# print( part.das.dists )
+checkTrue( ! is.na(part.das.dists) && ! is.null(part.das.dists) )
+checkEquals( class(part.das.dists), "matrix" )
+checkEquals( nrow(part.das.dists), length( test.accessions ) )
+checkEquals( ncol(part.das.dists), ncol( am ) )
+checkEquals( part.das.dists[[ 'Protein_1', 'Protein_1' ]], 0 )
+checkEquals( part.das.dists[[ 'A0RLX8', 'A0RLX8' ]], 0 )
+checkEquals( part.das.dists[[ 'A0PKB2', 'A0PKB2' ]], 0 )
+checkTrue( is.na( part.das.dists[[ 'Protein_1', 'A0PKB2' ]] ) )
+checkTrue( is.na( part.das.dists[[ 'Protein_1', 'A0RLX8' ]] ) )
+checkEquals( round( part.das.dists[[ 'A0PKB2', 'A0RLX8' ]], 6 ), 0.322616 )
 
 # Test pairwiseSequenceDistance
 print("Testing pairwiseSequenceDistance(...)")
