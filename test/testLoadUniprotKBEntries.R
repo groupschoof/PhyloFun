@@ -154,5 +154,8 @@ exp.shrd.funk.res <- matrix( bools, byrow=T, ncol=11, nrow=11,
     dimnames=list( col.row.nms, col.row.nms )
   )
 checkEquals( exp.shrd.funk.res, shrd.funk.res )
-
-
+# Test function when called to only compute partial shared functions:
+shrd.funk.accs <- c( "A0AEI7", "A0KEC3" )
+shrd.funk.res <- sharedFunction( shr.func.anno.mtrx, accessions=shrd.funk.accs )
+# print( shrd.funk.res )
+checkEquals( shrd.funk.res, exp.shrd.funk.res[ shrd.funk.accs, ] )
