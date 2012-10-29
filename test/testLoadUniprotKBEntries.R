@@ -130,3 +130,29 @@ seqs <- sapply( uniprot.docs, function( doc ) {
 err.uris <- names( seqs[ grepl("^Error", seqs[], perl=T) ] )
 checkEquals( length( err.uris ), 1 )
 
+# Test sharedFunction
+print("Testing sharedFunction(...)")
+f <- file( project.file.path( "test", "test_annotations.tbl" ), "r" )
+shr.func.anno.mtrx <- unserialize( f )
+close( f )
+shrd.funk.res <- sharedFunction( shr.func.anno.mtrx )
+# print( shrd.funk.res )
+col.row.nms <- c("A0RLX8", "A0LE53", "Protein_1", "A0PKB2", "A0Q3U6", "A0AEI7",
+  "A0K2M8", "A0KR35", "A0KEC3", "A0Q3U7", "A0L3I7")
+bools <- c( TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+  TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE,
+  FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+  TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+  TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE,
+  FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE,
+  TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE,
+  FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE,
+  TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE,
+  TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE,
+  TRUE, TRUE, TRUE, TRUE )
+exp.shrd.funk.res <- matrix( bools, byrow=T, ncol=11, nrow=11,
+    dimnames=list( col.row.nms, col.row.nms )
+  )
+checkEquals( exp.shrd.funk.res, shrd.funk.res )
+
+

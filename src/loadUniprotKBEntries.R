@@ -243,3 +243,37 @@ retrieveSequences <- function( downloaded.uniprot.docs,
   # Return
   seqs
 }
+
+sharedFunction <- function( annotation.matrix,
+  accessions=colnames(annotation.matrix), annotation.type='GO' ) {
+  # Constructs a Boolean matrix with column names as in the argument
+  # 'annotation.matrix' columns. Rows are the argument accessions. Each matrix
+  # entry is TRUE if and only if the two corresponding proteins share at least
+  # a single anntotation. 
+  #
+  # Args:
+  #  annotation.matrix : Matrix holding different function annotation for its
+  #                      column proteins
+  #  accessions : The accessions to compute the Boolean entries for, default
+  #               all proteins in annotation.matrix
+  #  annotation.type : The type of functional annotation to use, default 'GO'
+  #
+  # Returns: Boolean matrix with rows as in argument 'accessions' and columns
+  # the same as in argument 'annotation.matrix'.
+  #   
+  do.call( 'cbind',
+    setNames(
+      mclapply( colnames(annotation.matrix), function( a ) {
+          sapply( accessions, function( b ) {
+              length(
+                intersect(
+                  annotation.matrix[[ annotation.type, a ]],
+                  annotation.matrix[[ annotation.type, b ]]
+                )
+              ) > 0
+          } )
+      }, mc.cores=detectCores(), mc.preschedule=T ),
+      colnames(annotation.matrix)
+    )
+  )
+}

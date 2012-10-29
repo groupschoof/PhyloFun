@@ -43,7 +43,4 @@ dom.weights <- read.table( trailing.args[[4]] )
 seq.dists <- partialSequenceDistances( aa.seqs, accs )
 
 # Partial Domain Architecture Distances:
-vsm <- constructVectorSpaceModel( annos )
-das.vects <- generateDomainArchitectureSpaceVectors( vsm, annos, dom.weights,
-  accs )
-dom.dists <- partialDomainArchitectureDistances( das.vects )
+dom.dists <- partialDomainArchitectureDistances( annos, dom.weights, accs )
