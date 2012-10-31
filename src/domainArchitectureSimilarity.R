@@ -187,19 +187,38 @@ pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject, sub.matrix
   # Returns: The computed sequence distance for the two argument amino acid
   # sequences as instance of 'dist'. 
   #   
-  pa <- pairwiseAlignment(
-    AAString( replaceSelenocystein( aa.seq.pattern ) ),
-    AAString( replaceSelenocystein( aa.seq.subject ) ),
-    substitutionMatrix=sub.matrix, gapOpening=gap.open.pnlty, gapExtension=gap.extension.pnlty )
-  pd <- phyDat(
-    list(
-      "P1"=strsplit( toString( pattern(pa) ), NULL ),
-      "P2"=strsplit( toString( subject(pa) ), NULL )
-    ),
-    type="AA"
+  funk.body <- function( aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
+    gap.open.pnlty=-10, gap.extension.pnlty=-0.1, distance.model="Dayhoff" ) {
+    pa <- pairwiseAlignment(
+      AAString( replaceSelenocystein( aa.seq.pattern ) ),
+      AAString( replaceSelenocystein( aa.seq.subject ) ),
+      substitutionMatrix=sub.matrix, gapOpening=gap.open.pnlty, gapExtension=gap.extension.pnlty )
+    pd <- phyDat(
+      list(
+        "P1"=strsplit( toString( pattern(pa) ), NULL ),
+        "P2"=strsplit( toString( subject(pa) ), NULL )
+        ),
+      type="AA"
+      )
+    # Return only the numeric distance value:
+    as.matrix( dist.ml( pd, model=distance.model ) )[[ 1,2 ]]
+  }
+  # Run it safe:
+  tryCatch(
+    funk.body( aa.seq.pattern, aa.seq.subject, sub.matrix,
+      gap.open.pnlty, gap.extension.pnlty, distance.model ),
+    error=function( e ) {
+      msg <- paste(
+        "Could not compute pairwise sequence distance for arguments",
+        aa.seq.pattern, aa.seq.subject,
+        sub.matrix, gap.open.pnlty,
+        gap.extension.pnlty, distance.model,
+        e, sep="\n"
+      )
+      write( msg, stderr() )
+      NA
+    }
   )
-  # Return only the numeric distance value:
-  as.matrix( dist.ml( pd, model=distance.model ) )[[ 1,2 ]]
 }
 
 replaceSelenocystein <- function( aa.seq ) {
