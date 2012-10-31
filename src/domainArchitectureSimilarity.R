@@ -254,26 +254,32 @@ partialSequenceDistances <- function( protein.list, accessions ) {
   #
   # Args:
   #  protein.list : A _named_ list of Proteins.
+  #  accessions   : The subset of proteins to compute
+  #                 distances to all proteins to.
   #
   # Returns: An object of class 'matrix' holding the pairwise sequence distances
   # for each pair of proteins where one member is in the argument 'accessions'.
   #   
-  
   ps <- names( protein.list )
-  # Iterativly compute cells of this distance matrix:
-  m <- matrix( 0, nrow=length(accessions), ncol=length(ps),
-    dimnames=list(accessions, ps) )
-  lapply( accessions, function( protein.acc ) {
-    # Proteins to compute distances to:
-    i <- which( ps == protein.acc )
-    ps2c <- ps[ ps != protein.acc ]
-    lapply( ps2c, function( p2c ) {
-      m[[ protein.acc, p2c ]] <<- pairwiseSequenceDistance(
-        as.character( protein.list[ protein.acc ] ),
-        as.character( protein.list[ p2c ] )
-      )
-    })
-  })
-  # Return an object of type 'matrix':
-  m
+  # Construct a distance matrix:
+  do.call( 'rbind',
+    setNames( 
+      # Distance between each protein in accessions...
+      lapply( accessions, function( protein.acc ) {
+        setNames(
+          # ... to each protein in protein.list:
+          as.numeric(
+            mclapply( ps, function( p2c ) {
+              pairwiseSequenceDistance(
+                as.character( protein.list[ protein.acc ] ),
+                as.character( protein.list[ p2c ] )
+              )
+            }, mc.cores=detectCores(), mc.preschedule=T)
+          ),
+          ps
+        )
+      }),
+      accessions
+    )
+  )
 }
