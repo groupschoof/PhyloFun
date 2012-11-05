@@ -151,7 +151,7 @@ partialDomainArchitectureDistances <- function( annotation.matrix,
             lapply( accessions, function( acc ) {
                 accs <- c(acc, acc.2.compare)
                 vsm <- constructVectorSpaceModel(
-                  annotation.matrix[ , colnames(annotation.matrix) %in% accs, drop=F ] )
+                  annotation.matrix[ , accs, drop=F ] )
                 das.vects <- generateDomainArchitectureSpaceVectors( vsm,
                   annotation.matrix, domain.weights.table,
                   annotation.type=annotation.type, vectors.4.accessions=accs )
