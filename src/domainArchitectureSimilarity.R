@@ -159,7 +159,9 @@ partialDomainArchitectureDistances <- function( annotation.matrix,
             }),
             accessions
           )
-      }),
+        },
+        mc.cores=detectCores(), mc.preschedule=T
+      ),
       colnames(annotation.matrix)
     )
   )
