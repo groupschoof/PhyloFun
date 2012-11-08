@@ -52,19 +52,18 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
   do.call('cbind',
     setNames(
       mclapply( vectors.4.accessions, function( protein.id ) {
-          sapply( vector.space.model, function( domain.id ) {
-              prot.annos <- annotation.matrix[[ amr, protein.id ]]
-              if ( domain.id %in% prot.annos ) {
-                dw <- domain.weights.table[ domain.id, 1 ]
-                # Domain IDs not present in the domain.weights.table will be
-                # ignored:
-                if ( is.na(dw) ) 0.0 else dw
-              } else {
-                0.0
-              }
-          })
-        },
-        mc.cores=detectCores(), mc.preschedule=T ),
+        sapply( vector.space.model, function( domain.id ) {
+            prot.annos <- annotation.matrix[[ amr, protein.id ]]
+            if ( domain.id %in% prot.annos ) {
+              dw <- domain.weights.table[ domain.id, 1 ]
+              # Domain IDs not present in the domain.weights.table will be
+              # ignored:
+              if ( is.na(dw) ) 0.0 else dw
+            } else {
+              0.0
+            }
+        })
+      }),
       vectors.4.accessions )
   )
 }
@@ -147,21 +146,19 @@ partialDomainArchitectureDistances <- function( annotation.matrix,
   do.call( 'cbind', 
     setNames(
       mclapply( colnames(annotation.matrix), function( acc.2.compare ) {
-          setNames(
-            lapply( accessions, function( acc ) {
-                accs <- c(acc, acc.2.compare)
-                vsm <- constructVectorSpaceModel(
-                  annotation.matrix[ , accs, drop=F ] )
-                das.vects <- generateDomainArchitectureSpaceVectors( vsm,
-                  annotation.matrix, domain.weights.table,
-                  annotation.type=annotation.type, vectors.4.accessions=accs )
-                pairwiseDomainArchitectureDistance( das.vects[, acc],  das.vects[, acc.2.compare] )
-            }),
-            accessions
-          )
-        },
-        mc.cores=detectCores(), mc.preschedule=T
-      ),
+        setNames(
+          lapply( accessions, function( acc ) {
+              accs <- c(acc, acc.2.compare)
+              vsm <- constructVectorSpaceModel(
+                annotation.matrix[ , accs, drop=F ] )
+              das.vects <- generateDomainArchitectureSpaceVectors( vsm,
+                annotation.matrix, domain.weights.table,
+                annotation.type=annotation.type, vectors.4.accessions=accs )
+              pairwiseDomainArchitectureDistance( das.vects[, acc],  das.vects[, acc.2.compare] )
+          }),
+          accessions
+        )
+      }),
       colnames(annotation.matrix)
     )
   )
@@ -295,7 +292,7 @@ partialSequenceDistances <- function( protein.list, accessions ) {
                 as.character( protein.list[ protein.acc ] ),
                 as.character( protein.list[ p2c ] )
               )
-            }, mc.cores=detectCores(), mc.preschedule=T)
+            })
           ),
           ps
         )
