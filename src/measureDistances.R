@@ -86,17 +86,4 @@ if( ! file.exists( part.das.dists.file ) ) {
   )
 }
 
-# Partial boolean 'shared function' matrix:
-part.shrd.funct.file <- paste( out.head, "_shrd_func.tbl", sep="" )
-if( ! file.exists( part.shrd.funct.file ) ) {
-  write.table( sharedFunction( annos, accs ), 
-    part.shrd.funct.file
-  )
-  print( "computed shared functions" )
-} else {
-  print( paste("Partial shared function file already exists. Did not compute them again.",
-      part.shrd.funct.file)
-  )
-}
-
 print( "DONE" )
