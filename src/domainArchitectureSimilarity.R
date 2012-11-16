@@ -22,7 +22,8 @@ constructVectorSpaceModel <- function( annotation.matrix, type='InterPro' ) {
 
 generateDomainArchitectureSpaceVectors <- function( vector.space.model,
   annotation.matrix, domain.weights.table, annotation.type='InterPro', 
-  vectors.4.accessions=colnames(annotation.matrix) ) {
+  vectors.4.accessions=colnames(annotation.matrix),
+  lapply.funk=lapply ) {
   # All proteins as in the column names of 'annotation.matrix' are processed.
   # For each of these proteins a list is generated where the list positions
   # hold the domain weights as in table 'domain.weights.table' if the protein
@@ -43,6 +44,8 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
   #  vectors.4.accessions : Compute the DAS vectors for these accessions. This
   #                         enables partial computation of DAS vectors. By default DAS vectors for all
   #                         accessions are generated.
+  #  lapply.funk : Set to mclapply, if computation is to be done in parallel.
+  #                Obviously default mode is serial ('lapply'). 
   #
   # Returns: List of domain architecture space vectors one for each annotated
   # protein.
@@ -51,7 +54,7 @@ generateDomainArchitectureSpaceVectors <- function( vector.space.model,
 
   do.call('cbind',
     setNames(
-      mclapply( vectors.4.accessions, function( protein.id ) {
+      lapply.funk( vectors.4.accessions, function( protein.id ) {
         sapply( vector.space.model, function( domain.id ) {
             prot.annos <- annotation.matrix[[ amr, protein.id ]]
             if ( domain.id %in% prot.annos ) {
