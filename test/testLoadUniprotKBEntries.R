@@ -42,6 +42,9 @@ checkEquals(uniprotkb.url('Q0KFR8'),
   'http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/Q0KFR8/xml')
 checkEquals(uniprotkb.url("sp|P34529|DCR1_CAEEL"),
 "http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/sp%7cP34529%7cDCR1_CAEEL/xml")
+checkEquals( uniprotkb.url('Q0KFR8', frmt='fasta'),
+  'http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/Q0KFR8/fasta'
+)
 
 # Test extract.annotations
 print("Testing extract.annotations(...)")

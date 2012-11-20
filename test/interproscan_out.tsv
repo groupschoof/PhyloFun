@@ -1,0 +1,58 @@
+Protein_2	15c8e23abb12b07cd74262a17301b58f	622	Pfam	PF13520	Amino acid permease	58	436	1.9E-26	T	19-11-2012
+Protein_2	15c8e23abb12b07cd74262a17301b58f	622	PANTHER	PTHR11785		58	522	3.4E-99	T	19-11-2012	IPR002293	Amino acid/polyamine transporter I	GO:0003333|GO:0015171|GO:0016020	
+Protein_2	15c8e23abb12b07cd74262a17301b58f	622	PANTHER	PTHR11785:SF125		58	522	3.4E-99	T	19-11-2012
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	Gene3D	G3DSA:3.30.70.360		187	303	4.9E-39	T	19-11-2012
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	SUPERFAMILY	SSF53187		304	396	3.97E-83	T	19-11-2012
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	SUPERFAMILY	SSF53187		11	203	3.97E-83	T	19-11-2012
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	SUPERFAMILY	SSF55031		190	297	6.41E-30	T	19-11-2012	IPR011650	Peptidase M20, dimerisation	GO:0016787	
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	TIGRFAM	TIGR01891	amidohydrolases: amidohydrolase	19	382	1.2E-115	T	19-11-2012	IPR017439	Amidohydrolase	GO:0016787	
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	Pfam	PF07687	Peptidase dimerisation domain	191	286	3.7E-11	T	19-11-2012	IPR011650	Peptidase M20, dimerisation	GO:0016787	
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	Pfam	PF01546	Peptidase family M20/M25/M40	76	391	2.7E-24	T	19-11-2012	IPR002933	Peptidase M20	GO:0008152|GO:0016787	
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	PIRSF	PIRSF005962		2	398	8.7E-152	T	19-11-2012	IPR017439	Amidohydrolase	GO:0016787	
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	Gene3D	G3DSA:3.40.630.10		12	184	8.0E-97	T	19-11-2012
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	Gene3D	G3DSA:3.40.630.10		304	395	8.0E-97	T	19-11-2012
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	PANTHER	PTHR32404:SF0		1	395	4.8E-105	T	19-11-2012
+Protein_4	d546b386330edfaee7e72aa2a4365c82	399	PANTHER	PTHR32404		1	395	4.8E-105	T	19-11-2012
+Protein_1	7040ce7539913731487392c7787fdfc6	474	PANTHER	PTHR30050:SF0		1	474	3.0E-188	T	19-11-2012
+Protein_1	7040ce7539913731487392c7787fdfc6	474	SUPERFAMILY	SSF52540		135	345	1.5E-45	T	19-11-2012
+Protein_1	7040ce7539913731487392c7787fdfc6	474	Pfam	PF08299	Bacterial dnaA protein helix-turn-helix	379	447	2.1E-23	T	19-11-2012	IPR013159	Chromosomal replication initiator, DnaA C-terminal	GO:0043565|GO:0006270|GO:0006275|GO:0005524	
+Protein_1	7040ce7539913731487392c7787fdfc6	474	Pfam	PF00308	Bacterial dnaA  protein	134	351	3.6E-93	T	19-11-2012	IPR013317	Chromosomal replication control, initiator (DnaA)/regulator (Hda)		
+Protein_1	7040ce7539913731487392c7787fdfc6	474	SMART	SM00382	ATPases associated with a variety of cellular activities	166	294	2.5E-9	T	19-11-2012	IPR003593	AAA+ ATPase domain	GO:0000166|GO:0017111	
+Protein_1	7040ce7539913731487392c7787fdfc6	474	Hamap	MF_00377	Chromosomal replication initiator protein DnaA [dnaA].	6	469	32.254	T	19-11-2012	IPR001957	Chromosomal replication control, initiator DnaA	GO:0003688|GO:0005524|GO:0003677|GO:0006270|GO:0006275	
+Protein_1	7040ce7539913731487392c7787fdfc6	474	Gene3D	G3DSA:1.10.1750.10		369	468	6.6E-35	T	19-11-2012	IPR013159	Chromosomal replication initiator, DnaA C-terminal	GO:0043565|GO:0006270|GO:0006275|GO:0005524	
+Protein_1	7040ce7539913731487392c7787fdfc6	474	Gene3D	G3DSA:1.10.8.60		300	368	1.2E-25	T	19-11-2012
+Protein_1	7040ce7539913731487392c7787fdfc6	474	PRINTS	PR00051	Bacterial chromosomal replication initiator (DNAA) signature	167	187	1.7E-50	T	19-11-2012	IPR020591	Chromosomal replication control, initiator DnaA-like		
+Protein_1	7040ce7539913731487392c7787fdfc6	474	PRINTS	PR00051	Bacterial chromosomal replication initiator (DNAA) signature	199	213	1.7E-50	T	19-11-2012	IPR020591	Chromosomal replication control, initiator DnaA-like		
+Protein_1	7040ce7539913731487392c7787fdfc6	474	PRINTS	PR00051	Bacterial chromosomal replication initiator (DNAA) signature	231	245	1.7E-50	T	19-11-2012	IPR020591	Chromosomal replication control, initiator DnaA-like		
+Protein_1	7040ce7539913731487392c7787fdfc6	474	PRINTS	PR00051	Bacterial chromosomal replication initiator (DNAA) signature	265	292	1.7E-50	T	19-11-2012	IPR020591	Chromosomal replication control, initiator DnaA-like		
+Protein_1	7040ce7539913731487392c7787fdfc6	474	PRINTS	PR00051	Bacterial chromosomal replication initiator (DNAA) signature	428	447	1.7E-50	T	19-11-2012	IPR020591	Chromosomal replication control, initiator DnaA-like		
+Protein_1	7040ce7539913731487392c7787fdfc6	474	ProSitePatterns	PS01008	DnaA protein signature.	428	447	-	T	19-11-2012	IPR018312	Chromosomal replication control, initiator DnaA, conserved site	GO:0003677|GO:0005524|GO:0006275|GO:0006270|GO:0003688	
+Protein_1	7040ce7539913731487392c7787fdfc6	474	PANTHER	PTHR30050		1	474	3.0E-188	T	19-11-2012
+Protein_1	7040ce7539913731487392c7787fdfc6	474	Gene3D	G3DSA:3.40.50.300		132	297	1.3E-61	T	19-11-2012
+Protein_1	7040ce7539913731487392c7787fdfc6	474	SMART	SM00760	Bacterial dnaA protein helix-turn-helix domain	378	447	7.1E-34	T	19-11-2012	IPR013159	Chromosomal replication initiator, DnaA C-terminal	GO:0043565|GO:0006270|GO:0006275|GO:0005524	
+Protein_1	7040ce7539913731487392c7787fdfc6	474	SUPERFAMILY	SSF48295		365	469	2.49E-32	T	19-11-2012	IPR010921	Trp repressor/replication initiator	GO:0043565	
+Protein_1	7040ce7539913731487392c7787fdfc6	474	TIGRFAM	TIGR00362	DnaA: chromosomal replication initiator protein DnaA	9	468	3.5E-163	T	19-11-2012	IPR001957	Chromosomal replication control, initiator DnaA	GO:0003688|GO:0005524|GO:0003677|GO:0006270|GO:0006275	
+Protein_9	b6677db7a1fadadef2fe879e1b9fa723	161	SUPERFAMILY	SSF54637		4	153	8.24E-33	T	19-11-2012
+Protein_9	b6677db7a1fadadef2fe879e1b9fa723	161	PANTHER	PTHR12418		44	161	8.8E-26	T	19-11-2012
+Protein_9	b6677db7a1fadadef2fe879e1b9fa723	161	TIGRFAM	TIGR00369	unchar_dom_1: uncharacterized domain 1	43	154	7.7E-22	T	19-11-2012	IPR003736	Phenylacetic acid degradation-related domain		
+Protein_9	b6677db7a1fadadef2fe879e1b9fa723	161	Gene3D	G3DSA:3.10.129.10		37	159	6.0E-36	T	19-11-2012
+Protein_9	b6677db7a1fadadef2fe879e1b9fa723	161	Pfam	PF03061	Thioesterase superfamily	71	146	2.0E-13	T	19-11-2012	IPR006683	Thioesterase superfamily		
+Protein_6	f6ed9f71887be3f34ac345a81fcf534e	229	Pfam	PF02674	Colicin V production protein	5	146	8.3E-19	T	19-11-2012	IPR003825	Colicin V production, CvpA	GO:0009403|GO:0016020	
+Protein_10	2f81a80b15eca35ff531a39c1f2f4a0f	221	SUPERFAMILY	SSF56784		1	194	2.51E-27	T	19-11-2012	IPR023214	HAD-like domain		
+Protein_10	2f81a80b15eca35ff531a39c1f2f4a0f	221	TIGRFAM	TIGR01993	Pyr-5-nucltdase: pyrimidine 5'-nucleotidase	6	184	1.3E-53	T	19-11-2012	IPR010237	Pyrimidine 5-nucleotidase		
+Protein_10	2f81a80b15eca35ff531a39c1f2f4a0f	221	Pfam	PF13419	Haloacid dehalogenase-like hydrolase	8	185	3.4E-26	T	19-11-2012
+Protein_10	2f81a80b15eca35ff531a39c1f2f4a0f	221	TIGRFAM	TIGR01509	HAD-SF-IA-v3: HAD hydrolase, family IA, variant 3	42	185	2.1E-15	T	19-11-2012	IPR006402	HAD-superfamily hydrolase, subfamily IA, variant 3	GO:0016787	
+Protein_10	2f81a80b15eca35ff531a39c1f2f4a0f	221	PANTHER	PTHR31484		1	184	2.3E-23	T	19-11-2012
+Protein_10	2f81a80b15eca35ff531a39c1f2f4a0f	221	Gene3D	G3DSA:3.40.50.1000		71	201	9.8E-23	T	19-11-2012	IPR023214	HAD-like domain		
+Protein_10	2f81a80b15eca35ff531a39c1f2f4a0f	221	PANTHER	PTHR31484:SF0		1	184	2.3E-23	T	19-11-2012
+Protein_8	f4b7649f3c6d7813a1373312cfa1aa1c	209	Pfam	PF01661	Macro domain	42	167	4.7E-11	T	19-11-2012	IPR002589	Appr-1-p processing		
+Protein_8	f4b7649f3c6d7813a1373312cfa1aa1c	209	ProSiteProfiles	PS51154	Macro domain profile.	1	209	10.314	T	19-11-2012	IPR002589	Appr-1-p processing		
+Protein_8	f4b7649f3c6d7813a1373312cfa1aa1c	209	SUPERFAMILY	SSF52949		1	181	2.19E-31	T	19-11-2012
+Protein_8	f4b7649f3c6d7813a1373312cfa1aa1c	209	SMART	SM00506	Appr-1"-p processing enzyme	25	169	3.1E-11	T	19-11-2012	IPR002589	Appr-1-p processing		
+Protein_8	f4b7649f3c6d7813a1373312cfa1aa1c	209	Gene3D	G3DSA:3.40.220.10		1	205	1.5E-72	T	19-11-2012
+Protein_3	ad7a40614a7a95f4e5bb57c5467542c7	319	Pfam	PF04389	Peptidase family M28	127	305	3.9E-30	T	19-11-2012	IPR007484	Peptidase M28	GO:0008233|GO:0006508	
+Protein_3	ad7a40614a7a95f4e5bb57c5467542c7	319	SUPERFAMILY	SSF53187		50	316	6.01E-40	T	19-11-2012
+Protein_3	ad7a40614a7a95f4e5bb57c5467542c7	319	Gene3D	G3DSA:3.40.630.10		58	316	3.5E-41	T	19-11-2012
+Protein_3	ad7a40614a7a95f4e5bb57c5467542c7	319	ProSiteProfiles	PS51257	Prokaryotic membrane lipoprotein lipid attachment site profile.	1	22	5.0	T	19-11-2012
+Protein_5	2d220c7e0a33164132efe3ec80eb157	482	Gene3D	G3DSA:1.25.40.10		3	74	1.0E-6	T	19-11-2012	IPR011990	Tetratricopeptide-like helical	GO:0005515	
+Protein_5	2d220c7e0a33164132efe3ec80eb157	482	SUPERFAMILY	SSF48452		5	73	2.97E-6	T	19-11-2012

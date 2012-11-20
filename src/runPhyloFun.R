@@ -1,30 +1,44 @@
-print(paste("Usage: Rscript runPhyloFun.R input=myQueryProteins.fasta",
-    "search.jackhmmer.sequence.database=/path/to/uniprot_trembl.fasta",
-    "[jackhmmer.path=/path/to/hmmer3/binaries/jackhmmer]",
-    "[fast.tree.path=/path/to/FastTreeMP] [jackhmmer.args='-E 1e-10 -N 2']",
-    "[fast.tree.args='']"))
+library(tools)
+library(Biostrings)
+library(parallel)
+library(RCurl)
 
-argsToList <- function(args) {
-  sapply(args, function(a) {
-      if (grepl("=",a,fixed=T)) {
-        kv <- strsplit(a,'=')
-        setNames(list(kv[[1]][[2]]),kv[[1]][[1]])
-      }   
-    }, USE.NAMES=F)
+# In R sourcing other files is not trivial, unfortunately.
+# WARNING:
+# This method ONLY works for project files in depth one sub dirs!
+project.file.path <- function(...) {
+  initial.options <- commandArgs(trailingOnly = FALSE)
+  file.arg.name <- "--file="
+  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
+  script.dir <- dirname(file_path_as_absolute(script.name))
+  project.dir <- sub(basename(script.dir),'',script.dir)
+  normalizePath(file.path(project.dir,...))
 }
-
-phyloFunArgs <- function(args.list, 
-  defaults=list('jackhmmer.path'='jackhmmer',
-    'fast.tree.path'='FastTreeMP',
-    'jackhmmer.args'='-E 1e-10 -N 2',
-    'fast.tree.args'='')) {
-  sapply(names(defaults),function(n) {
-      if(is.null(args.list[[n]]))
-          setNames(list(defaults[[n]]),n)
-      else
-          setNames(list(args.list[[n]]),n)
-    }, USE.NAMES=F)
+src.project.file <- function(...) {
+  source(project.file.path(...))
 }
+# Helper functions:
+src.project.file( "src", "phyloFunTools.R" )
 
-input.args <- phyloFunArgs(argsToList(commandArgs(trailingOnly = TRUE)))
-print(input.args)
+# Hail User:
+print( "Usage: Rscript runPhyloFun.R path/2/query_proteins.fasta path/2/jackhmmer_results.tbl path/2/interproscan_results.tsv" )
+
+# Input
+trailing.args <- commandArgs(trailingOnly = TRUE)
+
+# Read fasta:
+aa.seqs <- sapply( read.AAStringSet( trailing.args[[1]] ), function(s) toString(s) )
+print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[1]]) )
+
+# Parse Jackhmmer results:
+jr <- parseJackhmmerTable( 
+  scan( file=trailing.args[[2]], what=character(), sep="\n" )
+)
+
+# for each protein, do
+# 
+# get jackhmmer results for that protein
+# download their sequences
+# us <- lapply( accs, function(a) uniprotkb.url( a, frmt='fasta' ) )
+# writeLines( getURL( us ), file )
+

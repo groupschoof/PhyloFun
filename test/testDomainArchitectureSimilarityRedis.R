@@ -69,13 +69,16 @@ das.vec.c.exp <- c( 3.32700478081248, 14.9922872943264,
   7.19508911404042, 4.26253229157448, 0.0 )
 checkEquals( das.vec.c, das.vec.c.exp )
 
-# Test pairwiseDASDistanceKey
-print("Testing pairwiseDASDistanceKey(...)")
+# Test pairwiseDistanceKey
+print("Testing pairwiseDistanceKey(...)")
 prot.acc.d <- "goat"
 prot.acc.e <- "sheep"
-key.exp <- "goat_sheep"
-checkEquals( pairwiseDASDistanceKey(prot.acc.d, prot.acc.e), key.exp )
-checkEquals( pairwiseDASDistanceKey(prot.acc.e, prot.acc.d), key.exp )
+key.exp <- "goat_sheep_das_dist"
+checkEquals( pairwiseDistanceKey(prot.acc.d, prot.acc.e), key.exp )
+checkEquals( pairwiseDistanceKey(prot.acc.e, prot.acc.d), key.exp )
+checkEquals( pairwiseDistanceKey(prot.acc.d, prot.acc.e, distance.type="seq_dist"),
+  paste( prot.acc.d, prot.acc.e, "seq_dist", sep="_" )
+)
 
 # Test pairwiseDomainArchitectureDistanceRedis
 print("Testing pairwiseDomainArchitectureDistanceRedis(...)")
@@ -83,7 +86,9 @@ redisFlushAll()
 dom.annos.2 <- do.call("cbind",
   list(
     "BAAA"=list( "InterPro"=list("IPR001957", "IPR010921", "IPR018312") ),
-    "MAAA"=list( "InterPro"=list("IPR001957", "IPR010921", "IPR018312", "IPR024633", "IPR013159", "IPR003593"))
+    "MAAA"=list( "InterPro"=list("IPR001957", "IPR010921", "IPR018312", "IPR024633", "IPR013159", "IPR003593")),
+    "MABA"=list( "InterPro"=list("IPR001957", "IPR018312") ),
+    "BAMA"=list( "InterPro"=list("IPR001957", "IPR024633", "IPR013159", "IPR003593"))
   )
 )
 dom.wghts.2 <- matrix(
@@ -100,8 +105,40 @@ no.res <- initializeDomainWeights( dom.wghts.2 )
 no.res <- initializeDomainAnnotations( dom.annos.2 )
 das.dist.a.b <- pairwiseDomainArchitectureDistanceRedis( "BAAA", "MAAA" )
 checkEquals( round(das.dist.a.b, 7), 0.0304956 )
-checkEquals( round( redisGet( pairwiseDASDistanceKey("BAAA", "MAAA") ), 7 ),
+checkEquals( round( redisGet( pairwiseDistanceKey("BAAA", "MAAA") ), 7 ),
   0.0304956 )
+
+# Test partialDomainArchitectureDistancesRedis
+print("Testing partialDomainArchitectureDistancesRedis(...)")
+# Initialization done by last test.
+no.res <- redisDelete( pairwiseDistanceKey( "BAAA", "MAAA" ) )
+no.res <- partialDomainArchitectureDistancesRedis(
+  colnames(dom.annos.2), colnames(dom.annos.2)[1:2]
+)
+# Check copied from previous test:
+checkEquals( round( redisGet( pairwiseDistanceKey("BAAA", "MAAA") ), 7 ),
+  0.0304956 )
+checkTrue( is.null( redisGet(
+  pairwiseDistanceKey( colnames(dom.annos.2)[[ 3 ]], colnames(dom.annos.2)[[ 4 ]] )
+) ) )
+
+# Test partialSequenceDistancesRedis
+print("Testing partialSequenceDistancesRedis(...)")
+redisFlushAll()
+p1 <- "LALDTKQIWFTTLGTLQNQILRYDYDTWLKTTALVSVANDLAVIGAPNVTTKQVIEDRFMSVLRRALGEVLGYQVNVRVIISSATPAPSEPVAVTPSEPSPTTEVAEPSFASFNQAAPMLNQLPLGDPNRSSVLNPRYTFSSFIVGTSNRLAHAACMAVAEHPAQAYNPLFLYGGVGLGKTHLLQAIGNYALDRNPEVNVLYVSSEKFTNDLINAIRRQQTEEFRIRYRNIDILLIDDIQFIAGKEGTQEEFFHTFNTLHGAGKQIVLSSDRPPKAILTLEERLRSRFEWGLIVDVQNPDLETRTAILRAKGETLQVPVSSEVIDFLAQRIQSNIRELEGCLNRVIAYANLNRTPVTVEVASAALADLLDTSRRKRVTADDIFREVSQHYGIDQRAIRGRGRSRNVVLPRQVVMYLLREETDASLVEIGELLGGRDHTTVMHGYNKITDDLTSDARLRNDITSLRQRLYGENAR"
+p2 <- "MQSIEDIWQETLQIVKKNMSKPSYDTWMKSTTAHSLEGNTFIISAPNNFVRDWLEKSYTQFIANILQEITGRLFDVRFIDGEQEENFEYTVIKPNPALDEDGIEIGKHMLNPRYVFDTFVIGSGNRFAHAASLAVAEAPAKAYNPLFIYGGVGLGKTHLMHAVGHYVQQHKDNAKVMYLSSEKFTNEFISSIRDNKTEEFRTKYRNVDVLLIDDIQFLAGKEGTQEEFFHTFNTLYDEQKQIIISSDRPPKEIPTLEDRLRSRFEWGLITDITPPDLETRIAILRKKAKADGLDIPNEVMLYIANQIDSNIRELEGALIRVVAYSSLVNKDITAGLAAEALKDIIPSSKSQVITISGIQETVGEYFHVRLEDFKAKKRTKSIAFPRQIAMYLSRELTDASLPKIGDEFGGRDHTTVIHAHEKISQLLKTDQVLKNDLAEIEKNLRKSQNMF"
+p3 <- "MQSIEDIWQETLQIVKKNMSKPSYDTWMKSTTAHSLEGNTFIISAPNNFVRDWLEKSYTQFIANILQEIT"
+p4 <- "ILRYDYDTWLKTTALVSVANDLAVIGAPNVTTKQVIEDRFMSVLRRALGEVLGY"
+p1.acc <- "Test_Protein_1"
+p2.acc <- "Test_Protein_2"
+p3.acc <- "Test_Protein_3"
+p4.acc <- "Test_Protein_4"
+aa.seqs <- setNames( list( p1, p2, p3, p4 ), c( p1.acc, p2.acc, p3.acc, p4.acc ) )
+no.res <- partialSequenceDistancesRedis( aa.seqs, c( p1.acc, p2.acc ) )
+p1.p2.dist.key <- pairwiseDistanceKey( p1.acc, p2.acc, distance.type="seq_dist" )
+checkTrue( ! is.null( redisGet( p1.p2.dist.key ) ) )
+checkTrue( is.null( redisGet( pairwiseDistanceKey( p3.acc, p4.acc, distance.type="seq_dist" ) ) ) )
+checkEquals( pairwiseSequenceDistance( p1, p2 ), redisGet( p1.p2.dist.key ) )
 
 # Clean up, boy:
 redisFlushAll()

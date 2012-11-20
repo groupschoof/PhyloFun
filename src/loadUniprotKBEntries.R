@@ -4,7 +4,7 @@ library(RCurl)
 library(parallel)
 library(biomaRt)
 
-uniprotkb.url <- function( accession ) {
+uniprotkb.url <- function( accession, frmt='xml' ) {
   # Returns valid URL to access Uniprot's RESTful Web-Service to download
   # data about the Protein as referenced by the argument 'accession'.
   # Note, that the accession is URL encoded before being pasted into the
@@ -12,15 +12,15 @@ uniprotkb.url <- function( accession ) {
   #
   # Args:
   #  accession : The Protein's Uniprot accession.
+  #  frmt      : The format of the downloaded Uniprot Entry. Default is 'xml'.
   #
   # Returns: The Uniprot URL for the argument accession.
   #   
   paste(
     'http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/',
     URLencode( accession ),
-    '/xml',
-    sep=''
-    )
+    '/', frmt, sep=''
+  )
 }
 
 extract.annotations <- function(doc, type) {

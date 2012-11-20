@@ -85,8 +85,8 @@ generateDomainArchitectureSpaceVectorRedis <- function( protein.accession,
   )
 }
 
-pairwiseDASDistanceKey <- function( protein.accession.a,
-  protein.accession.b ) {
+pairwiseDistanceKey <- function( protein.accession.a,
+  protein.accession.b, distance.type="das_dist" ) {
   # Generates unique key to store the pairwise DAS distance under.
   #
   # Args:
@@ -98,7 +98,10 @@ pairwiseDASDistanceKey <- function( protein.accession.a,
   paste.funk <- function( ... ) paste( ..., sep="_" ) 
   do.call( 'paste.funk',
     as.list( 
-      sort( c(protein.accession.a, protein.accession.b) )
+      c(
+        sort( c(protein.accession.a, protein.accession.b) ),
+        distance.type
+      )
     )
   )
 }
@@ -113,7 +116,7 @@ pairwiseDomainArchitectureDistanceRedis <- function( protein.accession.a,
   #  protein.accession.a : Accession of first protein.
   #  protein.accession.b : Accession of second protein.
   #  save.result : Store the computed distance in the DAS in the current redis
-  #                connection using result of function 'pairwiseDASDistanceKey(
+  #                connection using result of function 'pairwiseDistanceKey(
   #                protein.accession.a, protein.accession.b )'.
   #
   # Returns: The distance in DAS as computed by function
@@ -127,10 +130,127 @@ pairwiseDomainArchitectureDistanceRedis <- function( protein.accession.a,
   # Save result in redis, if requested:
   if( save.result ) {
     redisSet( 
-      pairwiseDASDistanceKey( protein.accession.a, protein.accession.b ),
+      pairwiseDistanceKey( protein.accession.a, protein.accession.b ),
       das.dist
     )
   }
   # return
   das.dist
+}
+
+partialDomainArchitectureDistancesRedis <- function(
+  all.accessions, partial.accessions, lapply.funk=lapply ) {
+  # Computes all pairwise distances in domain architecture space between
+  # accessions in argument 'partial.accessions' and 'all.accessions'. Only
+  # computes distances if they are not yet stored in the current REDIS instance
+  # and stores it in this case.
+  #
+  # Args:
+  #  all.accessions     : All amino acid accessions.
+  #  partial.accessions : Accessions to generate all pairs with all.accessions
+  #                       for.
+  #  lapply.funk        : Set to 'mclapply' if computation in parallel is
+  #                       wanted.
+  #
+  # Returns: NULL
+  #   
+  for ( acc.1 in partial.accessions ) {
+    lapply.funk( all.accessions, function( acc.2 ) {
+      if ( is.null( redisGet( pairwiseDistanceKey( acc.1, acc.2 ) ) ) ) {
+        pairwiseDomainArchitectureDistanceRedis(
+          acc.1, acc.2
+        )
+      }
+    })
+  }
+  # return
+  NULL
+}
+
+pairwiseSequenceDistanceRedis <- function( aa.seq.pattern,
+  aa.seq.subject, pattern.accession, subject.accession,
+  sub.matrix="PAM250", gap.open.pnlty=-10,
+  gap.extension.pnlty=-0.1, distance.model="Dayhoff", 
+  distance.key.suffix='seq_dist' ) {
+  # Computes the sequence distance between argument amino acid sequences
+  # 'aa.seq.pattern' and 'aa.seq.subject' using function
+  # 'pairwiseSequenceDistance(...)'. Saves the computed sequence distance in
+  # the current redis instance using the key as returned by function
+  # pairwiseDistanceKey with suffix as in argument 'distance.key.suffix'.
+  #
+  # Args:
+  #  aa.seq.pattern, aa.seq.subject : argument amino acid sequences
+  #  sub.matrix                     : substitution matrix to use in the global
+  #                                   alignment
+  #  gap.open.pnlty                 : score penalty to apply for opening a gap
+  #                                   in the global alignment
+  #  gap.extension.pnlty            : score penalty to apply for extending a
+  #                                   gap in the global alignment
+  #  distance.model                 : model to base the sequence distance
+  #                                   computation on
+  #  pattern.accession              : The accession of argument AA-Sequence
+  #                                   'aa.seq.pattern'. 
+  #  subject.accession              : The accession of argument AA-Sequence
+  #                                   'aa.seq.subject'. 
+  #  distance.key.suffix            : The suffix to append to the redis key
+  #                                   under which the computed sequence
+  #                                   distance is stored. See function
+  #                                   pairwiseDistanceKey(...) for details.
+  #
+  # Returns: The computed pairwise sequence distance as result of function
+  # 'pairwiseSequenceDistance(...)'.
+  #   
+  
+  # Compute Sequence Distance:
+  seq.dist <- pairwiseSequenceDistance(
+    as.character( aa.seq.pattern ),
+    as.character( aa.seq.subject ),
+    sub.matrix, gap.open.pnlty,
+    gap.extension.pnlty, distance.model
+  )
+  # Save result in current redis connection:
+  redisSet(  
+    pairwiseDistanceKey( pattern.accession,
+      subject.accession, distance.type=distance.key.suffix
+    ),
+    seq.dist
+  )
+  # Return computed distance:
+  seq.dist
+}
+
+partialSequenceDistancesRedis <- function( aa.sequences,
+  partial.accessions, 
+  distance.key.suffix='seq_dist', lapply.funk=lapply ) {
+  # Computes pairwise amino acid sequence distances for all pairs of entries in
+  # argument 'partial.accessions' and argument 'all.accessions'. Distances are
+  # only computed, if not already stored in the current REDIS instance and are
+  # stored in this case. 
+  #
+  # Args:
+  #  aa.sequences : A named list of amino acid sequences.
+  #  partial.accessions : Accessions in argument 'aa.sequences' to compute the
+  #                       pairwise distances for.
+  #  distance.key.suffix : The suffix of the key the distance is stored under.
+  #                        See function 'pairwiseDistanceKey(...)' for details.
+  #  lapply.funk : Function to use to iterate over all sequences and compute
+  #                distances. Set to mclapply, if parallel computation is requested.
+  #
+  # Returns: NULL
+  #   
+  all.accessions <- names( aa.sequences )
+  for ( acc.pattern in partial.accessions ) {
+    aa.seq.pattern <- aa.sequences[ acc.pattern ]
+    lapply.funk( all.accessions, function( acc.subject ) {
+      if ( is.null( redisGet( pairwiseDistanceKey( acc.pattern,
+              acc.subject, distance.type=distance.key.suffix ) ) )
+      ) {
+        pairwiseSequenceDistanceRedis( aa.seq.pattern, aa.sequences[ acc.subject ],
+          acc.pattern, acc.subject
+        )
+      }
+    })
+  }
+  # return
+  NULL
 }
