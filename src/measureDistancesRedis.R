@@ -22,7 +22,7 @@ src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
-print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port cores.2.use[default=all]")
+print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port")
 print( "WARNING: Make sure the complete sequence names in the FASTA file are exactly the same as in the accession_per_line file!" )
 print( "Remember, that it is required to have setup this computation beforehand. See R script 'initalizeMeasureDistances.R' for details." )
 
@@ -50,17 +50,7 @@ print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[1]]) )
 accs <- as.character( read.table( trailing.args[[2]] )$V1 )
 print( paste("Read", length(accs), "accessions to compute partial distances for. Accessions-File is:", trailing.args[[2]]) )
 
-# How many cores to use:
-if( is.null(trailing.args[[ 5 ]]) ) {
-  # All available cores:
-  options( 'mc.cores'=detectCores() )
-} else {
-  # As specified by the sixth command line argument:
-  options( 'mc.cores'=trailing.args[[ 5 ]] )
-}
-
 print( "Starting computation" )
-print( paste( "Will be using", options('mc.cores'), "cores" ) )
 
 # Partial Sequence Distances:
 no.res <- partialSequenceDistancesRedis( aa.seqs, accs, lapply.funk=mclapply )
