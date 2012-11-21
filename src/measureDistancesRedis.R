@@ -53,12 +53,10 @@ print( paste("Read", length(accs), "accessions to compute partial distances for.
 print( "Starting computation" )
 
 # Partial Sequence Distances:
-no.res <- partialSequenceDistancesRedis( aa.seqs, accs, lapply.funk=mclapply )
+no.res <- partialSequenceDistancesRedis( aa.seqs, accs )
 print( "Computed sequence distances" )
 
 # Partial Domain Architecture Distances:
-no.res <- partialDomainArchitectureDistancesRedis(
-  names( aa.seqs ), accs, lapply.funk=mclapply
-)
+no.res <- partialDomainArchitectureDistancesRedis( names( aa.seqs ), accs )
 
 print( "DONE" )
