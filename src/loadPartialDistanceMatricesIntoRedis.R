@@ -18,9 +18,7 @@ src.project.file <- function(...) {
 src.project.file('src','domainArchitectureSimilarityRedis.R')
 
 # Usage:
-print( "Usage: Rscript loadPartialDistanceMatricesIntoRedis.R
-  path/2/partialSequenceDistanceMatrix.tbl
-  path/2/partialDomainArchitectureDistanceMatrix.tbl redis.host redis.port")
+print( "Usage: Rscript loadPartialDistanceMatricesIntoRedis.R path/2/partialSequenceDistanceMatrix.tbl path/2/partialDomainArchitectureDistanceMatrix.tbl redis.host redis.port")
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)

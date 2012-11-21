@@ -22,13 +22,9 @@ src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
-print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta
-  path/2/accession_per_line.txt redis.host redis.port
-  cores.2.use[default=all]")
-print( "WARNING: Make sure the complete sequence names in the FASTA file are
-  exactly the same as in the accession_per_line file!" )
-print( "Remember, that it is required to have setup this computation
-  beforehand. See R script 'initalizeMeasureDistances.R' for details." )
+print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port cores.2.use[default=all]")
+print( "WARNING: Make sure the complete sequence names in the FASTA file are exactly the same as in the accession_per_line file!" )
+print( "Remember, that it is required to have setup this computation beforehand. See R script 'initalizeMeasureDistances.R' for details." )
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)

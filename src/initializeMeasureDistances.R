@@ -18,8 +18,7 @@ src.project.file <- function(...) {
 src.project.file('src','domainArchitectureSimilarityRedis.R')
 
 # Usage:
-print( "Usage: Rscript initializeMeasureDistances.R path/2/domain_weights_database.tbl
-  path/2/domain_annotations_R_serialized.txt redis.host redis.port")
+print( "Usage: Rscript initializeMeasureDistances.R path/2/domain_weights_database.tbl path/2/domain_annotations_R_serialized.txt redis.host redis.port")
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
