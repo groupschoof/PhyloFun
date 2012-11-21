@@ -41,16 +41,16 @@ part.seq.dists.file <- trailing.args[[ 1 ]]
 if ( file.exists( part.seq.dists.file ) ) {
   seq.dists <- read.table( part.seq.dists.file )
   for ( acc.1 in rownames( seq.dists ) ) {
-    mclapply( colnames( seq.dists ), function( acc.2 ) {
-      redisSet( 
-        pairwiseDistanceKey( acc.1, acc.2 ), 
-        seq.dists[[ acc.1, acc.2 ]]
-      )
+    lapply( colnames( seq.dists ), function( acc.2 ) {
+      k <- pairwiseDistanceKey( acc.1, acc.2 )
+      if ( is.null( redisGet(k) ) ) {
+        redisSet( k, seq.dists[[ acc.1, acc.2 ]] )
+      }
     })
   }
   print( "uploaded sequence distances" )
 } else {
-  print( paste( "Partial sequence distances file does not exists. Did not upload them again.", 
+  print( paste( "Partial sequence distances file does not exists. Did not upload them.", 
     part.seq.dists.file)
   )
 }
@@ -60,16 +60,16 @@ part.das.dists.file <- trailing.args[[ 2 ]]
 if ( file.exists( part.das.dists.file ) ) {
   das.dists <- read.table( part.das.dists.file )
   for ( acc.pattern in rownames( das.dists ) ) {
-    mclapply( colnames( das.dists ), function( acc.subject ) {
-      redisSet(
-        pairwiseDistanceKey( acc.pattern, acc.subject, distance.type="seq_dist" ),
-        das.dists[[ acc.pattern, acc.subject ]]
-      )
+    lapply( colnames( das.dists ), function( acc.subject ) {
+      k <- pairwiseDistanceKey( acc.pattern, acc.subject, distance.type="seq_dist" )
+      if ( is.null( redisGet(k) ) ) {
+        redisSet( k, das.dists[[ acc.pattern, acc.subject ]] )
+      }
     })
   }
   print( "uploaded das distances" )
 } else {
-  print( paste( "Partial domain architecture sequence distances file does not exists. Did not upload them again.",
+  print( paste( "Partial domain architecture sequence distances file does not exists. Did not upload them.",
       part.das.dists.file)
   )
 }
