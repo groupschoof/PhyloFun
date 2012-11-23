@@ -139,7 +139,8 @@ pairwiseDomainArchitectureDistanceRedis <- function( protein.accession.a,
 }
 
 partialDomainArchitectureDistancesRedis <- function(
-  all.accessions, partial.accessions, lapply.funk=lapply ) {
+  all.accessions, partial.accessions, lapply.funk=lapply, 
+  init.thread.funk, close.thread.funk ) {
   # Computes all pairwise distances in domain architecture space between
   # accessions in argument 'partial.accessions' and 'all.accessions'. Only
   # computes distances if they are not yet stored in the current REDIS instance
@@ -151,16 +152,24 @@ partialDomainArchitectureDistancesRedis <- function(
   #                       for.
   #  lapply.funk        : Set to 'mclapply' if computation in parallel is
   #                       wanted.
+  #  init.thread.funk   : If not NULL, this function is invoked at the very
+  #                       start of each loop inside (mc)lapply.
+  #  close.thread.funk  : If not null, this function is invoked at the very 
+  #                       end of each loop inside (mc)lapply.
   #
   # Returns: NULL
   #   
   for ( acc.1 in partial.accessions ) {
     lapply.funk( all.accessions, function( acc.2 ) {
+      if ( ! is.null(init.thread.funk) ) 
+        init.thread.funk()
       if ( is.null( redisGet( pairwiseDistanceKey( acc.1, acc.2 ) ) ) ) {
         pairwiseDomainArchitectureDistanceRedis(
           acc.1, acc.2
         )
       }
+      if ( ! is.null(close.thread.funk) )
+        close.thread.funk()
     })
   }
   # return

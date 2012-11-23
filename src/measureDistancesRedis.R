@@ -32,6 +32,7 @@ trailing.args <- commandArgs(trailingOnly = TRUE)
 # Connect to redis:
 redis.host <- trailing.args[[ 3 ]]
 redis.port <- trailing.args[[ 4 ]]
+# Test, if REDIS is available:
 tryCatch(
   redisConnect( host=redis.host, port=redis.port ),
   error=function( e ) {
@@ -39,8 +40,21 @@ tryCatch(
       redis.host, ":", redis.port, "\n", as.character( e )
     )
     stop( err.msg )
+  },
+  finaly=function() {
+    redisClose()
   }
 )
+
+# Init each loop iteration with this function:
+init.thread.funk <- function() {
+  redisConnect( host=redis.host, port=redis.port )
+}
+
+# Close each loop iteration with this function:
+close.thread.funk <- function() {
+  redisClose()
+}
 
 # Read fasta:
 aa.seqs <- sapply( read.AAStringSet( trailing.args[[1]] ), function(s) toString(s) )
