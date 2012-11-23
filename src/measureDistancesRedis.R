@@ -51,7 +51,7 @@ if( is.null(trailing.args[[ 5 ]]) ) {
   # All available cores:
   options( 'mc.cores'=detectCores() )
 } else {
-  # As specified by the sixth command line argument:
+  # As specified by the fifth command line argument:
   options( 'mc.cores'=trailing.args[[ 5 ]] )
 }
 
