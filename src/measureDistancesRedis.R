@@ -58,9 +58,19 @@ init.thread.funk <- function() {
 }
 
 # Close each loop iteration with this function:
-close.thread.funk <- function() {
-  redisClose()
-}
+close.thread.funk <- if( preschedule.jobs ) {
+    function() {
+      redisClose()
+      # Because sometimes recycling of prescheduled threads happens faster than
+      # garbage collection which can lead to socket connection problems,
+      # collect the garbage manually:
+      gc()
+    }
+  } else {
+    function() {
+      redisClose()
+    }
+  }
 
 # Read fasta:
 aa.seqs <- sapply( read.AAStringSet( trailing.args[[1]] ), function(s) toString(s) )
