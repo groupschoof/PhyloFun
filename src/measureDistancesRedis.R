@@ -22,7 +22,7 @@ src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
-print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port")
+print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port no.parallel.processes preschedule.jobs[default=TRUE]")
 print( "WARNING: Make sure the complete sequence names in the FASTA file are exactly the same as in the accession_per_line file!" )
 print( "Remember, that it is required to have setup this computation beforehand. See R script 'initalizeMeasureDistances.R' for details." )
 
@@ -46,6 +46,18 @@ tryCatch(
   }
 )
 
+# How many cores to use:
+if( is.null(trailing.args[[ 5 ]]) ) {
+  # All available cores:
+  options( 'mc.cores'=detectCores() )
+} else {
+  # As specified by the sixth command line argument:
+  options( 'mc.cores'=trailing.args[[ 5 ]] )
+}
+
+# Preschedule jobs?
+preschedule.jobs <- is.null( trailing.args[[ 6 ]] )
+
 # Init each loop iteration with this function:
 init.thread.funk <- function() {
   redisConnect( host=redis.host, port=redis.port )
@@ -65,18 +77,19 @@ accs <- as.character( read.table( trailing.args[[2]] )$V1 )
 print( paste("Read", length(accs), "accessions to compute partial distances for. Accessions-File is:", trailing.args[[2]]) )
 
 print( "Starting computation" )
+print( paste( "Will be using", options('mc.cores'), "cores" ) )
 
 # Partial Sequence Distances:
 no.res <- partialSequenceDistancesRedis( aa.seqs, accs, lapply.funk=mclapply,
   init.thread.funk=init.thread.funk, close.thread.funk=close.thread.funk,
-  mc.preschedule=F
+  mc.preschedule=preschedule.jobs
 )
 print( "Computed sequence distances" )
 
 # Partial Domain Architecture Distances:
 no.res <- partialDomainArchitectureDistancesRedis( names( aa.seqs ), accs, lapply.funk=mclapply,
   init.thread.funk=init.thread.funk, close.thread.funk=close.thread.funk,
-  mc.preschedule=F
+  mc.preschedule=preschedule.jobs
 )
 
 print( "DONE" )

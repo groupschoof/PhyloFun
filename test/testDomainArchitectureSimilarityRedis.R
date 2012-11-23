@@ -121,6 +121,24 @@ checkEquals( round( redisGet( pairwiseDistanceKey("BAAA", "MAAA") ), 7 ),
 checkTrue( is.null( redisGet(
   pairwiseDistanceKey( colnames(dom.annos.2)[[ 3 ]], colnames(dom.annos.2)[[ 4 ]] )
 ) ) )
+# Test in parallel mode:
+no.res <- redisDelete( pairwiseDistanceKey( "BAAA", "MAAA" ) )
+init.thread.funk <- function() { redisConnect() }
+close.thread.funk <- function() { redisClose() }
+redisClose()
+no.res <- partialDomainArchitectureDistancesRedis(
+  colnames(dom.annos.2), colnames(dom.annos.2)[1:2],
+  lapply.funk=mclapply, init.thread.funk=init.thread.funk,
+  close.thread.funk=close.thread.funk, mc.preschedule=T,
+  mc.cores=detectCores()
+)
+redisConnect()
+# Check copied from previous test:
+checkEquals( round( redisGet( pairwiseDistanceKey("BAAA", "MAAA") ), 7 ),
+  0.0304956 )
+checkTrue( is.null( redisGet(
+  pairwiseDistanceKey( colnames(dom.annos.2)[[ 3 ]], colnames(dom.annos.2)[[ 4 ]] )
+) ) )
 
 # Test partialSequenceDistancesRedis
 print("Testing partialSequenceDistancesRedis(...)")
