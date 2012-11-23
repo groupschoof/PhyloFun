@@ -160,19 +160,19 @@ partialDomainArchitectureDistancesRedis <- function(
   #
   # Returns: NULL
   #   
-  for ( acc.1 in partial.accessions ) {
-    lapply.funk( all.accessions, function( acc.2 ) {
-      if ( ! is.null(init.thread.funk) ) 
-        init.thread.funk()
+  lapply.funk( partial.accessions, function( acc.1 ) {
+    if ( ! is.null(init.thread.funk) ) 
+      init.thread.funk()
+    for ( acc.2 in all.accessions ) {
       if ( is.null( redisGet( pairwiseDistanceKey( acc.1, acc.2 ) ) ) ) {
         pairwiseDomainArchitectureDistanceRedis(
           acc.1, acc.2
         )
       }
-      if ( ! is.null(close.thread.funk) )
-        close.thread.funk()
-    }, ... )
-  }
+    }
+    if ( ! is.null(close.thread.funk) )
+      close.thread.funk()
+  }, ... )
   # return
   NULL
 }
@@ -255,22 +255,22 @@ partialSequenceDistancesRedis <- function( aa.sequences,
   # Returns: NULL
   #   
   all.accessions <- names( aa.sequences )
-  for ( acc.pattern in partial.accessions ) {
+  lapply.funk ( partial.accessions, function( acc.pattern ) {
+    if ( ! is.null(init.thread.funk) ) 
+      init.thread.funk()
     aa.seq.pattern <- aa.sequences[ acc.pattern ]
-    lapply.funk( all.accessions, function( acc.subject ) {
-      if ( ! is.null(init.thread.funk) ) 
-        init.thread.funk()
+    for ( acc.subject in all.accessions ) {
       if ( is.null( redisGet( pairwiseDistanceKey( acc.pattern,
               acc.subject, distance.type=distance.key.suffix ) ) )
-      ) {
+        ) {
         pairwiseSequenceDistanceRedis( aa.seq.pattern, aa.sequences[ acc.subject ],
           acc.pattern, acc.subject
         )
       }
-      if ( ! is.null(close.thread.funk) )
-        close.thread.funk()
-    }, ... )
-  }
+    }
+    if ( ! is.null(close.thread.funk) )
+      close.thread.funk()
+  }, ... )
   # return
   NULL
 }

@@ -1,6 +1,7 @@
 library(tools)
 library(RUnit)
 library(rredis)
+library(parallel)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -153,6 +154,25 @@ p3.acc <- "Test_Protein_3"
 p4.acc <- "Test_Protein_4"
 aa.seqs <- setNames( list( p1, p2, p3, p4 ), c( p1.acc, p2.acc, p3.acc, p4.acc ) )
 no.res <- partialSequenceDistancesRedis( aa.seqs, c( p1.acc, p2.acc ) )
+p1.p2.dist.key <- pairwiseDistanceKey( p1.acc, p2.acc, distance.type="seq_dist" )
+checkTrue( ! is.null( redisGet( p1.p2.dist.key ) ) )
+checkTrue( is.null( redisGet( pairwiseDistanceKey( p3.acc, p4.acc, distance.type="seq_dist" ) ) ) )
+checkEquals( pairwiseSequenceDistance( p1, p2 ), redisGet( p1.p2.dist.key ) )
+# Check in parallel mode:
+redisFlushAll()
+p1 <- "LALDTKQIWFTTLGTLQNQILRYDYDTWLKTTALVSVANDLAVIGAPNVTTKQVIEDRFMSVLRRALGEVLGYQVNVRVIISSATPAPSEPVAVTPSEPSPTTEVAEPSFASFNQAAPMLNQLPLGDPNRSSVLNPRYTFSSFIVGTSNRLAHAACMAVAEHPAQAYNPLFLYGGVGLGKTHLLQAIGNYALDRNPEVNVLYVSSEKFTNDLINAIRRQQTEEFRIRYRNIDILLIDDIQFIAGKEGTQEEFFHTFNTLHGAGKQIVLSSDRPPKAILTLEERLRSRFEWGLIVDVQNPDLETRTAILRAKGETLQVPVSSEVIDFLAQRIQSNIRELEGCLNRVIAYANLNRTPVTVEVASAALADLLDTSRRKRVTADDIFREVSQHYGIDQRAIRGRGRSRNVVLPRQVVMYLLREETDASLVEIGELLGGRDHTTVMHGYNKITDDLTSDARLRNDITSLRQRLYGENAR"
+p2 <- "MQSIEDIWQETLQIVKKNMSKPSYDTWMKSTTAHSLEGNTFIISAPNNFVRDWLEKSYTQFIANILQEITGRLFDVRFIDGEQEENFEYTVIKPNPALDEDGIEIGKHMLNPRYVFDTFVIGSGNRFAHAASLAVAEAPAKAYNPLFIYGGVGLGKTHLMHAVGHYVQQHKDNAKVMYLSSEKFTNEFISSIRDNKTEEFRTKYRNVDVLLIDDIQFLAGKEGTQEEFFHTFNTLYDEQKQIIISSDRPPKEIPTLEDRLRSRFEWGLITDITPPDLETRIAILRKKAKADGLDIPNEVMLYIANQIDSNIRELEGALIRVVAYSSLVNKDITAGLAAEALKDIIPSSKSQVITISGIQETVGEYFHVRLEDFKAKKRTKSIAFPRQIAMYLSRELTDASLPKIGDEFGGRDHTTVIHAHEKISQLLKTDQVLKNDLAEIEKNLRKSQNMF"
+p3 <- "MQSIEDIWQETLQIVKKNMSKPSYDTWMKSTTAHSLEGNTFIISAPNNFVRDWLEKSYTQFIANILQEIT"
+p4 <- "ILRYDYDTWLKTTALVSVANDLAVIGAPNVTTKQVIEDRFMSVLRRALGEVLGY"
+p1.acc <- "Test_Protein_1"
+p2.acc <- "Test_Protein_2"
+p3.acc <- "Test_Protein_3"
+p4.acc <- "Test_Protein_4"
+aa.seqs <- setNames( list( p1, p2, p3, p4 ), c( p1.acc, p2.acc, p3.acc, p4.acc ) )
+no.res <- partialSequenceDistancesRedis( aa.seqs, c( p1.acc, p2.acc ), lapply.funk=mclapply,
+  init.thread.funk=init.thread.funk, close.thread.funk=close.thread.funk,
+  mc.cores=detectCores(), mc.preschedule=F
+)
 p1.p2.dist.key <- pairwiseDistanceKey( p1.acc, p2.acc, distance.type="seq_dist" )
 checkTrue( ! is.null( redisGet( p1.p2.dist.key ) ) )
 checkTrue( is.null( redisGet( pairwiseDistanceKey( p3.acc, p4.acc, distance.type="seq_dist" ) ) ) )
