@@ -140,7 +140,7 @@ pairwiseDomainArchitectureDistanceRedis <- function( protein.accession.a,
 
 partialDomainArchitectureDistancesRedis <- function(
   all.accessions, partial.accessions, lapply.funk=lapply, 
-  init.thread.funk, close.thread.funk ) {
+  init.thread.funk=NULL, close.thread.funk=NULL, ... ) {
   # Computes all pairwise distances in domain architecture space between
   # accessions in argument 'partial.accessions' and 'all.accessions'. Only
   # computes distances if they are not yet stored in the current REDIS instance
@@ -156,6 +156,7 @@ partialDomainArchitectureDistancesRedis <- function(
   #                       start of each loop inside (mc)lapply.
   #  close.thread.funk  : If not null, this function is invoked at the very 
   #                       end of each loop inside (mc)lapply.
+  #  ...                : Additional arguments to be passed to 'lapply.funk'
   #
   # Returns: NULL
   #   
@@ -170,7 +171,7 @@ partialDomainArchitectureDistancesRedis <- function(
       }
       if ( ! is.null(close.thread.funk) )
         close.thread.funk()
-    })
+    }, ... )
   }
   # return
   NULL
@@ -230,7 +231,8 @@ pairwiseSequenceDistanceRedis <- function( aa.seq.pattern,
 
 partialSequenceDistancesRedis <- function( aa.sequences,
   partial.accessions, 
-  distance.key.suffix='seq_dist', lapply.funk=lapply ) {
+  distance.key.suffix='seq_dist', lapply.funk=lapply,
+  init.thread.funk=NULL, close.thread.funk=NULL, ... ) {
   # Computes pairwise amino acid sequence distances for all pairs of entries in
   # argument 'partial.accessions' and argument 'all.accessions'. Distances are
   # only computed, if not already stored in the current REDIS instance and are
@@ -244,6 +246,11 @@ partialSequenceDistancesRedis <- function( aa.sequences,
   #                        See function 'pairwiseDistanceKey(...)' for details.
   #  lapply.funk : Function to use to iterate over all sequences and compute
   #                distances. Set to mclapply, if parallel computation is requested.
+  #  init.thread.funk   : If not NULL, this function is invoked at the very
+  #                       start of each loop inside (mc)lapply.
+  #  close.thread.funk  : If not null, this function is invoked at the very 
+  #                       end of each loop inside (mc)lapply.
+  #  ...                : Additional arguments to be passed to 'lapply.funk'
   #
   # Returns: NULL
   #   
@@ -251,6 +258,8 @@ partialSequenceDistancesRedis <- function( aa.sequences,
   for ( acc.pattern in partial.accessions ) {
     aa.seq.pattern <- aa.sequences[ acc.pattern ]
     lapply.funk( all.accessions, function( acc.subject ) {
+      if ( ! is.null(init.thread.funk) ) 
+        init.thread.funk()
       if ( is.null( redisGet( pairwiseDistanceKey( acc.pattern,
               acc.subject, distance.type=distance.key.suffix ) ) )
       ) {
@@ -258,7 +267,9 @@ partialSequenceDistancesRedis <- function( aa.sequences,
           acc.pattern, acc.subject
         )
       }
-    })
+      if ( ! is.null(close.thread.funk) )
+        close.thread.funk()
+    }, ... )
   }
   # return
   NULL
