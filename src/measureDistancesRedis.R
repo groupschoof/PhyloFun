@@ -22,7 +22,7 @@ src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
-print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port no.parallel.processes preschedule.jobs[default=TRUE]")
+print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port no.parallel.processes preschedule.jobs['true'|'false']")
 print( "WARNING: Make sure the complete sequence names in the FASTA file are exactly the same as in the accession_per_line file!" )
 print( "Remember, that it is required to have setup this computation beforehand. See R script 'initalizeMeasureDistances.R' for details." )
 
@@ -47,16 +47,10 @@ tryCatch(
 )
 
 # How many cores to use:
-if( is.null(trailing.args[[ 5 ]]) ) {
-  # All available cores:
-  options( 'mc.cores'=detectCores() )
-} else {
-  # As specified by the fifth command line argument:
-  options( 'mc.cores'=trailing.args[[ 5 ]] )
-}
+options( 'mc.cores'=trailing.args[[ 5 ]] )
 
 # Preschedule jobs?
-preschedule.jobs <- is.null( trailing.args[[ 6 ]] )
+preschedule.jobs <- grepl( "^t|true|yes|y$", as.character( trailing.args[[ 6 ]] ), ignore.case=T )
 
 # Init each loop iteration with this function:
 init.thread.funk <- function() {
