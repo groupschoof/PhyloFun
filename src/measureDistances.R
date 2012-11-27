@@ -18,6 +18,7 @@ src.project.file <- function(...) {
   source(project.file.path(...))
 }
 src.project.file('src','domainArchitectureSimilarity.R')
+src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
