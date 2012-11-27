@@ -166,3 +166,50 @@ prot.seq.dists.mtrx <- round(  prot.seq.dists, 6 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 1 ]], 0.0 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.813185 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.925284 )
+
+# Test distanceMatrixIndices
+print("Testing distanceMatrixIndices(...)")
+accs <- c("A", "B", "C", "D", "E", "F", "G", "H")
+exp.inds <- list( c("A","B"), c("A","C"), c("A","D"), c("A","E"), c("A","F"), c("A","G"), c("A","H"), c("B","C"), c("B","D"), c("B","E"), c("B","F"), c("B","G"), c("B","H"), c("C","D"), c("C","E"), c("C","F"), c("C","G"), c("C","H"), c("D","E"), c("D","F"), c("D","G"), c("D","H"), c("E","F"), c("E","G"), c("E","H"), c("F","G"), c("F","H"), c("G","H") )
+checkEquals( exp.inds, distanceMatrixIndices( accs ) )
+
+# Test distanceIndices
+print("Testing distanceIndices(...)")
+batch.size <- 3
+dist.ind.1 <- distanceIndices( 1, batch.size, accs )
+checkEquals( dist.ind.1, exp.inds[1:3] )
+
+dist.ind.2 <- distanceIndices( 2, batch.size, accs )
+checkEquals( dist.ind.2, exp.inds[4:6] )
+
+dist.ind.3 <- distanceIndices( 3, batch.size, accs )
+checkEquals( dist.ind.3, exp.inds[7:9] )
+
+dist.ind.4 <- distanceIndices( 4, batch.size, accs )
+checkEquals( dist.ind.4, exp.inds[10:12] )
+
+# Test edge cases of function distanceIndices(...)
+dist.ind.5 <- distanceIndices( 1, 9, accs )
+checkEquals( dist.ind.5, exp.inds[1:9] )
+
+dist.ind.6 <- distanceIndices( 2, 8, accs )
+checkEquals( dist.ind.6, exp.inds[9:16] )
+
+dist.ind.7 <- distanceIndices( 4, 8, accs )
+checkEquals( dist.ind.7, exp.inds[25:28] )
+
+dist.ind.8 <- distanceIndices( 4, 6, accs )
+checkEquals( dist.ind.8, exp.inds[19:24] )
+
+batch.sizes <- 1:29
+for ( batch.size in batch.sizes ) {
+  all.batches <- unlist(
+    lapply( 1:ceiling( 28 / batch.size ),
+      function( batch.no ) {
+        distanceIndices( batch.no, batch.size, accs )
+      }
+    ),
+    recursive=F
+  )
+  print( checkEquals( all.batches, exp.inds ) )
+}

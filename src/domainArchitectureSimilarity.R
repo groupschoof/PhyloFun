@@ -304,3 +304,75 @@ partialSequenceDistances <- function( protein.list, accessions ) {
     )
   )
 }
+
+distanceMatrixIndices <- function( accessions ) {
+  # For a list of accessions - or other list names - this function
+  # generates the paired indices of a distance matrix. 
+  #
+  # Args:
+  #  accessions : to generate the paired indices of an object of type
+  #               'dist' 
+  #
+  # Returns: The list of accession pairs to compute distances for.
+  #   
+  unlist(
+    mclapply( accs, function( protein.acc ) {
+      # Proteins to compute distances to:
+      i <- which( accs == protein.acc ) + 1
+      if ( i <= length( accs ) ) {
+        ps2c <- accs[ i : length( accs ) ]
+        lapply( ps2c, function( p2c ) {
+          c( protein.acc, p2c )
+        })
+      }
+    }),
+    recursive=F
+  )
+}
+
+distanceIndices <- function( batch.no, batch.size, accessions ) {
+  # In which row and column of the distance matrix should we start the distance
+  # computation?
+  row.sizes <- seq( length(accessions) - 1, 1, -1 )
+  row.ind <- 0; col.ind <- 0;
+  if ( batch.no == 1 ) {
+    # No distance matrix cells to skip for first batch
+    row.ind <- 1
+    col.ind <- 1
+  } else {
+    # Find row and column in which to start this batch's computation:
+    skip <- ( batch.no - 1 ) * batch.size
+    while ( skip >= 0 ) {
+      row.ind <- row.ind + 1
+      col.ind <- skip + 1
+      if ( row.ind <= length( row.sizes ) ) {
+        skip <- skip - row.sizes[[ row.ind ]]
+      } else {
+        # last batch
+        break
+      }
+    }
+  }
+  # Generate batch.size pairs to compute distances for
+  curr.row <- accessions[ ( row.ind + col.ind ) : length(accessions) ]
+  b.ind <- 1
+  dist.pairs <- list()
+  while ( length(dist.pairs) < batch.size ) {
+    acc.a <- accessions[[ row.ind ]]
+    acc.b <- curr.row[[ b.ind ]]
+    dist.pairs[[ length(dist.pairs) + 1 ]] <- c( acc.a, acc.b)
+    b.ind <- b.ind + 1
+    if( b.ind > length( curr.row ) ) {
+      row.ind <- row.ind + 1
+      if ( row.ind < length(accessions) ) {
+        curr.row <- accessions[ row.ind : length(accessions) ]
+        b.ind <- 2
+      } else {
+        # Last batch
+        break
+      }
+    }
+  }
+  # return
+  dist.pairs
+}
