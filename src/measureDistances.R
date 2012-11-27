@@ -1,6 +1,7 @@
 library(tools)
 library(Biostrings)
 library(parallel)
+library(rredis)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
