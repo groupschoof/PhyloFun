@@ -48,7 +48,7 @@ batch.size <- as.integer( trailing.args[[ 5 ]] )
 options( 'mc.cores'=trailing.args[[ 6 ]] )
 
 # Redis URL and port:
-redis.url <- as.character( trailing.args[[ 7 ]] )
+redis.host <- as.character( trailing.args[[ 7 ]] )
 redis.port <- as.integer( trailing.args[[ 8 ]] )
 
 # Begin
