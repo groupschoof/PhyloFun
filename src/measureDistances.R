@@ -20,70 +20,66 @@ src.project.file('src','domainArchitectureSimilarity.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
-print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/accession_per_line.txt path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl path/2/output_name cores.2.use[default=all]")
-print( "WARNING: Make sure the complete sequence names in the FASTA file are exactly the same as in the accession_per_line file!" )
+print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl batch.no batch.size cores.2.use REDIS-URL REDIS-Port")
+print( "WARNING: Make sure the _complete_ sequence names in the FASTA file are _exactly the same_ as in the function annotation file!" )
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
 
 # Read fasta:
-aa.seqs <- sapply( read.AAStringSet( trailing.args[[1]] ), function(s) toString(s) )
-print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[1]]) )
-
-# Read Accessions to process:
-accs <- as.character( read.table( trailing.args[[2]] )$V1 )
-print( paste("Read", length(accs), "accessions to compute partial distance matrices for. Accessions-File is:", trailing.args[[2]]) )
+aa.seqs <- sapply( read.AAStringSet( trailing.args[[ 1 ]] ), function(s) toString(s) )
+print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[ 1 ]]) )
 
 # Load Uniprot function (InterPro and GO) Annotations:
-f <- file( trailing.args[[3]], "r" )
+f <- file( trailing.args[[ 2 ]], "r" )
 annos <- unserialize( f )
 close( f )
-print( paste("Read", ncol(annos), "function annotations from", trailing.args[[3]]) )
+print( paste("Read", ncol(annos), "function annotations from", trailing.args[[ 2 ]]) )
 
 # Load domain weights table:
-dom.weights <- read.table( trailing.args[[4]] )
-print( paste("Read", nrow(dom.weights), "domain weights from table", trailing.args[[4]]) )
+dom.weights <- read.table( trailing.args[[ 3 ]] )
+print( paste("Read", nrow(dom.weights), "domain weights from table", trailing.args[[ 3 ]]) )
 
-# Write output to files beginning with..
-out.head <- trailing.args[[ 5 ]]
-print( paste("Writing output to files whose names will start with", out.head) )
+# Read Batch Number and Batch Size:
+batch.no <- as.integer( trailing.args[[ 4 ]] )
+batch.size <- as.integer( trailing.args[[ 5 ]] )
 
 # How many cores to use:
-if( is.null(trailing.args[[ 6 ]]) ) {
-  # All available cores:
-  options( 'mc.cores'=detectCores() )
-} else {
-  # As specified by the sixth command line argument:
-  options( 'mc.cores'=trailing.args[[ 6 ]] )
-}
+options( 'mc.cores'=trailing.args[[ 6 ]] )
 
+# Redis URL and port:
+redis.url <- as.character( trailing.args[[ 7 ]] )
+redis.port <- as.integer( trailing.args[[ 8 ]] )
+
+# Begin
 print( "Starting computation" )
-print( paste( "Will be using", options('mc.cores'), "cores" ) )
+print( paste( "Will be using", options('mc.cores'), "parallel threads." ) )
+
+# Connect to REDIS:
+tryCatch(
+  redisConnect( host=redis.host, port=redis.port ),
+  error=function( e ) {
+    err.msg <- paste( "Could not connect to REDIS using URL ",
+      redis.host, ":", redis.port, "\n", as.character( e )
+    )
+    stop( err.msg )
+  }
+)
+
+# Generate pairs of protein accessions to compute distances for:
+accessions <- colnames( annos )
+dist.pairs <- distanceIndices( batch.no, batch.size, accessions )
 
 # Partial Sequence Distances:
-part.seq.dists.file <- paste( out.head, "_seq_dists.tbl", sep="" )
-if( ! file.exists( part.seq.dists.file ) ) {
-  write.table( partialSequenceDistances( aa.seqs, accs ),
-    part.seq.dists.file
-  )
-  print( "computed sequence distances" )
-} else {
-  print( paste( "Partial sequence distances file already exists. Did not compute them again.", 
-    part.seq.dists.file)
-  )
-}
+redisMSet(
+  partialSequenceDistances( aa.seqs, dist.pairs, lapply.funk=mclapply )
+)
 
 # Partial Domain Architecture Distances:
-part.das.dists.file <- paste( out.head, "_das_dists.tbl", sep="" )
-if( ! file.exists( part.das.dists.file ) ) {
-  write.table( partialDomainArchitectureDistances( annos, dom.weights, accs ),
-    part.das.dists.file
+redisMSet(
+  partialDomainArchitectureDistances( annos, dom.weights, dist.pairs,
+    lapply.funk=mclapply
   )
-  print( "computed das distances" )
-} else {
-  print( paste( "Partial domain architecture sequence distances file already exists. Did not compute them again.",
-      part.das.dists.file)
-  )
-}
+)
 
 print( "DONE" )

@@ -18,6 +18,7 @@ src.project.file <- function(...) {
 }
 src.project.file( 'src','loadUniprotKBEntries.R' )
 src.project.file( 'src','domainArchitectureSimilarity.R' )
+src.project.file( 'src','domainArchitectureSimilarityRedis.R' )
 
 # Load domain.weights.table:
 dwt <- read.table(
@@ -113,19 +114,13 @@ checkEquals( as.matrix(rslt), exp.rslt )
 
 # Test partialDomainArchitectureDistances
 print("Testing partialDomainArchitectureDistances(...)")
-test.accessions <- c('A0RLX8', 'A0PKB2', 'Protein_1')
-part.das.dists <- partialDomainArchitectureDistances( am, dwd, test.accessions )
+test.prot.pairs <- list( c( 'A0RLX8', 'A0PKB2' ), c( 'A0PKB2', 'Protein_1' ) )
+part.das.dists <- partialDomainArchitectureDistances( am, dwd, test.prot.pairs )
 # print( part.das.dists )
-checkTrue( ! is.na(part.das.dists) && ! is.null(part.das.dists) )
-checkEquals( class(part.das.dists), "matrix" )
-checkEquals( nrow(part.das.dists), length( test.accessions ) )
-checkEquals( ncol(part.das.dists), ncol( am ) )
-checkEquals( part.das.dists[[ 'Protein_1', 'Protein_1' ]], 0 )
-checkEquals( part.das.dists[[ 'A0RLX8', 'A0RLX8' ]], 0 )
-checkEquals( part.das.dists[[ 'A0PKB2', 'A0PKB2' ]], 0 )
-checkTrue( is.na( part.das.dists[[ 'Protein_1', 'A0PKB2' ]] ) )
-checkTrue( is.na( part.das.dists[[ 'Protein_1', 'A0RLX8' ]] ) )
-checkEquals( round( part.das.dists[[ 'A0PKB2', 'A0RLX8' ]], 6 ), 0.322616 )
+checkTrue( ! is.na( part.das.dists ) && ! is.null( part.das.dists ) )
+checkEquals( class( part.das.dists ), "list" )
+checkEquals( length( part.das.dists ), length( test.prot.pairs ) )
+checkEquals( round( part.das.dists[[ 1 ]], 6 ), 0.322616 )
 
 # Test pairwiseSequenceDistance
 print("Testing pairwiseSequenceDistance(...)")
@@ -156,21 +151,22 @@ checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.925284 )
 
 # Test partialSequenceDistances
 print("Testing partialSequenceDistances(...)")
-partial.accs <- c( "P1", "P2" )
-prot.seq.dists <- partialSequenceDistances( prot.lst, partial.accs )
+prot.pairs <- list( c( "P1", "P2" ) )
+prot.seq.dists <- partialSequenceDistances( prot.lst, prot.pairs )
 # print( prot.seq.dists )
-checkEquals( class(prot.seq.dists), 'matrix' )
-checkEquals( nrow(prot.seq.dists), length(partial.accs) )
-checkEquals( ncol(prot.seq.dists), length(prot.lst) )
-prot.seq.dists.mtrx <- round(  prot.seq.dists, 6 )
-checkEquals( prot.seq.dists.mtrx[[ 1, 1 ]], 0.0 )
-checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.813185 )
-checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.925284 )
+checkEquals( class( prot.seq.dists ), 'list' )
+checkEquals( length( prot.seq.dists ), 1 )
+checkEquals( round( prot.seq.dists[[ 1 ]], 6 ), 0.813185 )
 
 # Test distanceMatrixIndices
 print("Testing distanceMatrixIndices(...)")
 accs <- c("A", "B", "C", "D", "E", "F", "G", "H")
-exp.inds <- list( c("A","B"), c("A","C"), c("A","D"), c("A","E"), c("A","F"), c("A","G"), c("A","H"), c("B","C"), c("B","D"), c("B","E"), c("B","F"), c("B","G"), c("B","H"), c("C","D"), c("C","E"), c("C","F"), c("C","G"), c("C","H"), c("D","E"), c("D","F"), c("D","G"), c("D","H"), c("E","F"), c("E","G"), c("E","H"), c("F","G"), c("F","H"), c("G","H") )
+exp.inds <- list( c("A","B"), c("A","C"), c("A","D"), c("A","E"), c("A","F"),
+  c("A","G"), c("A","H"), c("B","C"), c("B","D"), c("B","E"), c("B","F"),
+  c("B","G"), c("B","H"), c("C","D"), c("C","E"), c("C","F"), c("C","G"),
+  c("C","H"), c("D","E"), c("D","F"), c("D","G"), c("D","H"), c("E","F"),
+  c("E","G"), c("E","H"), c("F","G"), c("F","H"), c("G","H")
+)
 checkEquals( exp.inds, distanceMatrixIndices( accs ) )
 
 # Test distanceIndices
