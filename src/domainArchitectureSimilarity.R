@@ -362,6 +362,17 @@ distanceMatrixIndices <- function( accessions ) {
 }
 
 distanceIndices <- function( batch.no, batch.size, accessions ) {
+  # For argument 'batch.no' and 'batch.size' computes all protein pairs
+  # of the argument batch. 
+  #
+  # Args:
+  #  batch.no : the nth subset of 'batch.size' protein pairs
+  #  batch.size : size of each subset
+  #  accessions : All protein accessions to generate pairs of.
+  #
+  # Returns: List of indicated protein pairs.
+  #   
+  
   # In which row and column of the distance matrix should we start the distance
   # computation?
   row.sizes <- seq( length(accessions) - 1, 1, -1 )
