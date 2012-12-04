@@ -129,9 +129,9 @@ p2 <- "MQSIEDIWQETLQIVKKNMSKPSYDTWMKSTTAHSLEGNTFIISAPNNFVRDWLEKSYTQFIANILQEITGRL
 p.dist <- round( pairwiseSequenceDistance( p1, p2 ), 6 )
 checkTrue( ! is.null(p.dist) )
 checkEquals( class(p.dist), 'numeric' )
-checkEquals( p.dist, 0.813185 )
+checkEquals( p.dist, 0.814161 )
 # Assert symmetric distance measure:
-checkEquals( round( pairwiseSequenceDistance( p2, p1 ), 6 ), 0.813185 )
+checkEquals( round( pairwiseSequenceDistance( p2, p1 ), 6 ), 0.814161 )
 
 # Test replaceSelenocystein
 print("Testing replaceSelenocystein(...)")
@@ -146,8 +146,8 @@ prot.seq.dists <- sequenceDistances( prot.lst )
 checkEquals( class(prot.seq.dists), 'dist' )
 prot.seq.dists.mtrx <- round( as.matrix( prot.seq.dists ), 6 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 1 ]], 0.0 )
-checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.813185 )
-checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.925284 )
+checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.814161 )
+checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.933567 )
 
 # Test partialSequenceDistances
 print("Testing partialSequenceDistances(...)")
@@ -156,7 +156,7 @@ prot.seq.dists <- partialSequenceDistances( prot.lst, prot.pairs )
 # print( prot.seq.dists )
 checkEquals( class( prot.seq.dists ), 'list' )
 checkEquals( length( prot.seq.dists ), 1 )
-checkEquals( round( prot.seq.dists[[ 1 ]], 6 ), 0.813185 )
+checkEquals( round( prot.seq.dists[[ 1 ]], 6 ), 0.814161 )
 
 # Test distanceMatrixIndices
 print("Testing distanceMatrixIndices(...)")

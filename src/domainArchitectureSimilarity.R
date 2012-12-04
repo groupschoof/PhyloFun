@@ -170,8 +170,9 @@ partialDomainArchitectureDistances <- function( annotation.matrix,
   )
 }
 
-pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
-  gap.open.pnlty=-10, gap.extension.pnlty=-0.1, distance.model="Dayhoff") {
+pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject,
+  type='overlap', sub.matrix='PAM250', gap.open.pnlty=-10,
+  gap.extension.pnlty=-0.1, distance.model='Dayhoff') {
   # For the two argument amino acid sequences this function computes first a
   # global pairwise alignment based on the supplied substitution matrix with
   # the argument gap opening and extension penalties. Then the sequence
@@ -180,6 +181,10 @@ pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject, sub.matrix
   #
   # Args:
   #  aa.seq.pattern, aa.seq.subject : argument amino acid sequences
+  #  type                           : Type of alignment to generate. See
+  #                                   function 'pairwiseAlignment' in
+  #                                   package 'Biostrings' for avilable
+  #                                   types. Default is 'overlap'.
   #  sub.matrix                     : substitution matrix to use in the global
   #                                   alignment
   #  gap.open.pnlty                 : score penalty to apply for opening a gap
@@ -197,7 +202,9 @@ pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject, sub.matrix
     pa <- pairwiseAlignment(
       AAString( replaceSelenocystein( aa.seq.pattern ) ),
       AAString( replaceSelenocystein( aa.seq.subject ) ),
-      substitutionMatrix=sub.matrix, gapOpening=gap.open.pnlty, gapExtension=gap.extension.pnlty )
+      type=type, substitutionMatrix=sub.matrix,
+      gapOpening=gap.open.pnlty, gapExtension=gap.extension.pnlty
+    )
     pd <- phyDat(
       list(
         "P1"=strsplit( toString( pattern(pa) ), NULL ),
