@@ -69,6 +69,7 @@ tryCatch(
 
 # Generate pairs of protein accessions to compute distances for:
 dist.pairs <- pairsFromBlastResult( blast.out )
+print( paste( "Computing distances for", length( dist.pairs ), "protein pairs." ) )
 
 # Partial Sequence Distances:
 redisMSet(
