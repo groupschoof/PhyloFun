@@ -319,12 +319,14 @@ pairsFromBlastResult <- function( tabular.blast.out,
   # 'tabular.blast.out'.
   #   
   tbo.red <- tabular.blast.out[ as.character( tabular.blast.out[ , query.column ] ) != as.character( tabular.blast.out[ , hit.column ] ) , , drop=F ][ , 1:2 ] 
-  lapply( 1:nrow(tbo.red), function(i) {
-    c(
-      as.character( tbo.red[[ i, 1 ]] ),
-      as.character( tbo.red[[ i, 2 ]] )
-    )
-  })
+  unique(
+    lapply( 1:nrow(tbo.red), function(i) {
+      c(
+        as.character( tbo.red[[ i, 1 ]] ),
+        as.character( tbo.red[[ i, 2 ]] )
+      )
+    })
+  )
 }
 
 distanceMatrixIndices <- function( accessions ) {
