@@ -22,7 +22,7 @@ src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
-print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl batch.no batch.size cores.2.use REDIS-URL REDIS-Port")
+print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl path/2/blast_out.tbl cores.2.use REDIS-URL REDIS-Port")
 print( "WARNING: Make sure the _complete_ sequence names in the FASTA file are _exactly the same_ as in the function annotation file!" )
 
 # Input
@@ -42,16 +42,15 @@ print( paste("Read", ncol(annos), "function annotations from", trailing.args[[ 2
 dom.weights <- read.table( trailing.args[[ 3 ]] )
 print( paste("Read", nrow(dom.weights), "domain weights from table", trailing.args[[ 3 ]]) )
 
-# Read Batch Number and Batch Size:
-batch.no <- as.integer( trailing.args[[ 4 ]] )
-batch.size <- as.integer( trailing.args[[ 5 ]] )
+# Read tabular Blast Output
+blast.out <- read.table( trailing.args[[ 4 ]] )
 
 # How many cores to use:
-options( 'mc.cores'=trailing.args[[ 6 ]] )
+options( 'mc.cores'=trailing.args[[ 5 ]] )
 
 # Redis URL and port:
-redis.host <- as.character( trailing.args[[ 7 ]] )
-redis.port <- as.integer( trailing.args[[ 8 ]] )
+redis.host <- as.character( trailing.args[[ 6 ]] )
+redis.port <- as.integer( trailing.args[[ 7 ]] )
 
 # Begin
 print( "Starting computation" )
@@ -69,8 +68,7 @@ tryCatch(
 )
 
 # Generate pairs of protein accessions to compute distances for:
-accessions <- colnames( annos )
-dist.pairs <- distanceIndices( batch.no, batch.size, accessions )
+dist.pairs <- pairsFromBlastResult( blast.out )
 
 # Partial Sequence Distances:
 redisMSet(

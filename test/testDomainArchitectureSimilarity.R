@@ -209,3 +209,13 @@ for ( batch.size in batch.sizes ) {
   )
   print( checkEquals( all.batches, exp.inds ) )
 }
+
+# Test pairsFromBlastResult
+print("Testing pairsFromBlastResult(...)")
+blast.result <- matrix(
+  c("Query_A", "Query_B", "Query_C", "Hit_A", "Hit_B", "Hit_C" ),
+  nrow=3, ncol=2
+)
+blast.pairs <- pairsFromBlastResult( blast.result )
+exp.pairs <- list( c("Query_A", "Hit_A"), c("Query_B", "Hit_B"), c("Query_C", "Hit_C") )
+checkEquals( blast.pairs, exp.pairs )

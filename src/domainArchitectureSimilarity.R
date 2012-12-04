@@ -302,6 +302,31 @@ partialSequenceDistances <- function( protein.list, prot.pairs,
   )
 }
 
+pairsFromBlastResult <- function( tabular.blast.out,
+  query.column=1, hit.column=2 ) {
+  # Constructs a list of protein pairs from the Blast results in argument
+  # 'tabular.blast.out'. The first argument of each pair is the query accession
+  # and the second is the hit accession. Cells are converted to type character.
+  #
+  # Args:
+  #  tabular.blast.out : The Blast output table read using 'read.table'. 
+  #  query.column      : The column index of the Blast output table which holds
+  #                      the query accessions.
+  #  hit.column        : The column index of the Blast output table which holds
+  #                      the hit accessions.
+  #
+  # Returns: A list of protein pairs from the Blast results in argument
+  # 'tabular.blast.out'.
+  #   
+  tbo.red <- tabular.blast.out[ as.character( tabular.blast.out[ , query.column ] ) != as.character( tabular.blast.out[ , hit.column ] ) , , drop=F ][ , 1:2 ] 
+  lapply( 1:nrow(tbo.red), function(i) {
+    c(
+      as.character( tbo.red[[ i, 1 ]] ),
+      as.character( tbo.red[[ i, 2 ]] )
+    )
+  })
+}
+
 distanceMatrixIndices <- function( accessions ) {
   # For a list of accessions - or other list names - this function
   # generates the paired indices of a distance matrix. 
