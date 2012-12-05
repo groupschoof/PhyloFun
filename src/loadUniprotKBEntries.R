@@ -249,7 +249,7 @@ sharedFunction <- function( annotation.matrix,
   # Constructs a Boolean matrix with column names as in the argument
   # 'annotation.matrix' columns. Rows are the argument accessions. Each matrix
   # entry is TRUE if and only if the two corresponding proteins share at least
-  # a single anntotation. 
+  # a single annotation. 
   #
   # Args:
   #  annotation.matrix : Matrix holding different function annotation for its
@@ -276,4 +276,21 @@ sharedFunction <- function( annotation.matrix,
       colnames(annotation.matrix)
     )
   )
+}
+
+sharedAnnotation <- function( annotation.matrix,
+  annotation, annotation.type='GO' ) {
+  # Filters argument 'annotation.matrix' where cells in row 'annotation.type'
+  # include the argument 'annotation'. 
+  #
+  # Args:
+  #  annotation.matrix : The matrix of functional annotations as returned by
+  #                      i.e. 'retrieveAnnotationsBiomart'.
+  #  annotation        : The annotation to filter for, i.e. "GO:0005634"
+  #  annotation.type   : The row of the annotation.matrix to check entries,
+  #                      default 'GO'.
+  #
+  # Returns: Returns matching sub-matrix.
+  #   
+  annotation.matrix[ , mapply( function(x){ any( x == annotation ) }, annotation.matrix[ annotation.type, ] ), drop=F ]
 }
