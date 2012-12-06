@@ -418,3 +418,20 @@ distanceIndices <- function( batch.no, batch.size, accessions ) {
   # return
   dist.pairs
 }
+
+pairsForAccessions <- function( all.pairs, accessions ) {
+  # Filters the argument set of protein pairs 'all.pairs' for all those where
+  # one pair member is contained in argument set 'accessions'. 
+  #
+  # Args:
+  #  all.pairs : The 2 column matrix or dataframe in which the set of protein
+  #              pairs is stored. Partner one is supposed to be in column one
+  #              and partner two in column two.
+  #  accessions : The set of unique protein accessions to extract all existing
+  #               pairs for.
+  #
+  # Returns: The subset of argument 'all.pairs' where each pair contains at
+  # least a single accession of argument set 'accessions'.
+  #   
+  all.pairs[ all.pairs[,1] %in% accessions | all.pairs[,2] %in% accessions, , drop=F ]
+}
