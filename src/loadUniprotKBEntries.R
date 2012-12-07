@@ -294,3 +294,40 @@ sharedAnnotation <- function( annotation.matrix,
   #   
   annotation.matrix[ , mapply( function(x){ any( x == annotation ) }, annotation.matrix[ annotation.type, ] ), drop=F ]
 }
+
+intersectAnnotations <- function( annotation.matrix, acc.a, acc.b, annotation.type="GO" ) {
+  # Intersects the annotations of protein 'acc.a' with protein 'acc.b' using
+  # the argument 'annotation.type'.
+  #
+  # Args:
+  #  annotation.matrix : The annotations as returned i.e. by
+  #                      'retrieveAnnotationsBiomart'
+  #  acc.a : Accession of first protein 
+  #  acc.b : Accession of second protein 
+  #
+  # Returns: The set intersection of the two proteins' annotation sets.
+  #   
+  intersect( annotation.matrix[[ annotation.type, acc.a ]],
+    annotation.matrix[[ annotation.type, acc.b ]]
+  )
+}
+
+shareAnnotation <- function( annotation, annotation.matrix, acc.a, acc.b,
+  annotation.type="GO" ) {
+  # Looks up the annotations of both arguments 'acc.a' and 'acc.b' and checks
+  # if both have argument 'annotation' in their 'annotation.type' set. 
+  #
+  # Args:
+  #  annotation : The GO term, InterPro ID, or Pfam ID to look up.
+  #  annotation.matrix : The annotations as returned i.e. by
+  #                      'retrieveAnnotationsBiomart'
+  #  acc.a : Accession of first protein 
+  #  acc.b : Accession of second protein 
+  #
+  # Returns: TRUE if and only if, both proteins share the argument
+  # 'annotation', FALSE otherwise.
+  #   
+  annotation %in% intersectAnnotations( annotation.matrix, acc.a, acc.b,
+    annotation.type
+  )
+}

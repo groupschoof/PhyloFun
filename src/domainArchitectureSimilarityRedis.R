@@ -106,6 +106,26 @@ pairwiseDistanceKey <- function( protein.accession.a,
   )
 }
 
+sortedPairName <- function( protein.accession.a,
+  protein.accession.b ) {
+  # Generates unique key to store the pairwise DAS distance under.
+  #
+  # Args:
+  #  protein.accession.a : Accession of first protein.
+  #  protein.accession.b : Accession of second protein.
+  #
+  # Returns: Alphabetically sorted arguments separated by underscore.
+  #   
+  paste.funk <- function( ... ) paste( ..., sep="_" ) 
+  do.call( 'paste.funk',
+    as.list( 
+      c(
+        sort( c(protein.accession.a, protein.accession.b) )
+      )
+    )
+  )
+}
+
 pairwiseDomainArchitectureDistanceRedis <- function( protein.accession.a,
   protein.accession.b, save.result=TRUE ) {
   # Computes the pairwise distance in the Domain Architecture Space (DAS) for

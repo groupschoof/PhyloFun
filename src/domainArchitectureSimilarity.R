@@ -171,8 +171,8 @@ partialDomainArchitectureDistances <- function( annotation.matrix,
 }
 
 pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject,
-  type='overlap', sub.matrix='PAM250', gap.open.pnlty=-10,
-  gap.extension.pnlty=-0.1, distance.model='Dayhoff') {
+  sub.matrix='PAM250', gap.open.pnlty=-10, gap.extension.pnlty=-0.1,
+  distance.model='Dayhoff') {
   # For the two argument amino acid sequences this function computes first a
   # global pairwise alignment based on the supplied substitution matrix with
   # the argument gap opening and extension penalties. Then the sequence
@@ -181,10 +181,6 @@ pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject,
   #
   # Args:
   #  aa.seq.pattern, aa.seq.subject : argument amino acid sequences
-  #  type                           : Type of alignment to generate. See
-  #                                   function 'pairwiseAlignment' in
-  #                                   package 'Biostrings' for avilable
-  #                                   types. Default is 'overlap'.
   #  sub.matrix                     : substitution matrix to use in the global
   #                                   alignment
   #  gap.open.pnlty                 : score penalty to apply for opening a gap
@@ -202,8 +198,8 @@ pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject,
     pa <- pairwiseAlignment(
       AAString( replaceSelenocystein( aa.seq.pattern ) ),
       AAString( replaceSelenocystein( aa.seq.subject ) ),
-      type=type, substitutionMatrix=sub.matrix,
-      gapOpening=gap.open.pnlty, gapExtension=gap.extension.pnlty
+      substitutionMatrix=sub.matrix, gapOpening=gap.open.pnlty,
+      gapExtension=gap.extension.pnlty
     )
     pd <- phyDat(
       list(
@@ -420,7 +416,7 @@ distanceIndices <- function( batch.no, batch.size, accessions ) {
 }
 
 pairsForAccessions <- function( all.pairs, accessions ) {
-  # Filters the argument set of protein pairs 'all.pairs' for all those where
+  # Filters the argument matrix of protein pairs 'all.pairs' for all those where
   # one pair member is contained in argument set 'accessions'. 
   #
   # Args:
@@ -434,4 +430,27 @@ pairsForAccessions <- function( all.pairs, accessions ) {
   # least a single accession of argument set 'accessions'.
   #   
   all.pairs[ all.pairs[,1] %in% accessions | all.pairs[,2] %in% accessions, , drop=F ]
+}
+
+pairsForAccessionsAssumingSymmetry <- function( all.pairs, accessions ) {
+  # Filters the argument matrix of protein pairs 'all.pairs' for all those where
+  # pair member in column one is contained in argument set 'accessions'. This
+  # method assumes that the table 'all.pairs' is i.e. the result of a
+  # symmetrical 'all vs all' sequence similarity search, whose result would
+  # have each pair twice once with member A in the first column and the second
+  # time in the second column. 
+  # 
+  # Remark: 19 comment lines for a single line of code...
+  #
+  # Args:
+  #  all.pairs : The 2+ column matrix or dataframe in which the set of protein
+  #              pairs is stored. Partner one is supposed to be in column one
+  #              and partner two in column two.
+  #  accessions : The set of unique protein accessions to extract all existing
+  #               pairs for.
+  #
+  # Returns: The subset of argument 'all.pairs' where each pair contains at
+  # least a single accession of argument set 'accessions'.
+  #   
+  all.pairs[ all.pairs[,1] %in% accessions, , drop=F ]
 }
