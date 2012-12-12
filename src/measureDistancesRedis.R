@@ -22,17 +22,41 @@ src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
 
 # Usage:
-print( "Usage: Rscript measureDistancesRedis.R path/2/proteins.fasta path/2/accession_per_line.txt redis.host redis.port no.parallel.processes preschedule.jobs['true'|'false']")
-print( "WARNING: Make sure the complete sequence names in the FASTA file are exactly the same as in the accession_per_line file!" )
-print( "Remember, that it is required to have setup this computation beforehand. See R script 'initalizeMeasureDistances.R' for details." )
+print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl path/2/blast_out.tbl cores.2.use REDIS-URL REDIS-Port")
+print( "WARNING: Make sure the _complete_ sequence names in the FASTA file are _exactly the same_ as in the function annotation file!" )
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
 
-# Connect to redis:
-redis.host <- trailing.args[[ 3 ]]
-redis.port <- trailing.args[[ 4 ]]
-# Test, if REDIS is available:
+# Read fasta:
+aa.seqs <- sapply( read.AAStringSet( trailing.args[[ 1 ]] ), function(s) toString(s) )
+print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[ 1 ]]) )
+
+# Load Uniprot function (InterPro and GO) Annotations:
+f <- file( trailing.args[[ 2 ]], "r" )
+annos <- unserialize( f )
+close( f )
+print( paste("Read", ncol(annos), "function annotations from", trailing.args[[ 2 ]]) )
+
+# Load domain weights table:
+dom.weights <- read.table( trailing.args[[ 3 ]] )
+print( paste("Read", nrow(dom.weights), "domain weights from table", trailing.args[[ 3 ]]) )
+
+# Read tabular Blast Output
+blast.out <- read.table( trailing.args[[ 4 ]] )
+
+# How many cores to use:
+options( 'mc.cores'=trailing.args[[ 5 ]] )
+
+# Redis URL and port:
+redis.host <- as.character( trailing.args[[ 6 ]] )
+redis.port <- as.integer( trailing.args[[ 7 ]] )
+
+# Begin
+print( "Starting computation" )
+print( paste( "Will be using", options('mc.cores'), "parallel threads." ) )
+
+# Connect to REDIS:
 tryCatch(
   redisConnect( host=redis.host, port=redis.port ),
   error=function( e ) {
@@ -40,60 +64,23 @@ tryCatch(
       redis.host, ":", redis.port, "\n", as.character( e )
     )
     stop( err.msg )
-  },
-  finaly=function() {
-    redisClose()
   }
 )
 
-# How many cores to use:
-options( 'mc.cores'=trailing.args[[ 5 ]] )
-
-# Preschedule jobs?
-preschedule.jobs <- grepl( "^t|true|yes|y$", as.character( trailing.args[[ 6 ]] ), ignore.case=T )
-
-# Init each loop iteration with this function:
-init.thread.funk <- function() {
-  redisConnect( host=redis.host, port=redis.port )
-}
-
-# Close each loop iteration with this function:
-close.thread.funk <- if( preschedule.jobs ) {
-    function() {
-      redisClose()
-      # Because sometimes recycling of prescheduled threads happens faster than
-      # garbage collection which can lead to socket connection problems,
-      # collect the garbage manually:
-      gc()
-    }
-  } else {
-    function() {
-      redisClose()
-    }
-  }
-
-# Read fasta:
-aa.seqs <- sapply( read.AAStringSet( trailing.args[[1]] ), function(s) toString(s) )
-print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[1]]) )
-
-# Read Accessions to process:
-accs <- as.character( read.table( trailing.args[[2]] )$V1 )
-print( paste("Read", length(accs), "accessions to compute partial distances for. Accessions-File is:", trailing.args[[2]]) )
-
-print( "Starting computation" )
-print( paste( "Will be using", options('mc.cores'), "cores" ) )
+# Generate pairs of protein accessions to compute distances for:
+dist.pairs <- pairsFromBlastResult( blast.out )
+print( paste( "Computing distances for", length( dist.pairs ), "protein pairs." ) )
 
 # Partial Sequence Distances:
-no.res <- partialSequenceDistancesRedis( aa.seqs, accs, lapply.funk=mclapply,
-  init.thread.funk=init.thread.funk, close.thread.funk=close.thread.funk,
-  mc.preschedule=preschedule.jobs
+redisMSet(
+  partialSequenceDistances( aa.seqs, dist.pairs, lapply.funk=mclapply )
 )
-print( "Computed sequence distances" )
 
 # Partial Domain Architecture Distances:
-no.res <- partialDomainArchitectureDistancesRedis( names( aa.seqs ), accs, lapply.funk=mclapply,
-  init.thread.funk=init.thread.funk, close.thread.funk=close.thread.funk,
-  mc.preschedule=preschedule.jobs
+redisMSet(
+  partialDomainArchitectureDistances( annos, dom.weights, dist.pairs,
+    lapply.funk=mclapply
+  )
 )
 
 print( "DONE" )

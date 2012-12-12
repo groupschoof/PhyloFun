@@ -113,7 +113,7 @@ mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
   #       argument 'distances.tbl'.
   #
   # Args:
-  #  distances.tbl : A matric containing distance measures (columns) for pairs
+  #  distances.tbl : A matrix containing distance measures (columns) for pairs
   #                  of proteins (rows), as i.e. returned by function
   #                  'measureDistances'.
   #  p.column.name : The distance measure on which to base the computation of
@@ -194,6 +194,103 @@ measureEuclideanDists <- function( dists.mtrx, dists.to.coordinates=c( 0,0 ),
           rownames(dists.mtrx)[[i]],
           c( colnames(dists.mtrx), euc.dist.col )
         ) 
+      )
+    })
+  )
+}
+
+gridPMutation <- function( dists.mtrx, grid.by=0.1,
+  round.2.digits=( nchar( as.character(grid.by) ) - 2 ),
+  p.column.index=1, lapply.funk=lapply ) {
+  # Fits the measured probabilites in argument column 'p.column.index' of
+  # argument matrix 'dists.mtrx' to the grid sequence from argument 'grid.by'
+  # to one, by 'grid.by' steps. Fitting is done by rounding to nearest grid
+  # value. If no suitable value for a given grid.point is encountered in
+  # interval ( grid.point - grid.by / 2, grid.point + grid.by / 2 ] NA is
+  # assigned to that grid.point. 
+  #
+  # Args:
+  #  dists.mtrx : The matrix of mutation probabilities and distances measured
+  #               for each pair of proteins, as returned by function
+  #               'mutationProbabilityDistribution'.
+  #  grid.by    : The steps to create the grid sequence with as in seq(
+  #               grid.by, 1, by=grid.by ).
+  #  round.2.digits : The grid sequence is rounded to these digits to ensure
+  #                   rounding errors in comparisons. Has to have as many
+  #                   decimal digits as argument 'grid.by'.
+  #  p.column.index : The index of argument 'dists.mtrx' column in which to
+  #                   find the measured probabilites.
+  #  lapply.funk : Set to 'mclapply' if parallel execution is wanted.
+  #
+  # Returns: A matrix with as many rows as grid points are created, where each
+  # row hold the first matching row of argument 'dists.mtrx' for its
+  # corresponding grid.point. The grid.points are stored in the first column of
+  # the matrix, while the other columns are unchanged as they appear in
+  # 'dists.mtrx'.
+  #   
+  grd <- round( seq( grid.by, 1, by=grid.by ),
+    round.2.digits
+  )
+  interval <- grid.by / 2
+  gridded <- do.call( 'rbind', 
+    lapply.funk( grd, function( x ) {
+      hits <- dists.mtrx[ 
+        abs( dists.mtrx[ , p.column.index ] - x ) < interval | 
+        ( dists.mtrx[ , p.column.index ] - x ) == interval, , drop=F 
+      ]
+      if ( nrow(hits) > 0 ) {
+        hits[ 1, , drop=F ]
+      } else {
+        NA
+      }
+    })
+  )
+  gridded <- cbind( grd, gridded )
+  colnames( gridded ) <- c(
+    paste( colnames(dists.mtrx)[p.column.index], "grid", sep="." ),
+    colnames( dists.mtrx )
+  )
+  gridded
+}
+
+pMutationMinMaxParentValues <- function( p.mut.dists.mtrx, p.column,
+  parent.columns=c("Sequence.Distance", "Domain.Architecture.Distance",
+    "Euclidean.Distance.To.Origin"), round.2.digits=2 ) {
+  # Rounds the measured probabilities to 'round.2.digits' and generates a
+  # unique sorted list of them. For each of these p-values the matching rows in
+  # argument 'p.mut.dists.mtrx' are selected and the minimum and maximum values
+  # of columns 'parent.columns' extracted. These values are composed into a new
+  # matrix.
+  #
+  # Args:
+  #  p.mut.dists.mtrx : The matrix of mutation probabilites and measured
+  #                     distances as returned by function
+  #                     'mutationProbabilityDistribution'.
+  #  p.column : The name of the column in which the probabilities are stored.
+  #  parent.columns : Vector of column names the mutation probability depend
+  #                   on, the min and max values are computed for these
+  #                   columns.
+  #  round.2.digits : The number of decimal digits to round the p-values to.
+  #
+  # Returns: A matrix in which for each unique rounded p-value the found
+  # matching min and max values of the 'parent.columns' are stored.
+  #   
+  rnd <- p.mut.dists.mtrx
+  rnd[ , p.column ] <- round( rnd[ , p.column ], round.2.digits )
+  ps <- unique( rnd[ , p.column ] )
+  do.call( 'rbind',
+    lapply( ps, function( p ) {
+      candidates <- rnd[ rnd[ , p.column ] == p, , drop=F ] 
+      parent.mins <- lapply( parent.columns, function( p.parent ) {
+        min( candidates[ , p.parent ], na.rm=T )
+      })
+      parent.maxs <- lapply( parent.columns, function( p.parent ) {
+        max( candidates[ , p.parent ], na.rm=T )
+      })
+      matrix( c( p, unlist(parent.mins), unlist( parent.maxs ) ), nrow=1,
+        dimnames=list( c(), c( p.column, paste( "min", parent.columns, sep="." ),
+            paste( "max", parent.columns, sep="." ) )
+        )
       )
     })
   )

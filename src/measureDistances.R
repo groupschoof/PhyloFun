@@ -1,7 +1,7 @@
 library(tools)
 library(Biostrings)
+library(phangorn)
 library(parallel)
-library(rredis)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -20,9 +20,10 @@ src.project.file <- function(...) {
 src.project.file('src','domainArchitectureSimilarity.R')
 src.project.file('src','domainArchitectureSimilarityRedis.R')
 src.project.file('src','loadUniprotKBEntries.R')
+src.project.file('src','measureDistanceFunctions.R')
 
 # Usage:
-print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl path/2/blast_out.tbl cores.2.use REDIS-URL REDIS-Port")
+print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/protein_function_annotation_matrix.r_serialized domain_weights_table.tbl path/2/blast_out.tbl go_term_id_per_line.tbl cores.2.use path/2/output_dir")
 print( "WARNING: Make sure the _complete_ sequence names in the FASTA file are _exactly the same_ as in the function annotation file!" )
 
 # Input
@@ -44,43 +45,70 @@ print( paste("Read", nrow(dom.weights), "domain weights from table", trailing.ar
 
 # Read tabular Blast Output
 blast.out <- read.table( trailing.args[[ 4 ]] )
+print( paste("Read", nrow(blast.out), "blast results (query-hit-pairs) from table", trailing.args[[ 4 ]]) )
+
+# Read GO terms to measure distances for:
+go.terms <- as.character( read.table( trailing.args[[ 5 ]] )[ , 1 ] )
+print( paste("Read", length( go.terms ), "GO terms to measure mutation
+    probabilities", "depending on sequence and domain architecture distances
+    for from file", trailing.args[[ 5 ]])
+)
 
 # How many cores to use:
-options( 'mc.cores'=trailing.args[[ 5 ]] )
+options( 'mc.cores'=trailing.args[[ 6 ]] )
+print( paste( "Will be using", options('mc.cores'), "parallel threads." ) )
 
-# Redis URL and port:
-redis.host <- as.character( trailing.args[[ 6 ]] )
-redis.port <- as.integer( trailing.args[[ 7 ]] )
+# Path to output directory:
+path.2.output.dir <- as.character( trailing.args[[ 7 ]] )
+print( paste( "Will write output to files in directory", path.2.output.dir ) )
 
 # Begin
 print( "Starting computation" )
-print( paste( "Will be using", options('mc.cores'), "parallel threads." ) )
 
-# Connect to REDIS:
-tryCatch(
-  redisConnect( host=redis.host, port=redis.port ),
-  error=function( e ) {
-    err.msg <- paste( "Could not connect to REDIS using URL ",
-      redis.host, ":", redis.port, "\n", as.character( e )
-    )
-    stop( err.msg )
-  }
-)
+for ( go.term in go.terms ) {
+  # Output path
+  go.term.out.path <- paste( path.2.output.dir, "/", go.term, "_", sep="" )
 
-# Generate pairs of protein accessions to compute distances for:
-dist.pairs <- pairsFromBlastResult( blast.out )
-print( paste( "Computing distances for", length( dist.pairs ), "protein pairs." ) )
-
-# Partial Sequence Distances:
-redisMSet(
-  partialSequenceDistances( aa.seqs, dist.pairs, lapply.funk=mclapply )
-)
-
-# Partial Domain Architecture Distances:
-redisMSet(
-  partialDomainArchitectureDistances( annos, dom.weights, dist.pairs,
-    lapply.funk=mclapply
+  # Measure distances
+  go.dists <- measureDistances( go.term, annotation.matrix, blast.out, aa.seqs,
+    dom.weights, lapply.funk=mclapply
   )
-)
+  write.table( go.dists,
+    file=paste( go.term.out.path, "_distances.tbl", sep="" )
+  )
+  
+  # mutation probability depending on sequence distance
+  write.table( 
+    pMutationMinMaxParentValues(
+      mutationProbabilityDistribution( go.dists, "Sequence.Distance",
+        lapply.funk=mclapply
+      ), 
+      "p.mutation|Sequence.Distance"
+    ),
+    file=paste( go.term.out.path, "p_mut_seq_dist.tbl", sep="" )
+  )
+  
+  # mutation probability depending on domain architecture distance
+  write.table(
+    pMutationMinMaxParentValues(
+      mutationProbabilityDistribution( go.dists,
+        "Domain.Architecture.Distance", lapply.funk=mclapply
+      ),
+      "p.mutation|Domain.Architecture.Distance"
+    ), 
+    file=paste( go.term.out.path, "p_mut_das_dist.tbl", sep="" )
+  )
+
+  # mutation probability depending on euclidean distance to origin
+  write.table(
+    pMutationMinMaxParentValues(
+      mutationProbabilityDistribution( go.dists,
+        "Euclidean.Distance.To.Origin", lapply.funk=mclapply
+      ),
+      "p.mutation|Euclidean.Distance.To.Origin"
+    ),
+    file=paste( go.term.out.path, "p_mut_seq_das_dist.tbl", sep="" )
+  )
+}
 
 print( "DONE" )

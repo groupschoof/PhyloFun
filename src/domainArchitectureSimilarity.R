@@ -218,10 +218,8 @@ pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject,
     error=function( e ) {
       msg <- paste(
         "Could not compute pairwise sequence distance for arguments",
-        aa.seq.pattern, aa.seq.subject,
-        type, sub.matrix, gap.open.pnlty,
-        gap.extension.pnlty, distance.model,
-        e, sep="\n"
+        aa.seq.pattern, aa.seq.subject, sub.matrix, gap.open.pnlty,
+        gap.extension.pnlty, distance.model, e, sep="\n"
       )
       write( msg, stderr() )
       NA

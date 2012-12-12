@@ -110,3 +110,66 @@ checkEquals( p.mut.das[ , "p.mutation|Domain.Architecture.Distance", drop=F ],
 checkEquals( p.mut.das[ , 2:ncol(p.mut.das) ],
   dists.test[ sort.list( dists.test[ , "Domain.Architecture.Distance" ] ), ]
 )
+
+dists.test <- matrix( c( 0.1, 0.3, 0.6, 1.0, 0.1, 0.6, 0.3, 1.0, 0, 1, 1, 1, 1.26, 1.13, 0.74, 1.27 ),
+  nrow=4, ncol=4, dimnames=list(
+    c( "A_B", "A_C", "B_C", "C_D" ),
+    c( "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:7272727", "Euclidean.Distance.To.Origin" )
+  )
+)
+exp.p.mut.seq.das <- matrix( c( 0, 0, 0.33, 0.33 ), ncol=1,
+  dimnames=list(
+    c( "B_C", "A_C", "A_B", "C_D" ),
+    "p.mutation|Euclidean.Distance.To.Origin"
+  )
+)
+p.mut.das.seq <- round( mutationProbabilityDistribution( dists.test, "Euclidean.Distance.To.Origin" ), 2 )
+# print( p.mut.das.seq )
+checkEquals( p.mut.das.seq[ , "p.mutation|Euclidean.Distance.To.Origin", drop=F ], exp.p.mut.seq.das )
+checkEquals( p.mut.das.seq[ , 2:ncol(p.mut.das.seq) ],
+  dists.test[ sort.list( dists.test[ , "Euclidean.Distance.To.Origin" ] ), ]
+)
+
+# Test pMutationQuantils
+print("Testing pMutationQuantils(...)")
+p.mut.quants <- gridPMutation( p.mut.das.seq )
+exp.p.mut.quants.1 <- matrix( c( NA, NA, 0.33, NA, NA, NA, NA, NA, NA, NA ),
+  ncol=1, dimnames=list(
+    c("", "", "A_B", "", "", "", "", "", "", "" ),
+    "p.mutation|Euclidean.Distance.To.Origin"
+  )
+)
+checkEquals( p.mut.quants[ , 2, drop=F ], exp.p.mut.quants.1 )
+
+# Test pMutationMinMaxParentValues
+print("Testing pMutationMinMaxParentValues(...)")
+go_0036057.p.mut.dists <- matrix(
+  c(0.0, 0.1, 0.1, 0.4, 0.4, 0.6, 0.7, 1.0,
+    0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.9, 1.2,
+    0.0, 0.95, 0.1, 0.9, 0.15, 0.8, 0.25, 1.0,
+    1, 1, 1, 1, 0, 0, 0, 0,
+    0.5, 0.75, 0.7, 1.0, 1.25, 1.15, 1.5, 1.75
+  ), nrow=8, ncol=5,
+  dimnames=list(
+    c(),c("p.mutation|Sequence.Distance", "Sequence.Distance",
+      "Domain.Architecture.Distance", "Share.GO:0036057",
+      "Euclidean.Distance.To.Origin")
+  )
+)
+go_0036057.p.mut.min.max <- pMutationMinMaxParentValues( go_0036057.p.mut.dists,
+  "p.mutation|Sequence.Distance" )
+exp.go_0036057.p.mut.min.max <- matrix( 
+  c( 0.0, 0.5, 0.00, 0.50, 0.5, 0.00, 0.50,
+     0.1, 0.6, 0.10, 0.70, 0.6, 0.95, 0.75,
+     0.4, 0.7, 0.15, 1.00, 0.7, 0.90, 1.25,
+     0.6, 0.8, 0.80, 1.15, 0.8, 0.80, 1.15,
+     0.7, 0.9, 0.25, 1.50, 0.9, 0.25, 1.50,
+     1.0, 1.2, 1.00, 1.75, 1.2, 1.00, 1.75
+  ), ncol=7, byrow=T, dimnames=list( c(),
+  c( "p.mutation|Sequence.Distance", "min.Sequence.Distance",
+      "min.Domain.Architecture.Distance", "min.Euclidean.Distance.To.Origin",
+      "max.Sequence.Distance", "max.Domain.Architecture.Distance",
+      "max.Euclidean.Distance.To.Origin" )
+  )
+)
+checkEquals( go_0036057.p.mut.min.max, exp.go_0036057.p.mut.min.max )
