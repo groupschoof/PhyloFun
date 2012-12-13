@@ -60,11 +60,11 @@ exp.dists <- matrix(
   ),
   byrow=T, nrow=4,
   dimnames=list(
-    c( "A0PKB2_A0RLX8", "A0K2M8_A0RLX8", "A0K2M8_A0KR35", "A0KEC3_A0Q3U6" ),
+    c( "A0RLX8_A0PKB2", "A0RLX8_A0K2M8", "A0K2M8_A0KR35", "A0Q3U6_A0KEC3" ),
     c( "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:0017111", "Euclidean.Distance.To.Origin" )
-
   )
 )
+# print( exp.dists )
 checkEquals( round( dists, 2 ), exp.dists )
 
 # Test pMutation
@@ -129,7 +129,6 @@ checkEquals( p.mut.das.seq[ , "p.mutation|Euclidean.Distance.To.Origin", drop=F 
 checkEquals( p.mut.das.seq[ , 2:ncol(p.mut.das.seq) ],
   dists.test[ sort.list( dists.test[ , "Euclidean.Distance.To.Origin" ] ), ]
 )
-
 
 
 # Test pMutationQuantils

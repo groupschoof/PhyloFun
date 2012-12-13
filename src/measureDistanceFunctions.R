@@ -2,7 +2,7 @@ measureDistances <- function( annotation, annotation.matrix,
   blast.result.tbl, aa.seqs, domain.weights.table,
   annotation.type="GO", round.2.digits=2,
   blast.tbl.query.col=1, blast.tbl.hit.col=2,
-  lapply.funk=lapply, use.unique.pairs=F ) {
+  lapply.funk=lapply ) {
   # For each protein pair, where at least one partner has the argument
   # 'annotation' the sequence and domain architecture distances are
   # computed. The distances are returned along with a boolean indicating
@@ -45,8 +45,6 @@ measureDistances <- function( annotation, annotation.matrix,
   annot.pairs.tbl <- pairsForAccessionsAssumingSymmetry( blast.result.tbl,
     colnames( annot.annot.mtrx)
   )
-  if ( use.unique.pairs )
-    annot.pairs.tbl <- uniquePairs( annot.pairs.tbl, lapply.funk=lapply.funk )
   # Measure distances and sort by pairs sharing and not sharing the annotation,
   # respectively:
   do.call('rbind', 
@@ -68,11 +66,14 @@ measureDistances <- function( annotation, annotation.matrix,
       shrd.annot <- shareAnnotation( annotation, annotation.matrix,
         acc.a, acc.b
       )
-      eucl.dist <- dist( matrix( c(0, seq.dist, 0, das.dist), nrow=2 ) )[[1]]
+      eucl.dist <- round( 
+        dist( matrix( c(0, seq.dist, 0, das.dist), nrow=2 ) )[[1]],
+        round.2.digits
+      )
       matrix(
         c( seq.dist, das.dist, shrd.annot, eucl.dist ), nrow=1,
         dimnames=list(
-          sortedPairName( acc.a, acc.b ),
+          paste( acc.a, acc.b, sep="_" ),
           c( "Sequence.Distance", "Domain.Architecture.Distance",
             paste("Share.", annotation, sep=""),
             "Euclidean.Distance.To.Origin"
@@ -130,13 +131,14 @@ mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
   # for each row. Sorting is done on argument column 'p.mut.colname'.
   #   
   p.mut.colname <- paste( "p.mutation|", p.column.name, sep="" )
-  srtd <- distances.tbl[ sort.list( distances.tbl[ , p.column.name ] ), ,
+  srtd <- distances.tbl[ sort.list( as.numeric( distances.tbl[ , p.column.name ] ) ), ,
     drop=F ]
   pairs.sharing <- 0; pairs.diff <- 0; p.mut.last <- 0;
+  ps <- unique( as.numeric( srtd[ , p.column.name ] ) )
   do.call( 'rbind',
-    lapply( 1:nrow(srtd), function(i) {
+    lapply( ps, function(p) {
       # Count pairs sharing and not sharing annotation for current value:
-      candidates <- srtd[ srtd[ , p.column.name ] == srtd[ , p.column.name ][ i ], , drop=F ]
+      candidates <- srtd[ srtd[ , p.column.name ] == p, , drop=F ]
       no.cand.sharing.anno <- nrow( candidates[ candidates[ , annotation.shared.column ] == TRUE, , drop=F ] )
       pairs.sharing <<- pairs.sharing + no.cand.sharing.anno
       pairs.diff <<- pairs.diff + ( nrow(candidates) - no.cand.sharing.anno )
@@ -145,13 +147,9 @@ mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
       # Mutation probability must not decline with increasing distances:
       p.mut.last <<- p.mut
 
-      matrix(
-        c( p.mut, srtd[ i, ] ),
-        nrow=1, dimnames=list(
-          rownames( srtd )[ i ],
-          c( p.mut.colname, colnames( srtd ) )
-        )
-      )
+      m <- cbind( p.mut, candidates )
+      colnames( m ) <- c( p.mut.colname, colnames( candidates ) )
+      m
     })
   )
 }

@@ -413,9 +413,10 @@ distanceIndices <- function( batch.no, batch.size, accessions ) {
   dist.pairs
 }
 
-pairsForAccessions <- function( all.pairs, accessions ) {
-  # Filters the argument matrix of protein pairs 'all.pairs' for all those where
-  # one pair member is contained in argument set 'accessions'. 
+pairsForAccessions <- function( all.pairs, accessions, lapply.funk=lapply ) {
+  # Filters the argument matrix of protein pairs 'all.pairs' for all those
+  # where one pair member is contained in argument set 'accessions'. Pairs are
+  # filtered for uniqueness and identity pairs like ( a, a ) are excluded.
   #
   # Args:
   #  all.pairs : The 2 column matrix or dataframe in which the set of protein
@@ -423,22 +424,27 @@ pairsForAccessions <- function( all.pairs, accessions ) {
   #              and partner two in column two.
   #  accessions : The set of unique protein accessions to extract all existing
   #               pairs for.
+  #  lapply.funk : Set to 'mclapply' if parallel execution is wanted.
   #
   # Returns: The subset of argument 'all.pairs' where each pair contains at
-  # least a single accession of argument set 'accessions'.
+  # least a single accession of argument set 'accessions'. Returned pairs are
+  # unique and do not contain identity pairs.
   #   
-  all.pairs[ all.pairs[,1] %in% accessions | all.pairs[,2] %in% accessions, , drop=F ]
+  uniquePairs(
+    all.pairs[ all.pairs[,1] %in% accessions | all.pairs[,2] %in% accessions, , drop=F ],
+    lapply.funk=lapply.funk
+  )
 }
 
-pairsForAccessionsAssumingSymmetry <- function( all.pairs, accessions ) {
+pairsForAccessionsAssumingSymmetry <- function( all.pairs, accessions,
+  lapply.funk=lapply ) {
   # Filters the argument matrix of protein pairs 'all.pairs' for all those where
   # pair member in column one is contained in argument set 'accessions'. This
   # method assumes that the table 'all.pairs' is i.e. the result of a
   # symmetrical 'all vs all' sequence similarity search, whose result would
   # have each pair twice once with member A in the first column and the second
-  # time in the second column. 
-  # 
-  # Remark: 19 comment lines for a single line of code...
+  # time in the second column. Pairs are filtered for uniqueness and identity
+  # pairs like ( a, a ) are excluded.
   #
   # Args:
   #  all.pairs : The 2+ column matrix or dataframe in which the set of protein
@@ -446,18 +452,24 @@ pairsForAccessionsAssumingSymmetry <- function( all.pairs, accessions ) {
   #              and partner two in column two.
   #  accessions : The set of unique protein accessions to extract all existing
   #               pairs for.
+  #  lapply.funk : Set to 'mclapply' if parallel execution is wanted.
   #
   # Returns: The subset of argument 'all.pairs' where each pair contains at
-  # least a single accession of argument set 'accessions'.
+  # least a single accession of argument set 'accessions'. Returned pairs are
+  # unqique and do not contain identity pairs.
   #   
-  all.pairs[ all.pairs[,1] %in% accessions, , drop=F ]
+  uniquePairs(
+    all.pairs[ all.pairs[,1] %in% accessions, , drop=F ],
+    lapply.funk=lapply.funk
+  )
 }
 
 uniquePairs <- function( pairs.tbl, lapply.funk=lapply ) {
   # Each row - column 1 and 2 - of argument matrix 'pairs.tbl' is sorted
   # alphabetically. The set of so sorted pairs is then filtered for _unique_
   # pairs. So a symmetrical pair ( a, b ) and ( b, a ) will only appear once in
-  # the result as pair ( a, b ).
+  # the result as pair ( a, b ). Also identity pairs like ( a, a ) are
+  # excluded.
   #
   # Args:
   #  pairs.tbl : The table of symmetrical pairs with member one in column 1 and
@@ -467,11 +479,22 @@ uniquePairs <- function( pairs.tbl, lapply.funk=lapply ) {
   # Returns: A two column matrix of pairs, whose members are alphabetically
   # sorted.
   #   
+  pairs.set <- list()
   do.call( 'rbind', 
-    unique(
-      lapply.funk( 1:nrow(pairs.tbl), function(i) {
-        sort( c( pairs.tbl[ i, 1 ], pairs.tbl[ i, 2 ] ) )
-      })
-    )
+    lapply.funk( 1:nrow(pairs.tbl), function(i) {
+      self.hit <- identical( as.character( pairs.tbl[[ i, 1 ]] ),
+        as.character( pairs.tbl[[ i, 2 ]] )
+      )
+      srt.pair.nm <- sortedPairName( pairs.tbl[[ i, 1 ]], pairs.tbl[[ i, 2 ]] )
+      if( ! self.hit && ! srt.pair.nm %in% pairs.set ) {
+        pairs.set <<- append( pairs.set, srt.pair.nm )
+        c(
+          as.character( pairs.tbl[[ i, 1 ]] ),
+          as.character( pairs.tbl[[ i, 2 ]] )
+        )
+      } else {
+        NULL
+      }
+    })
   )
 }

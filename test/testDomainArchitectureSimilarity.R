@@ -223,6 +223,6 @@ checkEquals( blast.pairs, exp.pairs )
 
 # Test uniquePairs
 print("Testing uniquePairs(...)")
-pairs.test <- matrix( c( "A", "B", "B", "A", "C", "D", "D", "C" ), byrow=T, nrow=4 )
+pairs.test <- matrix( c( "A", "B", "B", "A", "C", "D", "D", "C", "X", "X" ), byrow=T, nrow=5 )
 uniq.pairs.test <- uniquePairs( pairs.test )
 checkEquals( uniq.pairs.test, matrix( c( "A", "B", "C", "D" ), byrow=T, nrow=2 ) )
