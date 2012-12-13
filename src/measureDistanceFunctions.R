@@ -31,13 +31,13 @@ measureDistances <- function( annotation, annotation.matrix,
   #                         is wanted.
   #
   # Returns: a matrix where each row is labelled with the considered protein
-  # pair (accessions in alphabetical order) and columns are sequence and
-  # domain architecture distance, respectively. Another column holds a boolean
-  # indicating wether the pairs shares the argument annotation. The last column
-  # hold the pairwise euclidean distance of the distance pair coordinates to
-  # (0,0). The last column is used to sort the measured distances when
-  # computing the mutation probability depending on _both_ distances: p(
-  # "Mutation" | Sequence.Distance, Domain.Architecture.Distance )
+  # pair and columns are sequence and domain architecture distance,
+  # respectively. Another column holds a boolean indicating wether the pairs
+  # shares the argument annotation. The last column hold the pairwise euclidean
+  # distance of the distance pair coordinates to (0,0). The last column is used
+  # to sort the measured distances when computing the mutation probability
+  # depending on _both_ distances: p( "Mutation" | Sequence.Distance,
+  # Domain.Architecture.Distance )
   #   
   annot.annot.mtrx <- sharedAnnotation( annotation.matrix, annotation,
     annotation.type=annotation.type
@@ -45,8 +45,7 @@ measureDistances <- function( annotation, annotation.matrix,
   annot.pairs.tbl <- pairsForAccessionsAssumingSymmetry( blast.result.tbl,
     colnames( annot.annot.mtrx)
   )
-  # Measure distances and sort by pairs sharing and not sharing the annotation,
-  # respectively:
+  # Measure distances:
   do.call('rbind', 
     lapply.funk( 1:nrow(annot.pairs.tbl), function(i) {
       acc.a <- as.character( annot.pairs.tbl[[ i, blast.tbl.query.col ]] ) 
