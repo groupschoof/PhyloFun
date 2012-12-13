@@ -2,7 +2,7 @@ measureDistances <- function( annotation, annotation.matrix,
   blast.result.tbl, aa.seqs, domain.weights.table,
   annotation.type="GO", round.2.digits=2,
   blast.tbl.query.col=1, blast.tbl.hit.col=2,
-  lapply.funk=lapply ) {
+  lapply.funk=lapply, use.unique.pairs=F ) {
   # For each protein pair, where at least one partner has the argument
   # 'annotation' the sequence and domain architecture distances are
   # computed. The distances are returned along with a boolean indicating
@@ -45,6 +45,8 @@ measureDistances <- function( annotation, annotation.matrix,
   annot.pairs.tbl <- pairsForAccessionsAssumingSymmetry( blast.result.tbl,
     colnames( annot.annot.mtrx)
   )
+  if ( use.unique.pairs )
+    annot.pairs.tbl <<- uniquePairs( annot.pairs.tbl )
   # Measure distances and sort by pairs sharing and not sharing the annotation,
   # respectively:
   do.call('rbind', 
