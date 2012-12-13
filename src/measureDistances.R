@@ -75,7 +75,7 @@ for ( go.term in go.terms ) {
     dom.weights, lapply.funk=mclapply
   )
   write.table( go.dists,
-    file=paste( go.term.out.path, "_distances.tbl", sep="" )
+    file=paste( go.term.out.path, "distances.tbl", sep="" )
   )
   
   # mutation probability depending on sequence distance
