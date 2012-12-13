@@ -49,9 +49,10 @@ print( paste("Read", nrow(blast.out), "blast results (query-hit-pairs) from tabl
 
 # Read GO terms to measure distances for:
 go.terms <- as.character( read.table( trailing.args[[ 5 ]] )[ , 1 ] )
-print( paste("Read", length( go.terms ), "GO terms to measure mutation
-    probabilities", "depending on sequence and domain architecture distances
-    for from file", trailing.args[[ 5 ]])
+print( paste("Read", length( go.terms ),
+    "GO terms to measure mutation probabilities",
+    "depending on sequence and domain architecture distances for from file",
+    trailing.args[[ 5 ]])
 )
 
 # How many cores to use:
