@@ -133,11 +133,12 @@ mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
   pairs.sharing <- 0; pairs.diff <- 0; p.mut.last <- 0;
   do.call( 'rbind',
     lapply( 1:nrow(srtd), function(i) {
-      if ( srtd[[ i, annotation.shared.column ]] ) {
-        pairs.sharing <<- pairs.sharing + 1
-      } else {
-        pairs.diff <<- pairs.diff + 1
-      }
+      # Count pairs sharing and not sharing annotation for current value:
+      candidates <- srtd[ srtd[ , p.column.name ] == srtd[ , p.column.name ][ i ], , drop=F ]
+      no.cand.sharing.anno <- nrow( candidates[ candidates[ , annotation.shared.column ] == TRUE, , drop=F ] )
+      pairs.sharing <<- pairs.sharing + no.cand.sharing.anno
+      pairs.diff <<- pairs.diff + ( nrow(candidates) - no.cand.sharing.anno )
+
       p.mut <- pMutation( pairs.sharing, pairs.diff, p.mut.last )
       # Mutation probability must not decline with increasing distances:
       p.mut.last <<- p.mut
