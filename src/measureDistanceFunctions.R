@@ -46,7 +46,7 @@ measureDistances <- function( annotation, annotation.matrix,
     colnames( annot.annot.mtrx)
   )
   if ( use.unique.pairs )
-    annot.pairs.tbl <<- uniquePairs( annot.pairs.tbl, lapply.funk=lapply.funk )
+    annot.pairs.tbl <- uniquePairs( annot.pairs.tbl, lapply.funk=lapply.funk )
   # Measure distances and sort by pairs sharing and not sharing the annotation,
   # respectively:
   do.call('rbind', 
