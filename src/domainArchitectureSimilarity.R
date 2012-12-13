@@ -468,8 +468,8 @@ uniquePairs <- function( pairs.tbl, lapply.funk=lapply ) {
   # Each row - column 1 and 2 - of argument matrix 'pairs.tbl' is sorted
   # alphabetically. The set of so sorted pairs is then filtered for _unique_
   # pairs. So a symmetrical pair ( a, b ) and ( b, a ) will only appear once in
-  # the result as pair ( a, b ). Also identity pairs like ( a, a ) are
-  # excluded.
+  # the result as pair ( a, b ). Also identity pairs like ( a, a ) will be
+  # discarded.
   #
   # Args:
   #  pairs.tbl : The table of symmetrical pairs with member one in column 1 and
@@ -479,22 +479,17 @@ uniquePairs <- function( pairs.tbl, lapply.funk=lapply ) {
   # Returns: A two column matrix of pairs, whose members are alphabetically
   # sorted.
   #   
-  pairs.set <- list()
   do.call( 'rbind', 
-    lapply.funk( 1:nrow(pairs.tbl), function(i) {
-      self.hit <- identical( as.character( pairs.tbl[[ i, 1 ]] ),
-        as.character( pairs.tbl[[ i, 2 ]] )
-      )
-      srt.pair.nm <- sortedPairName( pairs.tbl[[ i, 1 ]], pairs.tbl[[ i, 2 ]] )
-      if( ! self.hit && ! srt.pair.nm %in% pairs.set ) {
-        pairs.set <<- append( pairs.set, srt.pair.nm )
-        c(
-          as.character( pairs.tbl[[ i, 1 ]] ),
-          as.character( pairs.tbl[[ i, 2 ]] )
-        )
-      } else {
-        NULL
-      }
-    })
+    unique(
+      lapply.funk( 1:nrow(pairs.tbl), function(i) {
+        acc.a <- as.character( pairs.tbl[[ i, 1 ]] )
+        acc.b <- as.character( pairs.tbl[[ i, 2 ]] )
+        if( ! identical( acc.a, acc.b ) )
+          sort( c( acc.a, acc.b ) )
+        else
+          NULL
+      })
+    )
   )
 }
+
