@@ -70,7 +70,7 @@ for ( go.term in go.terms ) {
   go.term.out.path <- paste( path.2.output.dir, "/", go.term, "_", sep="" )
 
   # Measure distances
-  go.dists <- measureDistances( go.term, annotation.matrix, blast.out, aa.seqs,
+  go.dists <- measureDistances( go.term, annos, blast.out, aa.seqs,
     dom.weights, lapply.funk=mclapply
   )
   write.table( go.dists,
