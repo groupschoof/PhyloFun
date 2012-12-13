@@ -98,7 +98,7 @@ pMutation <- function( pairs.shared, pairs.diff, min.p.mut=0 ) {
 }
 
 mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
-  annotation.shared.column=3, lapply.funk=lapply ) {
+  annotation.shared.column=3 ) {
   # Measure function mutation probability depending on argument column
   # 'p.column.name': p( 'Function.Mutation' | 'p.mut.colname' ). This
   # probability is measured by sorting the argument matrix 'distances.tbl' by
@@ -122,7 +122,6 @@ mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
   #                             the boolean 'Does this pair share the
   #                             annotation, distances.tbl was computed for?'
   #                             (default=3) 
-  #  lapply.funk : Set to mclapply, if parallel computation is wanted.
   #
   # Returns: A sorted copy of argument matrix 'distances.tbl' with an
   # additional column holding the measured annotation mutation probabilities
@@ -133,7 +132,7 @@ mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
     drop=F ]
   pairs.sharing <- 0; pairs.diff <- 0; p.mut.last <- 0;
   do.call( 'rbind',
-    lapply.funk( 1:nrow(srtd), function(i) {
+    lapply( 1:nrow(srtd), function(i) {
       if ( srtd[[ i, annotation.shared.column ]] ) {
         pairs.sharing <<- pairs.sharing + 1
       } else {

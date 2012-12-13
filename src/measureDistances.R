@@ -81,10 +81,8 @@ for ( go.term in go.terms ) {
   # mutation probability depending on sequence distance
   write.table( 
     pMutationMinMaxParentValues(
-      mutationProbabilityDistribution( go.dists, "Sequence.Distance",
-        lapply.funk=mclapply
-      ), 
-      "p.mutation|Sequence.Distance"
+      mutationProbabilityDistribution( go.dists, "Sequence.Distance" )
+      , "p.mutation|Sequence.Distance"
     ),
     file=paste( go.term.out.path, "p_mut_seq_dist.tbl", sep="" )
   )
@@ -93,7 +91,7 @@ for ( go.term in go.terms ) {
   write.table(
     pMutationMinMaxParentValues(
       mutationProbabilityDistribution( go.dists,
-        "Domain.Architecture.Distance", lapply.funk=mclapply
+        "Domain.Architecture.Distance"
       ),
       "p.mutation|Domain.Architecture.Distance"
     ), 
@@ -104,7 +102,7 @@ for ( go.term in go.terms ) {
   write.table(
     pMutationMinMaxParentValues(
       mutationProbabilityDistribution( go.dists,
-        "Euclidean.Distance.To.Origin", lapply.funk=mclapply
+        "Euclidean.Distance.To.Origin"
       ),
       "p.mutation|Euclidean.Distance.To.Origin"
     ),
