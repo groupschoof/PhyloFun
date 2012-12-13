@@ -129,9 +129,9 @@ p2 <- "MQSIEDIWQETLQIVKKNMSKPSYDTWMKSTTAHSLEGNTFIISAPNNFVRDWLEKSYTQFIANILQEITGRL
 p.dist <- round( pairwiseSequenceDistance( p1, p2 ), 6 )
 checkTrue( ! is.null(p.dist) )
 checkEquals( class(p.dist), 'numeric' )
-checkEquals( p.dist, 0.814161 )
+checkEquals( p.dist, 0.813185 )
 # Assert symmetric distance measure:
-checkEquals( round( pairwiseSequenceDistance( p2, p1 ), 6 ), 0.814161 )
+checkEquals( round( pairwiseSequenceDistance( p2, p1 ), 6 ), 0.813185 )
 
 # Test replaceSelenocystein
 print("Testing replaceSelenocystein(...)")
@@ -146,8 +146,9 @@ prot.seq.dists <- sequenceDistances( prot.lst )
 checkEquals( class(prot.seq.dists), 'dist' )
 prot.seq.dists.mtrx <- round( as.matrix( prot.seq.dists ), 6 )
 checkEquals( prot.seq.dists.mtrx[[ 1, 1 ]], 0.0 )
-checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.814161 )
-checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.933567 )
+checkEquals( prot.seq.dists.mtrx[[ 1, 2 ]], 0.813185 )
+print( prot.seq.dists.mtrx[[ 1, 3 ]] )
+checkEquals( prot.seq.dists.mtrx[[ 1, 3 ]], 0.925284 )
 
 # Test partialSequenceDistances
 print("Testing partialSequenceDistances(...)")
@@ -156,7 +157,7 @@ prot.seq.dists <- partialSequenceDistances( prot.lst, prot.pairs )
 # print( prot.seq.dists )
 checkEquals( class( prot.seq.dists ), 'list' )
 checkEquals( length( prot.seq.dists ), 1 )
-checkEquals( round( prot.seq.dists[[ 1 ]], 6 ), 0.814161 )
+checkEquals( round( prot.seq.dists[[ 1 ]], 6 ), 0.813185 )
 
 # Test distanceMatrixIndices
 print("Testing distanceMatrixIndices(...)")
@@ -219,3 +220,9 @@ blast.result <- matrix(
 blast.pairs <- pairsFromBlastResult( blast.result )
 exp.pairs <- list( c("Query_A", "Hit_A"), c("Query_B", "Hit_B"), c("Query_C", "Hit_C") )
 checkEquals( blast.pairs, exp.pairs )
+
+# Test uniquePairs
+print("Testing uniquePairs(...)")
+pairs.test <- matrix( c( "A", "B", "B", "A" ), byrow=T, nrow=2 )
+uniq.pairs.test <- uniquePairs( pairs.test )
+checkEquals( uniq.pairs.test, matrix( c( "A", "B" ), byrow=T, nrow=1 ) )

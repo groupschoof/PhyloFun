@@ -452,3 +452,26 @@ pairsForAccessionsAssumingSymmetry <- function( all.pairs, accessions ) {
   #   
   all.pairs[ all.pairs[,1] %in% accessions, , drop=F ]
 }
+
+uniquePairs <- function( pairs.tbl, lapply.funk=lapply ) {
+  # Each row - column 1 and 2 - of argument matrix 'pairs.tbl' is sorted
+  # alphabetically. The set of so sorted pairs is then filtered for _unique_
+  # pairs. So a symmetrical pair ( a, b ) and ( b, a ) will only appear once in
+  # the result as pair ( a, b ).
+  #
+  # Args:
+  #  pairs.tbl : The table of symmetrical pairs with member one in column 1 and
+  #              member two in column 2.
+  #  lapply.funk : Set to mclapply, if parallel execution is wanted.
+  #
+  # Returns: A two column matrix of pairs, whose members are alphabetically
+  # sorted.
+  #   
+  do.call( 'rbind', 
+    unique(
+      lapply.funk( 1:nrow(pairs.tbl), function(i) {
+        sort( c( pairs.tbl[ i, 1 ], pairs.tbl[ i, 2 ] ) )
+      })
+    )
+  )
+}

@@ -29,6 +29,10 @@ print( "WARNING: Make sure the _complete_ sequence names in the FASTA file are _
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
 
+# How many cores to use:
+options( 'mc.cores'=trailing.args[[ 6 ]] )
+print( paste( "Will be using", options('mc.cores'), "parallel threads." ) )
+
 # Read fasta:
 aa.seqs <- sapply( read.AAStringSet( trailing.args[[ 1 ]] ), function(s) toString(s) )
 print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[ 1 ]]) )
@@ -44,7 +48,7 @@ dom.weights <- read.table( trailing.args[[ 3 ]] )
 print( paste("Read", nrow(dom.weights), "domain weights from table", trailing.args[[ 3 ]]) )
 
 # Read tabular Blast Output
-blast.out <- read.table( trailing.args[[ 4 ]] )
+blast.out <- uniquePairs( read.table( trailing.args[[ 4 ]] ), lapply.funk=mclapply )
 print( paste("Read", nrow(blast.out), "blast results (query-hit-pairs) from table", trailing.args[[ 4 ]]) )
 
 # Read GO terms to measure distances for:
@@ -54,10 +58,6 @@ print( paste("Read", length( go.terms ),
     "depending on sequence and domain architecture distances for from file",
     trailing.args[[ 5 ]])
 )
-
-# How many cores to use:
-options( 'mc.cores'=trailing.args[[ 6 ]] )
-print( paste( "Will be using", options('mc.cores'), "parallel threads." ) )
 
 # Path to output directory:
 path.2.output.dir <- as.character( trailing.args[[ 7 ]] )
