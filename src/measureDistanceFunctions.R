@@ -43,7 +43,7 @@ measureDistances <- function( annotation, annotation.matrix,
     annotation.type=annotation.type
   )
   annot.pairs.tbl <- pairsForAccessionsAssumingSymmetry( blast.result.tbl,
-    colnames( annot.annot.mtrx), lapply.funk=lapply.funk
+    colnames( annot.annot.mtrx)
   )
   # Measure distances:
   do.call('rbind', 
