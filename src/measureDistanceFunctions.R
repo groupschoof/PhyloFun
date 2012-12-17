@@ -46,41 +46,46 @@ measureDistances <- function( annotation, annotation.matrix,
     colnames( annot.annot.mtrx)
   )
   # Measure distances:
-  do.call('rbind', 
-    lapply.funk( 1:nrow(annot.pairs.tbl), function(i) {
-      acc.a <- as.character( annot.pairs.tbl[[ i, blast.tbl.query.col ]] ) 
-      acc.b <- as.character( annot.pairs.tbl[[ i, blast.tbl.hit.col ]] ) 
-      seq.dist <- round(
-        pairwiseSequenceDistance( as.character(aa.seqs[ acc.a ]),
-          as.character(aa.seqs[ acc.b ])
-        ), 
-        round.2.digits
-      )
-      das.dist <- round(
-        partialDomainArchitectureDistances( annotation.matrix,
-          domain.weights.table, list( c(acc.a, acc.b) )
-        )[[1]],
-        round.2.digits
-      )
-      shrd.annot <- shareAnnotation( annotation, annotation.matrix,
-        acc.a, acc.b
-      )
-      eucl.dist <- round( 
-        dist( matrix( c(0, seq.dist, 0, das.dist), nrow=2 ) )[[1]],
-        round.2.digits
-      )
-      matrix(
-        c( seq.dist, das.dist, shrd.annot, eucl.dist ), nrow=1,
-        dimnames=list(
-          paste( acc.a, acc.b, sep="_" ),
-          c( "Sequence.Distance", "Domain.Architecture.Distance",
-            paste("Share.", annotation, sep=""),
-            "Euclidean.Distance.To.Origin"
+  if( ! is.null( annot.pairs.tbl ) && nrow( annot.pairs.tbl ) > 0 ) {
+    do.call('rbind', 
+      lapply.funk( 1:nrow(annot.pairs.tbl), function(i) {
+        acc.a <- as.character( annot.pairs.tbl[[ i, blast.tbl.query.col ]] ) 
+        acc.b <- as.character( annot.pairs.tbl[[ i, blast.tbl.hit.col ]] ) 
+        seq.dist <- round(
+          pairwiseSequenceDistance( as.character(aa.seqs[ acc.a ]),
+            as.character(aa.seqs[ acc.b ])
+          ), 
+          round.2.digits
+        )
+        das.dist <- round(
+          partialDomainArchitectureDistances( annotation.matrix,
+            domain.weights.table, list( c(acc.a, acc.b) )
+          )[[1]],
+          round.2.digits
+        )
+        shrd.annot <- shareAnnotation( annotation, annotation.matrix,
+          acc.a, acc.b
+        )
+        eucl.dist <- round( 
+          dist( matrix( c(0, seq.dist, 0, das.dist), nrow=2 ) )[[1]],
+          round.2.digits
+        )
+        matrix(
+          c( seq.dist, das.dist, shrd.annot, eucl.dist ), nrow=1,
+          dimnames=list(
+            paste( acc.a, acc.b, sep="_" ),
+            c( "Sequence.Distance", "Domain.Architecture.Distance",
+              paste("Share.", annotation, sep=""),
+              "Euclidean.Distance.To.Origin"
+            )
           )
         )
-      )
-    })
-  )
+      })
+    )
+  } else {
+    write( paste( "No protein pairs of significant sequence similarity found for ", annotation ), stderr() )
+    NULL
+  }
 }
 
 pMutation <- function( pairs.shared, pairs.diff, min.p.mut=0 ) {

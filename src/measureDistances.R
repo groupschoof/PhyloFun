@@ -74,40 +74,44 @@ for ( go.term in go.terms ) {
   go.dists <- measureDistances( go.term, annos, blast.out,
     aa.seqs, dom.weights, lapply.funk=mclapply
   )
-  write.table( go.dists,
-    file=paste( go.term.out.path, "distances.tbl", sep="" )
-  )
-  
-  # mutation probability depending on sequence distance
-  write.table( 
-    pMutationMinMaxParentValues(
-      mutationProbabilityDistribution( go.dists, "Sequence.Distance" )
-      , "p.mutation|Sequence.Distance"
-    ),
-    file=paste( go.term.out.path, "p_mut_seq_dist.tbl", sep="" )
-  )
-  
-  # mutation probability depending on domain architecture distance
-  write.table(
-    pMutationMinMaxParentValues(
-      mutationProbabilityDistribution( go.dists,
-        "Domain.Architecture.Distance"
-      ),
-      "p.mutation|Domain.Architecture.Distance"
-    ), 
-    file=paste( go.term.out.path, "p_mut_das_dist.tbl", sep="" )
-  )
 
-  # mutation probability depending on euclidean distance to origin
-  write.table(
-    pMutationMinMaxParentValues(
-      mutationProbabilityDistribution( go.dists,
-        "Euclidean.Distance.To.Origin"
+  if ( ! is.null( go.dists ) ) {
+    write.table( go.dists,
+      file=paste( go.term.out.path, "distances.tbl", sep="" )
+    )
+    
+    # mutation probability depending on sequence distance
+    write.table( 
+      pMutationMinMaxParentValues(
+        mutationProbabilityDistribution( go.dists, "Sequence.Distance" )
+        , "p.mutation|Sequence.Distance"
       ),
-      "p.mutation|Euclidean.Distance.To.Origin"
-    ),
-    file=paste( go.term.out.path, "p_mut_seq_das_dist.tbl", sep="" )
-  )
+      file=paste( go.term.out.path, "p_mut_seq_dist.tbl", sep="" )
+    )
+    
+    # mutation probability depending on domain architecture distance
+    write.table(
+      pMutationMinMaxParentValues(
+        mutationProbabilityDistribution( go.dists,
+          "Domain.Architecture.Distance"
+        ),
+        "p.mutation|Domain.Architecture.Distance"
+      ), 
+      file=paste( go.term.out.path, "p_mut_das_dist.tbl", sep="" )
+    )
+
+    # mutation probability depending on euclidean distance to origin
+    write.table(
+      pMutationMinMaxParentValues(
+        mutationProbabilityDistribution( go.dists,
+          "Euclidean.Distance.To.Origin"
+        ),
+        "p.mutation|Euclidean.Distance.To.Origin"
+      ),
+      file=paste( go.term.out.path, "p_mut_seq_das_dist.tbl", sep="" )
+    )
+  }
+
 }
 
 print( "DONE" )
