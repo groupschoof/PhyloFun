@@ -292,7 +292,13 @@ sharedAnnotation <- function( annotation.matrix,
   #
   # Returns: Returns matching sub-matrix.
   #   
-  annotation.matrix[ , mapply( function(x){ any( x == annotation ) }, annotation.matrix[ annotation.type, ] ), drop=F ]
+  annotation.matrix[ ,
+    mapply(
+      function(x){ any( x == annotation && ! is.na(x) ) },
+      annotation.matrix[ annotation.type, ]
+    ),
+    drop=F
+  ]
 }
 
 intersectAnnotations <- function( annotation.matrix, acc.a, acc.b, annotation.type="GO" ) {
