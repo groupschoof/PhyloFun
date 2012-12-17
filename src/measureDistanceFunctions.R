@@ -137,7 +137,11 @@ mutationProbabilityDistribution <- function( distances.tbl, p.column.name,
   do.call( 'rbind',
     lapply( ps, function(p) {
       # Count pairs sharing and not sharing annotation for current value:
-      candidates <- srtd[ srtd[ , p.column.name ] == p, , drop=F ]
+      candidates <- if( is.na(p) )
+        srtd[ which( is.na( srtd[ , p.column.name ] ) ), , drop=F ]
+      else
+        srtd[ which( srtd[ , p.column.name ] == p ), , drop=F ]
+
       no.cand.sharing.anno <- nrow( candidates[ candidates[ , annotation.shared.column ] == TRUE, , drop=F ] )
       pairs.sharing <<- pairs.sharing + no.cand.sharing.anno
       pairs.diff <<- pairs.diff + ( nrow(candidates) - no.cand.sharing.anno )
