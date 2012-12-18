@@ -60,12 +60,15 @@ exp.dists <- matrix(
   ),
   byrow=T, nrow=4,
   dimnames=list(
-    c( "A0RLX8_A0PKB2", "A0RLX8_A0K2M8", "A0K2M8_A0KR35", "A0Q3U6_A0KEC3" ),
+    c( "A0PKB2_A0RLX8", "A0K2M8_A0RLX8", "A0K2M8_A0KR35", "A0KEC3_A0Q3U6" ),
     c( "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:0017111", "Euclidean.Distance.To.Origin" )
   )
 )
 # print( exp.dists )
 checkEquals( round( dists, 2 ), exp.dists )
+no.dists <- measureDistances( "GO:0005737", annos, blast.rslt.tbl, aa.seqs,
+  domain.weights.table )
+checkTrue( is.null( no.dists ) )
 
 # Test pMutation
 print("Testing pMutation(...)")

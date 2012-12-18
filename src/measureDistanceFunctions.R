@@ -83,7 +83,7 @@ measureDistances <- function( annotation, annotation.matrix,
       })
     )
   } else {
-    write( paste( "No protein pairs of significant sequence similarity found for ", annotation ), stderr() )
+    write( paste( "No protein pairs of significant sequence similarity found for", annotation ), stderr() )
     NULL
   }
 }

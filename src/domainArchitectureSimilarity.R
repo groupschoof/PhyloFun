@@ -479,17 +479,20 @@ uniquePairs <- function( pairs.tbl, lapply.funk=lapply ) {
   # Returns: A two column matrix of pairs, whose members are alphabetically
   # sorted.
   #   
-  do.call( 'rbind', 
-    unique(
-      lapply.funk( 1:nrow(pairs.tbl), function(i) {
-        acc.a <- as.character( pairs.tbl[[ i, 1 ]] )
-        acc.b <- as.character( pairs.tbl[[ i, 2 ]] )
-        if( ! identical( acc.a, acc.b ) )
-          sort( c( acc.a, acc.b ) )
-        else
-          NULL
-      })
+  if( ! is.null( pairs.tbl ) &&
+    nrow( pairs.tbl ) > 0 && ncol( pairs.tbl ) >= 2 ) {
+    do.call( 'rbind', 
+      unique(
+        lapply.funk( 1:nrow(pairs.tbl), function(i) {
+          acc.a <- as.character( pairs.tbl[[ i, 1 ]] )
+          acc.b <- as.character( pairs.tbl[[ i, 2 ]] )
+          if( ! identical( acc.a, acc.b ) )
+            sort( c( acc.a, acc.b ) )
+          else
+            NULL
+        })
+      )
     )
-  )
+  }
 }
 
