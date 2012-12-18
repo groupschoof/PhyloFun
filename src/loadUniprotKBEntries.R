@@ -294,7 +294,7 @@ sharedAnnotation <- function( annotation.matrix,
   #   
   annotation.matrix[ ,
     mapply(
-      function(x){ any( x == annotation && ! is.na(x) ) },
+      function(x){ any( x == annotation & ! is.na(x) ) },
       annotation.matrix[ annotation.type, ]
     ),
     drop=F
