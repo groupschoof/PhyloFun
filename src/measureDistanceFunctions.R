@@ -240,9 +240,6 @@ gridPMutation <- function( dists.mtrx, grid.by=0.1,
     round.2.digits
   )
   interval <- grid.by
-  last.val <- matrix( 0.0, nrow=1, ncol=ncol(dists.mtrx),
-    dimnames=list( c(), colnames(dists.mtrx) )
-  )
   gridded <- do.call( 'rbind', 
     lapply.funk( grd, function( x ) {
       hits <- dists.mtrx[ 
@@ -250,21 +247,14 @@ gridPMutation <- function( dists.mtrx, grid.by=0.1,
         -1 * ( dists.mtrx[ , p.column.index ] - x ) >= 0, , drop=F 
       ]
       if ( nrow(hits) > 0 ) {
-        hit <- hits[ nrow(hits), , drop=F ]
-        # Avoid multiple row names:
-        rownames( hit ) <- c()
-        if ( hit[[ 1, p.column.index ]] > last.val[[ 1, p.column.index ]] ) {
-          last.val <<- hit
-        } else {
-          hit <- last.val
-        }
-        hit      # Return the hit
+        hits[ nrow(hits), , drop=F ]
       } else {
-        last.val # Return the last used highest value
+        NA
       }
     })
   )
   gridded <- cbind( grd, gridded )
+  rownames( gridded ) <- c()
   colnames( gridded ) <- c(
     paste( colnames(dists.mtrx)[p.column.index], "grid", sep="." ),
     colnames( dists.mtrx )

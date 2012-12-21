@@ -137,20 +137,13 @@ checkEquals( p.mut.das.seq[ , 2:ncol(p.mut.das.seq) ],
 # Test gridPMutation
 print("Testing gridPMutation(...)")
 p.mut.quants <- gridPMutation( p.mut.das.seq )
-exp.p.mut.quants.1 <- read.table(text="p.mutation|Euclidean.Distance.To.Origin.grid     p.mutation|Euclidean.Distance.To.Origin Sequence.Distance Domain.Architecture.Distance Share.GO:7272727 Euclidean.Distance.To.Origin
-                                          0.1                                    0.00                 0                            0                0                         0.00
-                                          0.2                                    0.00                 0                            0                0                         0.00
-                                          0.3                                    0.00                 0                            0                0                         0.00
-                                          0.4                                    0.33                 1                            1                1                         1.27
-                                          0.5                                    0.33                 1                            1                1                         1.27
-                                          0.6                                    0.33                 1                            1                1                         1.27
-                                          0.7                                    0.33                 1                            1                1                         1.27
-                                          0.8                                    0.33                 1                            1                1                         1.27
-                                          0.9                                    0.33                 1                            1                1                         1.27
-                                          1.0                                    0.33                 1                            1                1                         1.27", header=T)
-# read.table changes colnames with "|" to ".", so reset it:
-colnames( exp.p.mut.quants.1 ) <- c("p.mutation|Euclidean.Distance.To.Origin.grid", "p.mutation|Euclidean.Distance.To.Origin", "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:7272727", "Euclidean.Distance.To.Origin")
-checkEquals( as.data.frame( p.mut.quants ), exp.p.mut.quants.1 )
+exp.p.mut.quants.1 <- matrix( c( 0.0, NA, NA, 0.33, NA, NA, NA, NA, NA, NA ),
+  ncol=1, dimnames=list(
+    c(),
+    "p.mutation|Euclidean.Distance.To.Origin"
+  )
+)
+checkEquals( p.mut.quants[ , 2, drop=F ], exp.p.mut.quants.1 )
 
 # Test pMutationMinMaxParentValues
 print("Testing pMutationMinMaxParentValues(...)")

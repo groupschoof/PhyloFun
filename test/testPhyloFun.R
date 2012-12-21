@@ -20,38 +20,84 @@ src.project.file <- function(...) {
 src.project.file('src', 'loadUniprotKBEntries.R')
 src.project.file('src', 'phyloFun.R')
 
+# Test findMatchingColumn
+print("Testing findMatchingColumn(...)")
+p.mut.tbl <- as.matrix( read.table( header=T, text=
+"   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
+1                          0.00                  0.00                            0.00                             0.00                  0.00                                0                             0.00
+2                          0.50                  0.03                            0.00                             0.03                  0.03                                0                             0.03
+3                          0.67                  0.06                            0.00                             0.06                  0.06                                0                             0.06
+4                          0.75                  0.07                            0.00                             0.07                  0.07                                0                             0.07
+5                          0.83                  0.11                            0.00                             0.11                  0.11                                0                             0.11
+6                          0.86                  0.12                            0.00                             0.12                  1.50                                1                             1.98
+7                          0.87                  1.51                            0.00                             1.51                  1.52                                1                             1.82
+8                          0.88                  1.53                            0.00                             1.53                  1.54                                1                             1.84
+9                          0.89                  1.55                            0.00                             1.56                  1.58                                1                             1.87
+10                         0.90                  1.59                            0.16                             1.61                  1.60                                1                             1.89
+11                         0.91                  1.61                            0.00                             1.62                  1.66                                1                             2.29
+12                         0.92                  1.67                            0.06                             1.71                  1.92                                1                             2.14" )
+)
+mtch.col.1 <- findMatchingColumn( p.mut.tbl, 0.8, 5 )
+# print( mtch.col.1 )
+exp.mtch.col.1 <- as.matrix( read.table( header=T, text="
+   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
+6                          0.86                  0.12                            0.00                             0.12                  1.50                                1                             1.98" )
+)
+checkEquals( exp.mtch.col.1, mtch.col.1 )
+
+mtch.col.2 <- findMatchingColumn( p.mut.tbl, 1.54, 5 )
+# print( mtch.col.2 )
+exp.mtch.col.2 <- as.matrix( read.table( header=T, text="
+   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
+8                          0.88                  1.53                            0.00                             1.53                  1.54                                1                             1.84" )
+)
+checkEquals( exp.mtch.col.2, mtch.col.2 )
+
+mtch.col.3 <- findMatchingColumn( p.mut.tbl, 7272, 5 )
+# print( mtch.col.3 )
+exp.mtch.col.3 <- as.matrix( read.table( header=T, text="
+   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
+12                         0.92                  1.67                            0.06                             1.71                  1.92                                1                             2.14" )
+)
+checkEquals( exp.mtch.col.3, mtch.col.3 )
+
+mtch.col.4 <- findMatchingColumn(
+  matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 ), 0.9, 2
+)
+checkEquals( matrix( c(0.66, 1.0), ncol=2 ), mtch.col.4 )
+
 # Test tree is midpoint rooted!
 phylo.tree <- read.tree(project.file.path('test', 'test_tree.newick'))
-<<<<<<< HEAD
-fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
-=======
+# <<<<<<< HEAD
+# fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
+# =======
 fl <- file(project.file.path('test', 'test_annotations.tbl'), "r")
->>>>>>> origin/master
+# >>>>>>> origin/master
 annotation.matrix <- unserialize(fl)
 close(fl)
 
 # Test conditional.probs.tbl
 print("Testing conditional.probs.tbl(...)")
-err <- try(conditional.probs.tbl(0.45, NA, NA), silent=T)
-checkTrue(identical(class(err), "try-error"))
-# err <- try(conditional.probs.tbl(0.45, NA), silent=T)
-# checkTrue(identical(class(err), "try-error"))
-ua <- uniq.annotations(annotation.matrix, 'GO')
-res <- conditional.probs.tbl(0.45,
-  uniq.annotations(annotation.matrix, 'GO'))
-checkTrue(identical(dim(res), as.integer(c(length(ua), length(ua)))))
-checkEquals(rownames(res), ua)
-checkEquals(colnames(res), ua)
+ua <- c( "GO_1", "GO_2", "GO_3" )
+p.mut.tbl.lst <- list()
+p.mut.tbl.lst[[ "GO_1" ]] <- matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 )
+p.mut.tbl.lst[[ "GO_2" ]] <- matrix( c(0.25, 0.5, 0.75, 0.5, 1.0, 1.5), ncol=2 )
+p.mut.tbl.lst[[ "GO_3" ]] <- matrix( c(0.45, 0.75, 0.98, 0.5, 1.0, 1.5), ncol=2 )
+# print( p.mut.tbl.lst )
+con.prbs.tbl <- conditional.probs.tbl( 0.9, ua, p.mut.tbl.lst, 2 )
+# print( con.prbs.tbl )
+checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) )
+# print( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]] )
+checkEquals( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]], con.prbs.tbl[[ 1, 1 ]] ) 
+checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) ) 
+checkEquals( 1 - p.mut.tbl.lst[[ 2 ]][[ 2, 1 ]], con.prbs.tbl[[ 2, 2 ]] ) 
+checkEquals( 1.0, sum( con.prbs.tbl[ 3, ] ) ) 
+checkEquals( 1 - p.mut.tbl.lst[[ 3 ]][[ 2, 1 ]], con.prbs.tbl[[ 3, 3 ]] ) 
 
 # Test get.node.label
 print("Testing get.node.label(...)")
-<<<<<<< HEAD
-checkEquals(get.node.label(phylo.tree,21),"21")
-checkTrue(identical(class(get.node.label(phylo.tree,11)),"character"))
-=======
 checkEquals(get.node.label(phylo.tree, 21), "21")
 checkTrue(identical(class(get.node.label(phylo.tree, 11)), "character"))
->>>>>>> origin/master
 
 # Test edge.to.formula
 print("Testing edge.to.formula(...)")
@@ -97,10 +143,7 @@ checkEquals(
 # Test queryPhylBayesNetwork
 print("Testing queryPhylBayesNetwork(...)")
 prediction.result <- try(queryPhylBayesNetwork(phylo.tree,
-        annotation.matrix), silent=T)
+        annotation.matrix), silent=F)
+print( prediction.result )
 checkTrue( ! identical(class(prediction.result), 'try-error'))
 checkTrue(identical(class(prediction.result), "list"))
-
-
-
-
