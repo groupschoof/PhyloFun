@@ -110,6 +110,9 @@ close(fl)
 u.an.ma <- uniq.annotations(an.ma, 'GO')
 checkEquals(u.an.ma, c(NA,"GO:0003688","GO:0005524",
     "GO:0005737", "GO:0006270", "GO:0006275","GO:0017111"))
+u.an.ma <- uniq.annotations(an.ma, 'GO', T)
+checkEquals(u.an.ma, c("GO:0003688","GO:0005524",
+    "GO:0005737", "GO:0006270", "GO:0006275","GO:0017111"))
 
 # Test retrieveSequence
 print("Testing retrieveSequence(...)")

@@ -6,20 +6,20 @@ library(Matrix)
 # phylTree's edge matrix.
 get.root.node <- function(phylTree) {
   as.character(
-    unique(phylTree$edge[!(phylTree$edge[,1] %in% phylTree$edge[,2]),][,1])[[1]]
+    unique(phylTree$edge[!(phylTree$edge[, 1] %in% phylTree$edge[, 2]), ][, 1])[[1]]
     )
 }
 
-get.node.label <- function(phylTree,node.index) {
-  res <- try(phylTree$tip.label[[node.index]],silent=T)
-  if(identical("try-error",class(res))) as.character(node.index) else res
+get.node.label <- function(phylTree, node.index) {
+  res <- try(phylTree$tip.label[[node.index]], silent=T)
+  if(identical("try-error", class(res))) as.character(node.index) else res
 }
 
-edge.to.formula <- function(phyloTree,edge.index) {
+edge.to.formula <- function(phyloTree, edge.index) {
   prnt <- get.node.label(phyloTree,
-    phyloTree$edge[[edge.index,1]])
+    phyloTree$edge[[edge.index, 1]])
   child <- get.node.label(phyloTree,
-    phyloTree$edge[[edge.index,2]])
+    phyloTree$edge[[edge.index, 2]])
   eval(bquote(~ .(child) | .(prnt) ))
 }
 
@@ -51,78 +51,86 @@ findMatchingColumn <- function( mutation.probability.table, value, column.index 
 }
 
 conditional.probs.tbl <- function( edge.length, uniq.annotations,
-  annots.mut.prob.table.list, mut.tbl.length.col.indx=5, p.mut.col.indx=1 ) {
+  annots.mut.prob.table.list, mut.tbl.length.col.indx=5, p.mut.col.indx=1,
+  unknown.annot='unknown' ) {
   # Looks up the mutation probability tables for each annotation and constructs
   # the transition probabilities based on the current branch's length.
+  # Introduced a new annotation UNKNOWN which can mutate to every other
+  # annotation in argument 'uniq.annotations' and does have a zero probability
+  # of self retainment.
   #
   # Args:
   #  edge.length : sequence distance as the current branch's length.
-  #  uniq.annotations : The unique anntotations as they appear in the current
-  #                     phylogenetic tree.
+  #  annos : The unique anntotations as they appear in the current phylogenetic
+  #          tree. Should NOT contain NULL or NA values.
   #  annots.mut.prob.table.list : The list of empirical mutation probabilities
   #                               for each annotation.
   #  mut.tbl.length.col.indx : The index of the mutation probability table's
   #                            column in which to find the corresponding
   #                            sequence distance.
   #  p.mut.col.indx : The mutation probability column's index.
+  #  unknown.annot : The UNKNOWN annotation. Can be set to any convenient name.
   #
   # Returns: 
-  #   A length(uniq.annotations)*length(uniq.annotations) probability matrix with
-  #   the m[i,j] := P(j | i), i = parent function, j = child function
+  #   A length(annos)*length(annos) probability matrix with
+  #   the m[i, j] := P(j | i), i = parent function, j = child function
   #   
-  p.retain.lst <- as.numeric( 
-    lapply( uniq.annotations, function( a ) {
-      p.mut.tbl <- annots.mut.prob.table.list[[ a ]]
-      if ( ! is.null( p.mut.tbl ) ) {
-        1 - findMatchingColumn(
-          p.mut.tbl, edge.length, mut.tbl.length.col.indx
-        )[[ 1, p.mut.col.indx ]]
-      } else {
-        0.5
-      }
-    })
-  )
-  names( p.retain.lst ) <- uniq.annotations
-  print( p.retain.lst )
-  # ToDo: Do we really need a double iteration?
+  annos <- c( uniq.annotations, unknown.annot )
   do.call( 'rbind', 
-    lapply( uniq.annotations, function( a ) {
-      p.ret <- p.retain.lst[[ a ]]
-      p.mut <- 1 - p.ret
-      norm.trans.probs <- p.mut / sum( as.numeric (
-        p.retain.lst[ which( names(p.retain.lst[]) != a ) ]
-      ) )
-      trans.probs <- p.retain.lst * norm.trans.probs
-      trans.probs[[ a ]] <- p.ret
-      matrix( trans.probs, nrow=1, dimnames=list( a, uniq.annotations ) )
+    lapply( annos, function( a ) {
+      p.mut.tbl <- annots.mut.prob.table.list[[ a ]]
+      if ( identical( a, unknown.annot ) ) {
+        trans.probs <- matrix( 1 / length( uniq.annotations ),
+          nrow=1, ncol=length( annos ),
+          dimnames=list( a, annos )
+        )
+        # unknown retainment probability:
+        trans.probs[[ a, a ]] <- 0
+        trans.probs
+      } else if ( ! is.null( p.mut.tbl ) ) {
+        p.mut <- findMatchingColumn(
+          p.mut.tbl, edge.length, mut.tbl.length.col.indx
+          )[[ 1, p.mut.col.indx ]]
+        trans.probs <- matrix( ( p.mut / ( length( annos ) - 1 ) ),
+          nrow=1, ncol=length( annos ),
+          dimnames=list( a, annos )
+        )
+        # annotation retainment probability:
+        trans.probs[[ a, a ]] <- 1 - p.mut
+        trans.probs
+      } else {
+        write( paste( "WARNING! Could not find mutation probability table for", a ),
+          stderr() )
+        NULL
+      }
     })
   )
 }
 
-bayes.nodes <- function(phylo.tree,annotation.matrix,annotation.type='GO') {
-  annotations <- uniq.annotations(annotation.matrix,annotation.type)
-  no.evidence <- as.numeric(matrix(1.0,nrow=1,ncol=length(annotations)))
+bayes.nodes <- function( phylo.tree, annotation.matrix, annotation.type='GO',
+  mutation.probability.tables.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE
+  ) {
+  annotations <- uniq.annotations( annotation.matrix, annotation.type )
+  no.evidence <- as.numeric( matrix( 1.0, nrow=1, ncol=length( annotations ) ) )
   nds <- list(
-    cptable(
-      eval(bquote(~ .(get.root.node(phylo.tree)))),
-      values=no.evidence,
-      levels=annotations))
-  for(i in 1:nrow(phylo.tree$edge)) {
-    nds <- append(nds,
-      list(cptable(edge.to.formula(phylo.tree,i),
-        values=conditional.probs.tbl(
-          phylo.tree$edge.length[[i]],
-          annotations),
-        levels=annotations))
-      )
+    cptable( eval( bquote( ~ .( get.root.node( phylo.tree ) ) ) ),
+      values=no.evidence, levels=annotations )
+  )
+  for(i in 1:nrow( phylo.tree$edge ) ) {
+    nds <- append( nds,
+      list( cptable( edge.to.formula( phylo.tree, i ),
+        values=conditional.probs.tbl( phylo.tree$edge.length[[i]], annotations,
+          mutation.probability.tables.list ),
+        levels=annotations ) )
+ )
   }
   nds
 }
 
 # Returns the labels of phylo.tree's tips, that have no annotation of specified
 # annotation.type, or those that have non NA annotations, if negate=TRUE.
-getTipsWithNaAnnotation <- function(phylo.tree,annotation.matrix,annotation.type='GO',negate=F) {
-  bool.indxs <- is.na(annotation.matrix[annotation.type,])
+getTipsWithNaAnnotation <- function(phylo.tree, annotation.matrix, annotation.type='GO', negate=F) {
+  bool.indxs <- is.na(annotation.matrix[annotation.type, ])
   surroundEachWithQuotes(
     colnames(annotation.matrix)[which( if(negate) ! bool.indxs else bool.indxs)]
   )
@@ -132,7 +140,7 @@ getTipsWithNaAnnotation <- function(phylo.tree,annotation.matrix,annotation.type
 surroundEachWithQuotes <- function(char.vector) {
   sapply(char.vector,
     function(x){
-      paste("\"",x,"\"",sep='')
+      paste("\"", x, "\"", sep='')
     },
     USE.NAMES=F)
 }
@@ -147,11 +155,11 @@ queryPhylBayesNetwork <- function(
         annotation.type))),
   type='distribution') {
   # Provide diagnostic evidence matrix (true 'function annotation'):
-  evidence.matrix <- annotation.matrix[!is.na(annotation.matrix[,annotation.type]),annotation.type]
+  evidence.matrix <- annotation.matrix[!is.na(annotation.matrix[, annotation.type]), annotation.type]
   colnames(evidence.matrix) <- surroundEachWithQuotes(colnames(evidence.matrix))
   list(prediction=predict(bayes.netw,
-    getTipsWithNaAnnotation(phylo.tree,annotation.matrix,annotation.type),
-    getTipsWithNaAnnotation(phylo.tree,annotation.matrix,annotation.type,negate=T),
+    getTipsWithNaAnnotation(phylo.tree, annotation.matrix, annotation.type),
+    getTipsWithNaAnnotation(phylo.tree, annotation.matrix, annotation.type, negate=T),
     evidence.matrix,
     type),
     bayesian.network=bayes.netw)

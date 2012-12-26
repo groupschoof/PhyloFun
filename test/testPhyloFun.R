@@ -85,7 +85,7 @@ p.mut.tbl.lst[[ "GO_2" ]] <- matrix( c(0.25, 0.5, 0.75, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_3" ]] <- matrix( c(0.45, 0.75, 0.98, 0.5, 1.0, 1.5), ncol=2 )
 # print( p.mut.tbl.lst )
 con.prbs.tbl <- conditional.probs.tbl( 0.9, ua, p.mut.tbl.lst, 2 )
-# print( con.prbs.tbl )
+print( con.prbs.tbl )
 checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) )
 # print( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]] )
 checkEquals( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]], con.prbs.tbl[[ 1, 1 ]] ) 
@@ -93,6 +93,8 @@ checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) )
 checkEquals( 1 - p.mut.tbl.lst[[ 2 ]][[ 2, 1 ]], con.prbs.tbl[[ 2, 2 ]] ) 
 checkEquals( 1.0, sum( con.prbs.tbl[ 3, ] ) ) 
 checkEquals( 1 - p.mut.tbl.lst[[ 3 ]][[ 2, 1 ]], con.prbs.tbl[[ 3, 3 ]] ) 
+checkEquals( 0, con.prbs.tbl[[ 'unknown', 'unknown' ]] )
+checkEquals( 1.0, sum( con.prbs.tbl[ 'unknown', ] ) )
 
 # Test get.node.label
 print("Testing get.node.label(...)")
@@ -113,6 +115,7 @@ checkTrue(! grepl('[a-zA-Z]+', as.character(frml)[[2]], perl=T))
 
 # Test bayes.nodes
 print("Testing bayes.nodes(...)")
+load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 bys.nds <- bayes.nodes(phylo.tree, annotation.matrix)
 checkTrue(length(bys.nds) == nrow(phylo.tree$edge)+1)
 root.bys.nd <- bys.nds[[1]]

@@ -69,3 +69,14 @@ goTermsOfLevelAndType <- function( level, term.type,
   )
 }
 
+goTermsForAccessionWithLevel <- function( accessions, con=connectToGeneOntology() ) {
+  join.funk <- function( ... ) { paste( ..., sep=", " ) }
+  dbGetQuery( con, paste(
+      "SELECT t.*, g.relation_distance FROM term t LEFT JOIN graph_path g ON ",
+      "t.id = g.term2_id WHERE g.term1_id = ( SELECT r.id FROM term r WHERE r.is_root = 1 ) ",
+      "AND t.acc in (",
+      do.call( 'join.funk', as.list( paste( "'", accessions, "'", sep="" ) ) ),
+      ")"
+    ) 
+  )
+}

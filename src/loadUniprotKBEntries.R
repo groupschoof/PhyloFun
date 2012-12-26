@@ -139,11 +139,30 @@ retrieve.annotations.parallel <- function(accessions, ...) {
   )
 }
 
-uniq.annotations <- function(annotation.matrix, type) {
-  sort(
+uniq.annotations <- function( annotation.matrix, type, exclude.NAs=FALSE ) {
+  # Looks up all pairwise distinct annotations of argument type. NAs can be
+  # excluded.
+  #
+  # Args:
+  #  annotation.matrix : The matrix of protein annotations as returned by
+  #                      function 'retrieveAnnotationsBiomart'.
+  #  type              : The row name of 'annotation.matrix', i.e. 'GO' or
+  #                      'InterPro'.
+  #  exclude.NAs       : Switch indicating wether to include NA values in the
+  #                      result.
+  #
+  # Returns: an alphabetically sorted vector of all pairwise distinct
+  # annotations.
+  #   
+  ua <- sort(
     unique(do.call('c', (annotation.matrix[type,]))),
     na.last=F
-    )
+  )
+  if ( exclude.NAs ) {
+    ua[ ! is.na(ua[]) ]
+  } else {
+    ua 
+  }
 }
 
 retrieveAnnotationsBiomart <- function( accs,
