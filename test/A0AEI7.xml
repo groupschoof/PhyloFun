@@ -1,0 +1,225 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<uniprot xmlns="http://uniprot.org/uniprot" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://uniprot.org/uniprot http://www.uniprot.org/support/docs/uniprot.xsd">
+<entry dataset="Swiss-Prot" created="2008-01-15" modified="2012-11-28" version="42">
+<accession>A0AEI7</accession>
+<name>DNAA_LISW6</name>
+<protein>
+<recommendedName>
+<fullName>Chromosomal replication initiator protein DnaA</fullName>
+</recommendedName>
+</protein>
+<gene>
+<name type="primary">dnaA</name>
+<name type="ordered locus">lwe0001</name>
+</gene>
+<organism>
+<name type="scientific">Listeria welshimeri serovar 6b (strain ATCC 35897 / DSM 20650 / SLCC5334)</name>
+<dbReference type="NCBI Taxonomy" id="386043"/>
+<lineage>
+<taxon>Bacteria</taxon>
+<taxon>Firmicutes</taxon>
+<taxon>Bacillales</taxon>
+<taxon>Listeriaceae</taxon>
+<taxon>Listeria</taxon>
+</lineage>
+</organism>
+<reference key="1">
+<citation type="journal article" date="2006" name="J. Bacteriol." volume="188" first="7405" last="7415">
+<title>Whole-genome sequence of Listeria welshimeri reveals common steps in genome reduction with Listeria innocua as compared to Listeria monocytogenes.</title>
+<authorList>
+<person name="Hain T."/>
+<person name="Steinweg C."/>
+<person name="Kuenne C.T."/>
+<person name="Billion A."/>
+<person name="Ghai R."/>
+<person name="Chatterjee S.S."/>
+<person name="Domann E."/>
+<person name="Kaerst U."/>
+<person name="Goesmann A."/>
+<person name="Bekel T."/>
+<person name="Bartels D."/>
+<person name="Kaiser O."/>
+<person name="Meyer F."/>
+<person name="Puehler A."/>
+<person name="Weisshaar B."/>
+<person name="Wehland J."/>
+<person name="Liang C."/>
+<person name="Dandekar T."/>
+<person name="Lampidis R."/>
+<person name="Kreft J."/>
+<person name="Goebel W."/>
+<person name="Chakraborty T."/>
+</authorList>
+<dbReference type="PubMed" id="16936040"/>
+<dbReference type="DOI" id="10.1128/JB.00758-06"/>
+</citation>
+<scope>NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA]</scope>
+<source>
+<strain>ATCC 35897 / DSM 20650 / SLCC5334</strain>
+</source>
+</reference>
+<comment type="function">
+<text evidence="1">Plays an important role in the initiation and regulation of chromosomal replication. Binds to the origin of replication; it binds specifically double-stranded DNA at a 9 bp consensus (dnaA box): 5'-TTATC[CA]A[CA]A-3'. DnaA binds to ATP and to acidic phospholipids (By similarity).</text>
+</comment>
+<comment type="subcellular location">
+<subcellularLocation>
+<location status="by similarity" evidence="1">Cytoplasm</location>
+</subcellularLocation>
+</comment>
+<comment type="similarity">
+<text>Belongs to the DnaA family.</text>
+</comment>
+<dbReference type="EMBL" id="AM263198">
+<property type="protein sequence ID" value="CAK19419.1"/>
+<property type="molecule type" value="Genomic_DNA"/>
+</dbReference>
+<dbReference type="RefSeq" id="YP_848204.1">
+<property type="nucleotide sequence ID" value="NC_008555.1"/>
+</dbReference>
+<dbReference type="ProteinModelPortal" id="A0AEI7"/>
+<dbReference type="STRING" id="A0AEI7"/>
+<dbReference type="GeneID" id="4465113"/>
+<dbReference type="GenomeReviews" id="AM263198_GR">
+<property type="gene designation" value="lwe0001"/>
+</dbReference>
+<dbReference type="KEGG" id="lwe:lwe0001"/>
+<dbReference type="PATRIC" id="20327089">
+<property type="gene designation" value="VBILisWel39304_0001"/>
+</dbReference>
+<dbReference type="eggNOG" id="COG0593"/>
+<dbReference type="HOGENOM" id="HOG000235658"/>
+<dbReference type="KO" id="K02313"/>
+<dbReference type="OMA" id="GMYLMRH"/>
+<dbReference type="ProtClustDB" id="PRK00149"/>
+<dbReference type="BioCyc" id="LWEL386043:GI5X-26-MONOMER"/>
+<dbReference type="GO" id="GO:0005737">
+<property type="term" value="C:cytoplasm"/>
+<property type="evidence" value="IEA:UniProtKB-SubCell"/>
+</dbReference>
+<dbReference type="GO" id="GO:0005524">
+<property type="term" value="F:ATP binding"/>
+<property type="evidence" value="IEA:UniProtKB-KW"/>
+</dbReference>
+<dbReference type="GO" id="GO:0003688">
+<property type="term" value="F:DNA replication origin binding"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0017111">
+<property type="term" value="F:nucleoside-triphosphatase activity"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0006270">
+<property type="term" value="P:DNA replication initiation"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0006275">
+<property type="term" value="P:regulation of DNA replication"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="Gene3D" id="1.10.1750.10">
+<property type="entry name" value="DnaA_C"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="HAMAP" id="MF_00377">
+<property type="entry name" value="DnaA_bact"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR003593">
+<property type="entry name" value="AAA+_ATPase"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR001957">
+<property type="entry name" value="Chromosome_initiator_DnaA"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR020591">
+<property type="entry name" value="Chromosome_initiator_DnaA-like"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR018312">
+<property type="entry name" value="Chromosome_initiator_DnaA_CS"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR013159">
+<property type="entry name" value="DnaA_C"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR013317">
+<property type="entry name" value="DnaA_Hda"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR024633">
+<property type="entry name" value="DnaA_N_dom"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR010921">
+<property type="entry name" value="Trp_repressor/repl_initiator"/>
+</dbReference>
+<dbReference type="Pfam" id="PF00308">
+<property type="entry name" value="Bac_DnaA"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="Pfam" id="PF08299">
+<property type="entry name" value="Bac_DnaA_C"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="Pfam" id="PF11638">
+<property type="entry name" value="DnaA_N"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="PRINTS" id="PR00051">
+<property type="entry name" value="DNAA"/>
+</dbReference>
+<dbReference type="SMART" id="SM00382">
+<property type="entry name" value="AAA"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="SMART" id="SM00760">
+<property type="entry name" value="Bac_DnaA_C"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="SUPFAM" id="SSF48295">
+<property type="entry name" value="Trp_repress_rep"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="TIGRFAMs" id="TIGR00362">
+<property type="entry name" value="DnaA"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="PROSITE" id="PS01008">
+<property type="entry name" value="DNAA"/>
+<property type="match status" value="1"/>
+</dbReference>
+<proteinExistence type="inferred from homology"/>
+<keyword id="KW-0067">ATP-binding</keyword>
+<keyword id="KW-0181">Complete proteome</keyword>
+<keyword id="KW-0963">Cytoplasm</keyword>
+<keyword id="KW-0235">DNA replication</keyword>
+<keyword id="KW-0238">DNA-binding</keyword>
+<keyword id="KW-0547">Nucleotide-binding</keyword>
+<feature type="chain" description="Chromosomal replication initiator protein DnaA" id="PRO_1000048667" evidence="1">
+<location>
+<begin position="1"/>
+<end position="451"/>
+</location>
+</feature>
+<feature type="nucleotide phosphate-binding region" description="ATP" status="potential">
+<location>
+<begin position="150"/>
+<end position="157"/>
+</location>
+</feature>
+<evidence key="1" type="ECO:0000203">
+<source>
+<dbReference type="HAMAP-Rule" id="MF_00377"/>
+</source>
+</evidence>
+<sequence length="451" mass="51427" checksum="C6102E500A11976D" modified="2006-11-28" version="1">
+MQSIEDIWQETLQIVKKNMSKPSYDTWMKSTTAHSLEGNTFIISAPNNFVRDWLEKSYTQ
+FIANILQEITGRLFDVRFIDGEQEENFEYTVIKPNPALDEDGIEIGKHMLNPRYVFDTFV
+IGSGNRFAHAASLAVAEAPAKAYNPLFIYGGVGLGKTHLMHAVGHYVQQHKDNAKVMYLS
+SEKFTNEFISSIRDNKTEEFRTKYRNVDVLLIDDIQFLAGKEGTQEEFFHTFNTLYDEQK
+QIIISSDRPPKEIPTLEDRLRSRFEWGLITDITPPDLETRIAILRKKAKADGLDIPNEVM
+LYIANQIDSNIRELEGALIRVVAYSSLVNKDITAGLAAEALKDIIPSSKSQVITISGIQE
+TVGEYFHVRLEDFKAKKRTKSIAFPRQIAMYLSRELTDASLPKIGDEFGGRDHTTVIHAH
+EKISQLLKTDQVLKNDLAEIEKNLRKSQNMF
+</sequence>
+</entry>
+<copyright>
+Copyrighted by the UniProt Consortium, see http://www.uniprot.org/terms
+Distributed under the Creative Commons Attribution-NoDerivs License
+</copyright>
+</uniprot>

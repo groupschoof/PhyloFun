@@ -1,0 +1,399 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<uniprot xmlns="http://uniprot.org/uniprot" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://uniprot.org/uniprot http://www.uniprot.org/support/docs/uniprot.xsd">
+<entry dataset="Swiss-Prot" created="2007-01-09" modified="2012-11-28" version="79">
+<accession>Q9ZZX1</accession>
+<accession>Q8W770</accession>
+<name>SCE4_YEAST</name>
+<protein>
+<recommendedName>
+<fullName>Intron-encoded DNA endonuclease aI5 alpha</fullName>
+</recommendedName>
+<alternativeName>
+<fullName>DNA endonuclease I-SceIV</fullName>
+</alternativeName>
+<component>
+<recommendedName>
+<fullName>Truncated non-functional cytochrome oxidase 1</fullName>
+</recommendedName>
+</component>
+<component>
+<recommendedName>
+<fullName>DNA endonuclease aI5 alpha</fullName>
+<ecNumber>3.1.-.-</ecNumber>
+</recommendedName>
+<alternativeName>
+<fullName>Intron-encoded endonuclease I-SceIV</fullName>
+</alternativeName>
+</component>
+</protein>
+<gene>
+<name type="primary">aI5_alpha</name>
+<name type="synonym">I-SCEIV</name>
+<name type="ordered locus">Q0070</name>
+</gene>
+<organism>
+<name type="scientific">Saccharomyces cerevisiae (strain ATCC 204508 / S288c)</name>
+<name type="common">Baker's yeast</name>
+<dbReference type="NCBI Taxonomy" id="559292"/>
+<lineage>
+<taxon>Eukaryota</taxon>
+<taxon>Fungi</taxon>
+<taxon>Dikarya</taxon>
+<taxon>Ascomycota</taxon>
+<taxon>Saccharomycotina</taxon>
+<taxon>Saccharomycetes</taxon>
+<taxon>Saccharomycetales</taxon>
+<taxon>Saccharomycetaceae</taxon>
+<taxon>Saccharomyces</taxon>
+</lineage>
+</organism>
+<geneLocation type="mitochondrion"/>
+<reference key="1">
+<citation type="journal article" date="1998" name="FEBS Lett." volume="440" first="325" last="331">
+<title>The complete sequence of the mitochondrial genome of Saccharomyces cerevisiae.</title>
+<authorList>
+<person name="Foury F."/>
+<person name="Roganti T."/>
+<person name="Lecrenier N."/>
+<person name="Purnelle B."/>
+</authorList>
+<dbReference type="MEDLINE" id="99087401"/>
+<dbReference type="PubMed" id="9872396"/>
+<dbReference type="DOI" id="10.1016/S0014-5793(98)01467-7"/>
+</citation>
+<scope>NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA]</scope>
+<source>
+<strain>ATCC 96604 / S288c / FY1679</strain>
+</source>
+</reference>
+<reference key="2">
+<citation type="journal article" date="1992" name="Gene" volume="113" first="1" last="8">
+<title>The yeast mitochondrial intron aI5 alpha: associated endonuclease activity and in vivo mobility.</title>
+<authorList>
+<person name="Seraphin B."/>
+<person name="Faye G."/>
+<person name="Hatat D."/>
+<person name="Jacq C."/>
+</authorList>
+<dbReference type="PubMed" id="1314207"/>
+<dbReference type="DOI" id="10.1016/0378-1119(92)90663-A"/>
+</citation>
+<scope>FUNCTION</scope>
+<scope>CLEAVAGE SITE SPECIFICITY</scope>
+<scope>ENDONUCLEASE ACTIVITY</scope>
+<scope>INTRON HOMING</scope>
+</reference>
+<reference key="3">
+<citation type="journal article" date="1998" name="Biochem. Biophys. Res. Commun." volume="248" first="127" last="133">
+<title>Structure and activity of the mitochondrial intron-encoded endonuclease, I-SceIV.</title>
+<authorList>
+<person name="Wernette C.M."/>
+</authorList>
+<dbReference type="PubMed" id="9675098"/>
+<dbReference type="DOI" id="10.1006/bbrc.1998.8921"/>
+</citation>
+<scope>FUNCTION</scope>
+<scope>COFACTOR</scope>
+<scope>CLEAVAGE SITE SPECIFICITY</scope>
+<scope>ENDONUCLEASE ACTIVITY</scope>
+<scope>PH OPTIMUM</scope>
+<scope>SUBUNIT</scope>
+</reference>
+<comment type="function">
+<text evidence="1 2 3">Mitochondrial DNA endonuclease involved in intron homing. It introduces a specific double-strand break in the DNA of the COX1 gene and thus mediates the insertion of an intron, containing its own coding sequence (group I intron), into an intronless gene. Recognizes with limited specificity and cleaves the sequence 5'-ATCTTCTCTTGATTAGCCCTGATCTACGG-3' after the nucleotide sequence ATTA leaving a four-base overhang and a 3'-OH.</text>
+</comment>
+<comment type="cofactor">
+<text evidence="2">Magnesium.</text>
+</comment>
+<comment type="biophysicochemical properties">
+<phDependence evidence="2">Optimum pH is 9.5.</phDependence>
+</comment>
+<comment type="subunit">
+<text evidence="2">Heterodimer of a 32 kDa catalytic subunit and a larger 60 kDa polypeptide subunit.</text>
+</comment>
+<comment type="subcellular location">
+<subcellularLocation>
+<location>Mitochondrion</location>
+</subcellularLocation>
+<subcellularLocation>
+<location>Membrane</location>
+<topology status="potential" evidence="4">Multi-pass membrane protein</topology>
+</subcellularLocation>
+</comment>
+<comment type="PTM">
+<text evidence="1 3">The mature protein may arise from proteolytic cleavage of an in-frame translation of some COX1 exons plus the intron containing the aI5_alpha open reading frame.</text>
+</comment>
+<comment type="similarity">
+<text>In the N-terminal section; belongs to the heme-copper respiratory oxidase family.</text>
+</comment>
+<comment type="similarity">
+<text>In the C-terminal section; belongs to the LAGLIDADG endonuclease family.</text>
+</comment>
+<comment type="sequence caution">
+<conflict type="erroneous gene model prediction">
+<sequence resource="EMBL-CDS" id="CAD19502" version="1"/>
+</conflict>
+</comment>
+<dbReference type="EC" id="3.1.-.-"/>
+<dbReference type="EMBL" id="AJ011856">
+<property type="protein sequence ID" value="CAA09829.1"/>
+<property type="molecule type" value="Genomic_DNA"/>
+</dbReference>
+<dbReference type="EMBL" id="AJ011856">
+<property type="protein sequence ID" value="CAD19502.1"/>
+<property type="status" value="ALT_SEQ"/>
+<property type="molecule type" value="Genomic_DNA"/>
+</dbReference>
+<dbReference type="PIR" id="S78650">
+<property type="entry name" value="S78650"/>
+</dbReference>
+<dbReference type="RefSeq" id="NP_009306.1">
+<property type="nucleotide sequence ID" value="NM_001184357.1"/>
+</dbReference>
+<dbReference type="ProteinModelPortal" id="Q9ZZX1"/>
+<dbReference type="SMR" id="Q9ZZX1">
+<property type="residue range" value="2-324, 399-618"/>
+</dbReference>
+<dbReference type="STRING" id="Q9ZZX1"/>
+<dbReference type="EnsemblFungi" id="Q0070">
+<property type="protein sequence ID" value="Q0070"/>
+<property type="gene ID" value="Q0070"/>
+</dbReference>
+<dbReference type="GeneID" id="854597"/>
+<dbReference type="KEGG" id="sce:Q0070"/>
+<dbReference type="CYGD" id="Q0070"/>
+<dbReference type="SGD" id="S000007265">
+<property type="gene designation" value="AI5_ALPHA"/>
+</dbReference>
+<dbReference type="eggNOG" id="COG0843"/>
+<dbReference type="GeneTree" id="ENSGT00550000075393"/>
+<dbReference type="KO" id="K02256"/>
+<dbReference type="OrthoDB" id="EOG4JHGRP"/>
+<dbReference type="NextBio" id="977077"/>
+<dbReference type="ArrayExpress" id="Q9ZZX1"/>
+<dbReference type="Genevestigator" id="Q9ZZX1"/>
+<dbReference type="GO" id="GO:0016021">
+<property type="term" value="C:integral to membrane"/>
+<property type="evidence" value="IEA:UniProtKB-KW"/>
+</dbReference>
+<dbReference type="GO" id="GO:0005739">
+<property type="term" value="C:mitochondrion"/>
+<property type="evidence" value="TAS:SGD"/>
+</dbReference>
+<dbReference type="GO" id="GO:0004129">
+<property type="term" value="F:cytochrome-c oxidase activity"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0009055">
+<property type="term" value="F:electron carrier activity"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0004519">
+<property type="term" value="F:endonuclease activity"/>
+<property type="evidence" value="IMP:SGD"/>
+</dbReference>
+<dbReference type="GO" id="GO:0020037">
+<property type="term" value="F:heme binding"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0005506">
+<property type="term" value="F:iron ion binding"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0009060">
+<property type="term" value="P:aerobic respiration"/>
+<property type="evidence" value="IEA:InterPro"/>
+</dbReference>
+<dbReference type="GO" id="GO:0006316">
+<property type="term" value="P:movement of group I intron"/>
+<property type="evidence" value="IMP:SGD"/>
+</dbReference>
+<dbReference type="GO" id="GO:0006397">
+<property type="term" value="P:mRNA processing"/>
+<property type="evidence" value="IEA:UniProtKB-KW"/>
+</dbReference>
+<dbReference type="GO" id="GO:0008380">
+<property type="term" value="P:RNA splicing"/>
+<property type="evidence" value="IEA:UniProtKB-KW"/>
+</dbReference>
+<dbReference type="Gene3D" id="1.20.210.10">
+<property type="entry name" value="COX1"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR000883">
+<property type="entry name" value="Cyt_c_Oxase_su1"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR023615">
+<property type="entry name" value="Cyt_c_Oxase_su1_BS"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR023616">
+<property type="entry name" value="Cyt_c_Oxase_su1_dom"/>
+</dbReference>
+<dbReference type="InterPro" id="IPR004860">
+<property type="entry name" value="LAGLIDADG_2"/>
+</dbReference>
+<dbReference type="PANTHER" id="PTHR10422">
+<property type="entry name" value="PTHR10422"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="Pfam" id="PF00115">
+<property type="entry name" value="COX1"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="Pfam" id="PF03161">
+<property type="entry name" value="LAGLIDADG_2"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="PRINTS" id="PR01165">
+<property type="entry name" value="CYCOXIDASEI"/>
+</dbReference>
+<dbReference type="SUPFAM" id="SSF81442">
+<property type="entry name" value="COX1"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="PROSITE" id="PS50855">
+<property type="entry name" value="COX1"/>
+<property type="match status" value="1"/>
+</dbReference>
+<dbReference type="PROSITE" id="PS00077">
+<property type="entry name" value="COX1_CUB"/>
+<property type="match status" value="1"/>
+</dbReference>
+<proteinExistence type="evidence at protein level"/>
+<keyword id="KW-0181">Complete proteome</keyword>
+<keyword id="KW-0255">Endonuclease</keyword>
+<keyword id="KW-0378">Hydrolase</keyword>
+<keyword id="KW-0404">Intron homing</keyword>
+<keyword id="KW-0472">Membrane</keyword>
+<keyword id="KW-0496">Mitochondrion</keyword>
+<keyword id="KW-0540">Nuclease</keyword>
+<keyword id="KW-1185">Reference proteome</keyword>
+<keyword id="KW-0812">Transmembrane</keyword>
+<keyword id="KW-1133">Transmembrane helix</keyword>
+<keyword id="KW-0507">mRNA processing</keyword>
+<keyword id="KW-0508">mRNA splicing</keyword>
+<feature type="chain" description="Truncated non-functional cytochrome oxidase 1" id="PRO_0000270983" evidence="3">
+<location>
+<begin position="1"/>
+<end status="unknown"/>
+</location>
+</feature>
+<feature type="chain" description="DNA endonuclease aI5 alpha" id="PRO_0000270984" evidence="3">
+<location>
+<begin status="unknown"/>
+<end position="630"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="16"/>
+<end position="36"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="57"/>
+<end position="77"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="101"/>
+<end position="121"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="147"/>
+<end position="167"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="182"/>
+<end position="202"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="235"/>
+<end position="255"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="267"/>
+<end position="287"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="305"/>
+<end position="325"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="417"/>
+<end position="437"/>
+</location>
+</feature>
+<feature type="transmembrane region" description="Helical;" status="potential">
+<location>
+<begin position="464"/>
+<end position="483"/>
+</location>
+</feature>
+<feature type="region of interest" description="COX1 exons encoded">
+<location>
+<begin position="1"/>
+<end position="324"/>
+</location>
+</feature>
+<feature type="region of interest" description="COX1 intron aI5_alpha encoded">
+<location>
+<begin position="325"/>
+<end position="630"/>
+</location>
+</feature>
+<feature type="compositionally biased region" description="Asn-rich">
+<location>
+<begin position="333"/>
+<end position="390"/>
+</location>
+</feature>
+<evidence key="1" type="ECO:0000006">
+<source>
+<dbReference type="PubMed" id="1314207"/>
+</source>
+</evidence>
+<evidence key="2" type="ECO:0000006">
+<source>
+<dbReference type="PubMed" id="9675098"/>
+</source>
+</evidence>
+<evidence key="3" type="ECO:0000044">
+<source>
+<dbReference type="UniProtKB" id="P03878"/>
+</source>
+</evidence>
+<evidence key="4" type="ECO:0000001"/>
+<sequence length="630" mass="72165" checksum="6EA9AA02CD2A6C16" modified="1999-05-01" version="1" precursor="true">
+MVQRWLYSTNAKDIAVLYFMLAIFSGMAGTAMSLIIRLELAAPGSQYLHGNSQLFNVLVV
+GHAVLMIFFLVMPALIGGFGNYLLPLMIGATDTAFPRINNIAFWVLPMGLVCLVTSTLVE
+SGAGTGWTVYPPLSSIQAHSGPSVDLAIFALHLTSISSLLGAINFIVTTLNMRTNGMTMH
+KLPLFVWSIFITAFLLLLSLPVLSAGITMLLLDRNFNTSFFEVSGGGDPILYEHLFWFFG
+HPEVYILIIPGFGIISHVVSTYSKKPVFGEISMVYAMASIGLLGFLVWSHHMYIVGLDAD
+TRAYFTSATMIIAIPTGIKIFSWLMNPFSKDKNKNKNKKLIRNYQKMNNNNMMKTYLNNN
+NMIMMNMYKGNLYDIYPRSNRNYIQPNNINKELVVYGYNLESCVGMPTYTNIVKHMVGIP
+NNILYIMTGILLTDGWIDYTSKKDLDKKTIMEINCRFRLKQSMIHSEYLMYVFMLLSHYC
+MSYPKMKIAKVKGKSYNQLEFYTRSLPCFTILRYMFYNGRVKIVPNNLYDLLNYESLAHM
+IMCDGSFVKGGGLYLNLQSFTTKELIFIMNILKIKFNLNCTLHKSRNKYTIYMRVESVKR
+LFPMIYKYILPSMRYKFDIMLWQKKYNMIN
+</sequence>
+</entry>
+<copyright>
+Copyrighted by the UniProt Consortium, see http://www.uniprot.org/terms
+Distributed under the Creative Commons Attribution-NoDerivs License
+</copyright>
+</uniprot>

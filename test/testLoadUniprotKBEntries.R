@@ -184,3 +184,17 @@ checkEquals( class(shrd.annos.2), "matrix" )
 checkEquals( nrow(shrd.annos.2), 3 )
 checkEquals( ncol(shrd.annos.2), 2 )
 checkEquals( shrd.annos.2[[ "GO", "A0Q3U7" ]], annos[[ "GO", "A0Q3U7" ]] )
+
+# Test extractExperimentallyVerifiedGoAnnos
+print("Testing extractExperimentallyVerifiedGoAnnos(...)")
+rslt <- extractExperimentallyVerifiedGoAnnos( project.file.path( "test", "A0AEI7.xml" ) )
+checkTrue( is.null(rslt) )
+rslt <- extractExperimentallyVerifiedGoAnnos( project.file.path( "test", "Q9ZZX1.xml" ) )
+checkEquals( c( "GO:0004519", "GO:0006316" ), rslt )
+
+# Test retrieveExperimentallyVerifiedGOAnnotations
+print("Testing retrieveExperimentallyVerifiedGOAnnotations(...)")
+exper.go.annos <- retrieveExperimentallyVerifiedGOAnnotations( c( "A0AEI7", "Q9ZZX1" ) )
+# print( exper.go.annos )
+checkTrue( is.null( exper.go.annos[[ 'GO', 'A0AEI7' ]] ) )
+checkEquals( exper.go.annos[[ 'GO', 'Q9ZZX1' ]], c( "GO:0004519", "GO:0006316" ) )
