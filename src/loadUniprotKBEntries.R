@@ -382,24 +382,34 @@ extractExperimentallyVerifiedGoAnnos <- function( doc ) {
     NULL
 }
 
-retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions ) {
+retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
+  uniprot.no.entry.error.regex='^ERROR 12 No entries found' ) {
   # Downloads and parses XML documents from Uniprot for each accession in
   # argument. Extracts all experimentally verified GO annotations.
   #
   # Args:
   #  uniprot.accessions : A character vector of Uniprot accessions.
+  #  uniprot.no.entry.error.regex : If the downloaded XML document matches this
+  #                                 regular expression, the corresponding
+  #                                 accession is assigned NULL go annotations. 
   #
   # Returns: A matrix with row 'GO' and one column for each Uniprot accession.
   # Each cell is either NULL or a character vector holding all experimentally
-  # verified GO annotations. 
+  # verified GO annotations. NULL annotations are excluded, so the returned
+  # matrix can be of zero columns and a single row.
   #   
   urls <- lapply( uniprot.accessions, uniprotkb.url )
   annos <- do.call( 'cbind',
     lapply( getURL( urls ), function( d ) {
-      list( 'GO'=extractExperimentallyVerifiedGoAnnos( d ) )
+      ga <- if ( ! grepl( uniprot.no.entry.error.regex, d ) ) {
+        extractExperimentallyVerifiedGoAnnos( d )
+      } else {
+        NULL
+      }
+      list( 'GO'=ga )
     })
   )
   colnames( annos ) <- uniprot.accessions
-  annos
+  # Exclude NULL columns:
+  annos[ , as.character( annos[ 'GO', ] ) != 'NULL' , drop=F ]
 }
-

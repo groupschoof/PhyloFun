@@ -127,7 +127,6 @@ checkTrue(! grepl('[a-zA-Z]+', as.character(frml)[[2]], perl=T))
 # Test bayesNodes
 print("Testing bayesNodes(...)")
 bys.nds <- bayesNodes( phylo.tree, annotation.matrix )
-serialize( bys.nds, file( "~/Desktop/tmp_bys_nds.txt", "w" ) )
 uniq.annos <- validAnnotations( annotation.matrix )
 # print( bys.nds )
 checkTrue( length( bys.nds ) == nrow( phylo.tree$edge ) + 1 )
@@ -160,8 +159,13 @@ checkEquals(
 
 # Test queryPhylBayesNetwork
 print("Testing queryPhylBayesNetwork(...)")
-prediction.result <- try(queryPhylBayesNetwork(phylo.tree,
-        annotation.matrix), silent=F)
-print( prediction.result )
-checkTrue( ! identical(class(prediction.result), 'try-error'))
-checkTrue(identical(class(prediction.result), "list"))
+# Test with NO experimentally verified evidence in any tip:
+phyl.tree.1 <- read.tree( project.file.path( "test", "test_tree.newick" ) )
+annos.1 <- retrieveAnnotationsBiomart( phyl.tree.1$tip.label )
+prediction.result <- try(
+  queryPhylBayesNetwork( phyl.tree.1, annos.1 ),
+  silent=F
+)
+# print( prediction.result )
+checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
+checkTrue( identical( class( prediction.result ), "list" ) )
