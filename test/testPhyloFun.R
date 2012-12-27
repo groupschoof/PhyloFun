@@ -20,6 +20,9 @@ src.project.file <- function(...) {
 src.project.file('src', 'loadUniprotKBEntries.R')
 src.project.file('src', 'phyloFun.R')
 
+# Load list of mutation probability tables for all measured GO terms:
+load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
+
 # Test findMatchingColumn
 print("Testing findMatchingColumn(...)")
 p.mut.tbl <- as.matrix( read.table( header=T, text=
@@ -69,12 +72,20 @@ checkEquals( matrix( c(0.66, 1.0), ncol=2 ), mtch.col.4 )
 # Test tree is midpoint rooted!
 phylo.tree <- read.tree(project.file.path('test', 'test_tree.newick'))
 # <<<<<<< HEAD
-# fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
+fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
 # =======
-fl <- file(project.file.path('test', 'test_annotations.tbl'), "r")
+# fl <- file(project.file.path('test', 'test_annotations.tbl'), "r")
 # >>>>>>> origin/master
 annotation.matrix <- unserialize(fl)
 close(fl)
+
+# Test validAnnotations
+print("Testing validAnnotations(...)")
+valid.annos <- validAnnotations( annotation.matrix )
+# print( uniq.annotations( annotation.matrix, "GO" ) )
+# print( valid.annos )
+checkEquals( c( "GO:0005524", "GO:0005737", "GO:0006270", "GO:0006275",
+    "GO:0017111", "unknown" ), valid.annos )
 
 # Test conditional.probs.tbl
 print("Testing conditional.probs.tbl(...)")
@@ -84,7 +95,7 @@ p.mut.tbl.lst[[ "GO_1" ]] <- matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_2" ]] <- matrix( c(0.25, 0.5, 0.75, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_3" ]] <- matrix( c(0.45, 0.75, 0.98, 0.5, 1.0, 1.5), ncol=2 )
 # print( p.mut.tbl.lst )
-con.prbs.tbl <- conditional.probs.tbl( 0.9, ua, p.mut.tbl.lst, 2 )
+con.prbs.tbl <- conditional.probs.tbl( 0.9, c( ua, 'unknown' ), p.mut.tbl.lst, 2 )
 # print( con.prbs.tbl )
 checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) )
 # print( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]] )
@@ -93,6 +104,8 @@ checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) )
 checkEquals( 1 - p.mut.tbl.lst[[ 2 ]][[ 2, 1 ]], con.prbs.tbl[[ 2, 2 ]] ) 
 checkEquals( 1.0, sum( con.prbs.tbl[ 3, ] ) ) 
 checkEquals( 1 - p.mut.tbl.lst[[ 3 ]][[ 2, 1 ]], con.prbs.tbl[[ 3, 3 ]] ) 
+checkEquals( 0, con.prbs.tbl[[ 'unknown', 'unknown' ]] )
+checkEquals( 1.0, sum( con.prbs.tbl[ 'unknown', ] ) )
 
 # Test get.node.label
 print("Testing get.node.label(...)")
@@ -111,24 +124,28 @@ indx <- which(phylo.tree$edge[, 1] == (length(phylo.tree$tip.label)+1))[1]
 frml <- edge.to.formula(phylo.tree, indx)
 checkTrue(! grepl('[a-zA-Z]+', as.character(frml)[[2]], perl=T))
 
-# Test bayes.nodes
-print("Testing bayes.nodes(...)")
-bys.nds <- bayes.nodes(phylo.tree, annotation.matrix)
-checkTrue(length(bys.nds) == nrow(phylo.tree$edge)+1)
-root.bys.nd <- bys.nds[[1]]
-checkTrue(length(root.bys.nd$values) == length(ua))
-checkEquals(root.bys.nd$levels, ua)
-# print(bys.nds[[1]])
+# Test bayesNodes
+print("Testing bayesNodes(...)")
+bys.nds <- bayesNodes( phylo.tree, annotation.matrix )
+uniq.annos <- validAnnotations( annotation.matrix )
+# print( bys.nds )
+checkTrue( length( bys.nds ) == nrow( phylo.tree$edge ) + 1 )
+root.bys.nd <- bys.nds[[ 1 ]]
+# print( root.bys.nd )
+# print( uniq.annos )
+checkTrue( length( root.bys.nd$values ) == length( uniq.annos ) )
+checkEquals( root.bys.nd$levels, uniq.annos )
+# print(bys.nds[[2]]$values)
 
 # Test create bayesian Network
-print("Testing create bayesian Network(...)")
-grain.res <- try( grain(compileCPT(bys.nds)), silent=T)
-checkTrue(!identical('try-error', class(grain.res)))
+print( "Testing create bayesian Network" )
+grain.res <- try( grain( compileCPT( bys.nds ) ), silent=T )
+checkTrue( ! identical( 'try-error', class( grain.res ) ) )
 
 # Test getTipsWithNaAnnotation
 print("Testing getTipsWithNaAnnotation(...)")
-checkEquals(getTipsWithNaAnnotation(phylo.tree, annotation.matrix),
-  c("\"Protein_1\""))
+checkEquals( getTipsWithNaAnnotation( phylo.tree, annotation.matrix ),
+  c("\"Protein_1\"") )
 # Test multiple NA annotations
 am <- annotation.matrix
 am[1, 6] <- NA
@@ -142,8 +159,13 @@ checkEquals(
 
 # Test queryPhylBayesNetwork
 print("Testing queryPhylBayesNetwork(...)")
-prediction.result <- try(queryPhylBayesNetwork(phylo.tree,
-        annotation.matrix), silent=F)
-print( prediction.result )
-checkTrue( ! identical(class(prediction.result), 'try-error'))
-checkTrue(identical(class(prediction.result), "list"))
+# Test with NO experimentally verified evidence in any tip:
+phyl.tree.1 <- read.tree( project.file.path( "test", "test_tree.newick" ) )
+annos.1 <- retrieveAnnotationsBiomart( phyl.tree.1$tip.label )
+prediction.result <- try(
+  queryPhylBayesNetwork( phyl.tree.1, annos.1 ),
+  silent=F
+)
+# print( prediction.result )
+checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
+checkTrue( identical( class( prediction.result ), "list" ) )
