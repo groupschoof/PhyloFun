@@ -371,8 +371,10 @@ extractExperimentallyVerifiedGoAnnos <- function( doc, xpath.prefix='//' ) {
   #                 means whole document, './' means children of the current
   #                 node.
   #
-  # Returns: A character vector of the extracted experimentally verified GO
-  # annotations, or NULL, if none can be found.
+  # Returns: A 1*1 matrix containing a character vector of the extracted
+  # experimentally verified GO annotations. Row name is 'GO' and column name is
+  # the proteins FIRST accession as appearing in the XML document. Returns
+  # NULL, if no experimentally verified Go annotations can be found.
   #   
   block <- function() {
     ns <- c( xmlns="http://uniprot.org/uniprot" )
@@ -386,9 +388,15 @@ extractExperimentallyVerifiedGoAnnos <- function( doc, xpath.prefix='//' ) {
         namespaces=ns
       )
     )
-    if ( ! is.null( ndst ) && length( ndst ) > 0 )
-      vapply( ndst, xmlGetAttr, vector( mode='character', length=1 ), 'id' )
-    else
+    acc <- suppressWarnings(
+      xpathApply( doc, paste( xpath.prefix, "xmlns:accession", sep="" ),
+        xmlValue, namespaces=ns )[[1]]
+    )
+    if ( ! is.null( ndst ) && length( ndst ) > 0 ) {
+      mtrx <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', acc ) )
+      mtrx[[ 1, 1 ]] <- vapply( ndst, xmlGetAttr, vector( mode='character', length=1 ), 'id' )
+      mtrx
+    } else
       NULL
   }
   tryCatch( block(), error=function( err ) {
@@ -456,12 +464,9 @@ retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
     if ( ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
       annos <- do.call( 'cbind',
         lapply( uniprot.entries , function( d ) {
-          list(
-            'GO'=extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./' )
-          )
+          extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./' )
         })
       )
-      colnames( annos ) <- uniprot.accessions
       # Exclude NULL columns:
       annos[ , as.character( annos[ 'GO', ] ) != 'NULL' , drop=F ]
     }

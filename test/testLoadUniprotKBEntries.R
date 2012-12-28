@@ -194,7 +194,10 @@ checkTrue( is.null(rslt) )
 rslt <- extractExperimentallyVerifiedGoAnnos(
   xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) )
 )
-checkEquals( c( "GO:0004519", "GO:0006316" ), rslt )
+# print( rslt )
+exp.rslt <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', 'Q9ZZX1' ) )
+exp.rslt[[ 1, 1 ]] <- c( "GO:0004519", "GO:0006316" )
+checkEquals( exp.rslt, rslt )
 
 # Test retrieveExperimentallyVerifiedGOAnnotations
 print("Testing retrieveExperimentallyVerifiedGOAnnotations(...)")
