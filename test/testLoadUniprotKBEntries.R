@@ -187,9 +187,13 @@ checkEquals( shrd.annos.2[[ "GO", "A0Q3U7" ]], annos[[ "GO", "A0Q3U7" ]] )
 
 # Test extractExperimentallyVerifiedGoAnnos
 print("Testing extractExperimentallyVerifiedGoAnnos(...)")
-rslt <- extractExperimentallyVerifiedGoAnnos( project.file.path( "test", "A0AEI7.xml" ) )
+rslt <- extractExperimentallyVerifiedGoAnnos(
+  xmlInternalTreeParse( project.file.path( "test", "A0AEI7.xml" ) )
+)
 checkTrue( is.null(rslt) )
-rslt <- extractExperimentallyVerifiedGoAnnos( project.file.path( "test", "Q9ZZX1.xml" ) )
+rslt <- extractExperimentallyVerifiedGoAnnos(
+  xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) )
+)
 checkEquals( c( "GO:0004519", "GO:0006316" ), rslt )
 
 # Test retrieveExperimentallyVerifiedGOAnnotations
@@ -198,3 +202,16 @@ exper.go.annos <- retrieveExperimentallyVerifiedGOAnnotations( c( "A0AEI7", "Q9Z
 # print( exper.go.annos )
 checkEquals( exper.go.annos[[ 'GO', 'Q9ZZX1' ]], c( "GO:0004519", "GO:0006316" ) )
 checkEquals( ncol(exper.go.annos), 1 )
+# Test with 550 accessions, triggering recursive execution:
+accs.550 <- as.character( read.table( project.file.path( "test", "550_exp_ver_accs.txt" ) )$V1 )
+exper.go.annos.550 <- retrieveExperimentallyVerifiedGOAnnotations( accs.550 )
+checkTrue( ! is.null( exper.go.annos.550 ) )
+checkEquals( "matrix", class( exper.go.annos.550 ) )
+checkEquals( 1, nrow( exper.go.annos.550 ) )
+# Uniprot constantly changes their annotations, hence make a very conservative
+# test:
+checkTrue( ncol( exper.go.annos.550 ) > 400 )
+checkEquals( ncol( exper.go.annos.550 ),
+  length( unique( colnames( exper.go.annos.550 ) ) )
+)
+

@@ -169,3 +169,14 @@ prediction.result <- try(
 # print( prediction.result )
 checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
 checkTrue( identical( class( prediction.result ), "list" ) )
+# Test with a large tree ( 646 leaves ) with evidence of two Proteins with
+# experimentally verified functions:
+phyl.tree.2 <- read.tree( project.file.path( "test", "test_tree_large.newick" ) )
+annos.2 <- retrieveAnnotationsBiomart( phyl.tree.2$tip.label )
+prediction.result <- try(
+  queryPhylBayesNetwork( phyl.tree.2, annos.2 ),
+  silent=F
+)
+# print( prediction.result )
+checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
+checkTrue( identical( class( prediction.result ), "list" ) )
