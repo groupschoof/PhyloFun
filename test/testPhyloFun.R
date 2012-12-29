@@ -163,7 +163,7 @@ print("Testing queryPhylBayesNetwork(...)")
 phyl.tree.1 <- read.tree( project.file.path( "test", "test_tree.newick" ) )
 annos.1 <- retrieveAnnotationsBiomart( phyl.tree.1$tip.label )
 prediction.result <- try(
-  queryPhylBayesNetwork( phyl.tree.1, annos.1 ),
+  queryPhylBayesNetwork( phyl.tree.1, annos.1, "\"Protein_1\"" ),
   silent=F
 )
 # print( prediction.result )
@@ -174,7 +174,7 @@ checkTrue( identical( class( prediction.result ), "list" ) )
 phyl.tree.2 <- read.tree( project.file.path( "test", "test_tree_large.newick" ) )
 annos.2 <- retrieveAnnotationsBiomart( phyl.tree.2$tip.label )
 prediction.result <- try(
-  queryPhylBayesNetwork( phyl.tree.2, annos.2 ),
+  queryPhylBayesNetwork( phyl.tree.2, annos.2, "\"Protein_1\"" ),
   silent=F
 )
 # print( prediction.result )
