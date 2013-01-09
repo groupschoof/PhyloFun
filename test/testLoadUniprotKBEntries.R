@@ -125,6 +125,7 @@ checkEquals(aa.seq,
 # checkEquals( class(retrieveSequence('')), 'try-error' )
 # checkEquals( class(retrieveSequence(NA)), 'try-error' )
 # checkEquals( class(retrieveSequence(NULL)), 'try-error' )
+checkTrue( is.null( retrieveSequence( "Error 12. No entries found", return.error=F ) ) )
 
 # Test retrieveSequences
 print("Testing retrieveSequences(...)")
