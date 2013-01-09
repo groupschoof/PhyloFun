@@ -251,13 +251,12 @@ retrieveSequence <- function( doc, noverbose=T, return.error=T ) {
   block <- function() {
     if ( ! is.null(doc) ) {
       ns <- c(xmlns="http://uniprot.org/uniprot");
+      if ( is.character(doc) ) {
+        doc <- xmlInternalTreeParse( doc )
+      }
       gsub("\\s", "",
         xmlValue(
-          getNodeSet(
-            xmlInternalTreeParse(doc),
-            "//xmlns:entry/xmlns:sequence",
-            ns
-          )[[1]]
+          getNodeSet( doc, "//xmlns:entry/xmlns:sequence", ns)[[1]]
         )
       )
     }
