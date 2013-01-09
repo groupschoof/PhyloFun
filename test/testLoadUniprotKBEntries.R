@@ -48,16 +48,19 @@ checkEquals( uniprotkb.url('Q0KFR8', frmt='fasta'),
 
 # Test extract.annotations
 print("Testing extract.annotations(...)")
-d <- xmlInternalTreeParse(uniprotkb.url('Q0KFR8'))
+d <- xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) )
 annos <- extract.annotations(d, 'InterPro')
+# print( d )
+# print( annos )
 checkTrue(length(annos) > 0)
-checkTrue('IPR003593' %in% annos)
+checkTrue('IPR004860' %in% annos)
 annos <- extract.annotations(d, 'GO')
+# print( annos )
 checkTrue(length(annos) > 0)
-checkTrue('GO:0006270' %in% annos)
+checkTrue('GO:0005739' %in% annos)
 annos <- extract.annotations(d, 'Pfam')
 checkTrue(length(annos) > 0)
-checkTrue('PF11638' %in% annos)
+checkTrue('PF00115' %in% annos)
 
 # Test retrieve.annotations
 anno.list <- retrieve.annotations(uniprotkb.url('Q0KFR8'))

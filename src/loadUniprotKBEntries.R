@@ -198,15 +198,40 @@ retrieveAnnotationsBiomart <- function( accs,
   )
 }
 
-downloadUniprotDocuments <- function( uniprot.uris ) {
+downloadUniprotDocuments <- function( uniprot.accessions, frmt='xml',
+  uniprot.webfetch.max.ids=200 ) {
   # Downloads the documents from the RESTful Uniprot web service.
   #
   # Args:
-  #  uniprot.uris : A vector or list of uniprot URLs
+  #  uniprot.accessions       : A vector or list of uniprot accessions
+  #  frmt                     : The format in which the uniprot documents shall
+  #                             be encoded
+  #  uniprot.webfetch.max.ids : The current maximum number of IDs in a batch
+  #                             fetch allowed by the Uniprot webfetch service.
   #
   # Returns: Returns a named character vector of the downloaded XML documents.
-  # Names are the 'uniprot.uris'.
-  getURL( uniprot.uris )
+  # Names are the 'uniprot.accessions'.
+  if ( length( uniprot.accessions ) > uniprot.webfetch.max.ids ) {
+    # Recursive fetch of uniprot.webfetch.max.ids sized batches:
+    c( 
+      downloadUniprotDocuments( 
+        uniprot.accessions[ 1:uniprot.webfetch.max.ids ] ),
+      downloadUniprotDocuments(
+        uniprot.accessions[
+          ( uniprot.webfetch.max.ids + 1 ):length(uniprot.accessions)
+        ]
+      )
+    )
+  } else {
+    # Fetch max uniprot.webfetch.max.ids in a single batch:
+    fetch.url <- uniprotkb.url(
+      paste( uniprot.accessions, collapse=",", sep=""),
+      frmt=frmt
+    )
+    uniprot.entries <- getEntries( getURL( fetch.url ) )
+    names( uniprot.entries ) <- uniprot.accessions
+    uniprot.entries
+  }
 }
 
 retrieveSequence <- function( doc ) {
@@ -231,7 +256,7 @@ retrieveSequence <- function( doc ) {
   )
 }
 
-retrieveSequences <- function( downloaded.uniprot.docs,
+retrieveSequences <- function( downloaded.uniprot.docs, accessions=names( downloaded.uniprot.docs ),
   max.retries=10, noverbose=F ) {
   # Parses each downloaded argument Uniprot document and extracts the content
   # of the '<sequence>' tag. If an error occurs doing so, re-tries downloading
@@ -241,6 +266,7 @@ retrieveSequences <- function( downloaded.uniprot.docs,
   # Args:
   #  downloaded.uniprot.docs : The documents downloaded from Uniprot's RESTful
   #                            web service. 
+  #  accessions : The names of the returned list. Default names( downloaded.uniprot.docs )
   #  max.retries : The maximum number of times another download is attempted.
   #  noverbose : switch indicating wether to print out errors
   #
@@ -260,6 +286,7 @@ retrieveSequences <- function( downloaded.uniprot.docs,
         (max.retries - 1) )
     )
   }
+  names( seqs ) <- accessions
   # Return
   seqs
 }
@@ -446,29 +473,14 @@ retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
   # verified GO annotations. NULL annotations are excluded, so the returned
   # matrix can be of zero columns and a single row.
   #   
-  if ( length( uniprot.accessions ) > uniprot.webfetch.max.ids ) {
-    # Recursive fetch of uniprot.webfetch.max.ids sized batches:
-    cbind( 
-      retrieveExperimentallyVerifiedGOAnnotations( 
-        uniprot.accessions[ 1:uniprot.webfetch.max.ids ] ),
-      retrieveExperimentallyVerifiedGOAnnotations(
-        uniprot.accessions[
-          ( uniprot.webfetch.max.ids + 1 ):length(uniprot.accessions)
-        ]
-      )
+  uniprot.entries <- downloadUniprotDocuments( uniprot.accessions )  
+  if ( ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
+    annos <- do.call( 'cbind',
+      lapply( uniprot.entries , function( d ) {
+        extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./' )
+      })
     )
-  } else {
-    # Fetch max uniprot.webfetch.max.ids in a single batch:
-    fetch.url <- uniprotkb.url( paste( uniprot.accessions, collapse=",", sep="" ) )
-    uniprot.entries <- getEntries( getURL( fetch.url ) )  
-    if ( ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
-      annos <- do.call( 'cbind',
-        lapply( uniprot.entries , function( d ) {
-          extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./' )
-        })
-      )
-      # Exclude NULL columns:
-      annos[ , as.character( annos[ 'GO', ] ) != 'NULL' , drop=F ]
-    }
+    # Exclude NULL columns:
+    annos[ , as.character( annos[ 'GO', ] ) != 'NULL' , drop=F ]
   }
 }

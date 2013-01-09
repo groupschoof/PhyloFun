@@ -1,7 +1,7 @@
 library(tools)
 library(Biostrings)
-library(parallel)
 library(RCurl)
+library(stringr)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -21,7 +21,7 @@ src.project.file <- function(...) {
 src.project.file( "src", "phyloFunTools.R" )
 
 # Hail User:
-print( "Usage: Rscript runPhyloFun.R path/2/query_proteins.fasta path/2/jackhmmer_results.tbl path/2/interproscan_results.tsv" )
+print( "Usage: Rscript runPhyloFun.R path/2/query_proteins.fasta path/2/jackhmmer_results.tbl [ query-accession-regex='^\\s*(\\S+)\\s' ]")
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
@@ -34,8 +34,25 @@ print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[1]]) )
 jr <- parseJackhmmerTable( 
   scan( file=trailing.args[[2]], what=character(), sep="\n" )
 )
+print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hit-pairs" ) )
 
-# for each protein, do
+# Parse accessions as String between '>' and the first blank character:
+query.acc.regex <- if ( length(trailing.args) == 3 ) trailing.args[[3]] else '^\\s*(\\S+)\\s' 
+accs <- unlist( lapply( names(aa.seqs), function(n) str_match( n, query.acc.regex )[[ 1, 2 ]] ) )
+print( paste( "Parsed the query proteins' accessions as text matching",
+  query.acc.regex, "after the '>' character in file", trailing.args[[ 1 ]],
+  "If your query accessions are not matching, PhyloFun will fail to find their accessions in the JACKHMMER results!" )
+)
+
+# For each query protein, do:
+for ( acc in accs ) {
+  hits <- jr[ which( jr[ , 'query.name' ] == acc ), , drop=F ]
+  if ( nrow( hits ) > 0 ) {
+    hit.accs <- hits[ , 'hit.name' ]
+    hit.uniprot.docs <- getURL( sapply( hit.accs, function( a ) uniprotkb.url( a ) ) )
+    hit.seqs <- retrieveSequences( hit.uniprot.docs )
+  }
+}
 # 
 # get jackhmmer results for that protein
 # download their sequences
