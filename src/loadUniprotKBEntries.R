@@ -249,7 +249,7 @@ retrieveSequence <- function( doc, noverbose=T, return.error=T ) {
   # Returns: The content of the contained '<sequence>...</sequence>' tag.
   #   
   block <- function() {
-    if ( ! is.null(doc) && doc != '' ) {
+    if ( ! is.null(doc) ) {
       ns <- c(xmlns="http://uniprot.org/uniprot");
       gsub("\\s", "",
         xmlValue(
