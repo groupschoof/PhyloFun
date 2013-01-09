@@ -49,34 +49,88 @@ findMatchingColumn <- function( mutation.probability.table, value, column.index 
   }
 }
 
-validAnnotations <- function( annotation.matrix, unknown.annot='unknown',
-  annotation.type='GO', annotations.with.mutation.probability.tables=names(
-  GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE ) ) {
-  # Filters all annotations of argument type 'annotation.type' to be pairwise
-  # unique, to exclude NAs, and to have mutation probability tables set in
-  # argument 'mutation.probability.tables.list'. To this list the UNKNOWN
-  # annotation is appended.
+goTypeAnnotationMatrices <- function( annotation.matrix,
+  valid.go.terms=names( GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE ),
+  go.con=connectToGeneOntology(), exclude.empty.cols=T ) {
+  # For each type of Gene Ontology terms, 'molecular_function',
+  # 'biological_process', and 'cellular_component', a separate annotation
+  # matrix is generated. These matrices hold the set of GO term annotations for
+  # each protein as in the column names of argument 'annotation.matrix'. If a
+  # non NULL and non empty valid.go.terms list is provided only GO term
+  # annotations appearing in this list will appear.
   #
   # Args:
-  #  annotation.matrix : The matrix of protein function annotations as returned
-  #                      i.e. by 'retrieveAnnotationsBiomart'.
-  #  unknown.annot : The UNKNOWN annotation, can be set to any convenient name.
-  #  annotation.type : The type of annotation to extract, must be one of
-  #                    argument 'annotation.matrix' row names.
-  #  annotations.with.mutation.probability.tables : The annotations for which
-  #                    mutation probability tables have been generated. Default
-  #                    is the names of constant list
-  #                    GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE.
+  #  annotation.matrix  : A funtion annotation matrix as returned by
+  #                       'retrieveAnnotationsBiomart'.
+  #  valid.go.terms     : If non NULL and non empty only terms appearing in
+  #                       this list will be assigned.
+  #  go.con             : database connection to the gene-ontology-MySQL-db
+  #  exclude.empty.cols : If set to FALSE proteins with no annotations in the
+  #                       current GO term type will have character(0) entries.
+  #                       If this switch is set to TRUE, such columns will
+  #                       simply be excluded from the resulting matrices. 
   #
-  # Returns: A character vector of legal and valid annotations including the
-  # UNKNOWN.
+  # Returns: A named list with three annotation matrices 'biological_process',
+  # 'cellular_component', and 'molecular_function'. Each annotation matrix has
+  # a single row and the same columns as argument 'annotation.matrix'. Each
+  # cell contains the filtered GO annotations of the corresponding GO term
+  # type.
   #   
-  c(
-    intersect(
-      uniq.annotations( annotation.matrix, annotation.type, exclude.NAs=T ),
-      annotations.with.mutation.probability.tables
-    ),
-    unknown.annot
+  all.distinct.annos <- uniq.annotations( annotation.matrix, 'GO', exclude.NAs=T )
+  annos <- goTermsForAccessionWithLevel( all.distinct.annos )
+  go.types <- c( 'biological_process', 'cellular_component', 'molecular_function' ) 
+  setNames(
+    lapply( go.types, function( go.tp ) {
+      gos.of.type <- annos[ which( annos$term_type == go.tp ), 'acc' ]
+      if ( ! is.null( valid.go.terms ) && length( valid.go.terms ) > 0 )
+        gos.of.type <- intersect( gos.of.type, valid.go.terms )
+      do.call( 'cbind',
+        lapply( colnames( annotation.matrix ), function( prot ) {
+          prot.mtrx <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', prot ) )
+          prot.mtrx[[ 'GO', prot ]] <- sort( intersect( annotation.matrix[[ 'GO', prot ]], gos.of.type ) )
+          if ( ! is.null(prot.mtrx[[ 'GO', prot ]]) &&
+              length(prot.mtrx[[ 'GO', prot ]]) > 0 ||
+              ! exclude.empty.cols ) 
+            prot.mtrx
+          else
+            NULL
+        })
+      )
+    }),
+    go.types
+  )
+}
+
+mutationProbability <- function( annotation, branch.length,
+  annots.mut.prob.table.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
+  distance.column.index, select.funk=max ) {
+  # Returns the maximum mutation probability found for any annotation in the
+  # argument list 'annotation'.
+  #
+  # Args:
+  #  annotation                 : A character vector of function annotations,
+  #                               i.e. c( 'GO_A', 'GO_B', 'GO_C' )
+  #  branch.length              : The length of the current phylogenetic
+  #                               branch.
+  #  annots.mut.prob.table.list : The list to lookup each single annotations's
+  #                               mutation probability table.
+  #  distance.column.index      : The index of the column in which above
+  #                               probability tables hold the maximum distance
+  #                               measures mapped to their corresponding
+  #                               mutation probabilities.
+  #  select.funk                : Set to min, mean or max to define which
+  #                               mutation probability should be returned.
+  #                               Default is max.
+  #
+  # Returns: The numeric maximum of all matching mutation probabilities.
+  #   
+  select.funk(
+    as.numeric(
+      lapply( annotation, function( singl.anno ) {
+        findMatchingColumn( annots.mut.prob.table.list[[ singl.anno ]],
+          branch.length, distance.column.index )[[ 1, 1 ]]
+      })
+    )
   )
 }
 
@@ -85,7 +139,7 @@ conditional.probs.tbl <- function( edge.length, annos,
   unknown.annot='unknown' ) {
   # Looks up the mutation probability tables for each annotation and constructs
   # the transition probabilities based on the current branch's length.
-  # Introduced a new annotation UNKNOWN which can mutate to every other
+  # Introduces a new annotation 'UNKNOWN' which can mutate to every other
   # annotation in argument 'uniq.annotations' and does have a zero probability
   # of self retainment.
   #
@@ -107,48 +161,110 @@ conditional.probs.tbl <- function( edge.length, annos,
   #   the m[i, j] := P(j | i), i = parent function, j = child function
   #   
   do.call( 'rbind', 
-    lapply( annos, function( a ) {
-      p.mut.tbl <- annots.mut.prob.table.list[[ a ]]
+    lapply( annos, function( anno ) {
+      a <- annotationToString( anno )
+      colnms <- lapply( annos, annotationToString )
       if ( identical( a, unknown.annot ) ) {
         trans.probs <- matrix( 1 / ( length( annos ) - 1 ),
           nrow=1, ncol=length( annos ),
-          dimnames=list( a, annos )
+          dimnames=list( a, colnms )
         )
         # unknown retainment probability:
         trans.probs[[ a, a ]] <- 0
         trans.probs
-      } else if ( ! is.null( p.mut.tbl ) ) {
-        p.mut <- findMatchingColumn(
-          p.mut.tbl, edge.length, mut.tbl.length.col.indx
-          )[[ 1, p.mut.col.indx ]]
+      } else {
+        p.mut <- mutationProbability( anno, edge.length,
+          annots.mut.prob.table.list, mut.tbl.length.col.indx
+        )
         trans.probs <- matrix( ( p.mut / ( length( annos ) - 1 ) ),
           nrow=1, ncol=length( annos ),
-          dimnames=list( a, annos )
+          dimnames=list( a, colnms )
         )
         # annotation retainment probability:
         trans.probs[[ a, a ]] <- 1 - p.mut
         trans.probs
-      } else {
-        write( paste( "WARNING! Could not find mutation probability table for", a ),
-          stderr() )
-        NULL
       }
     })
   )
 }
 
-bayesNodes <- function( phylo.tree, annotation.matrix, annotation.type='GO',
+annotationToString <- function( compound.annotation ) {
+  # Throughout PhyloFun this is used to generate a unique string from a
+  # character vector of protein annotations. - We could of course use the
+  # toString method, but this function produces a more readable output when
+  # more compound annotations appear as random variable values.
+  #
+  # Args:
+  #  compound.annotation : a character vector, i.e. c( "GO_AGO_B", "GO_C" ).
+  #
+  # Returns: A character vector of length one, i.e. "GO_A & GO_B & GO_C"
+  #   
+  paste( compound.annotation, collapse=" & " )
+}
+
+goAnnotationSpaceList <- function( go.type.annotation.matrices,
+  unknown.annot='unknown' ) {
+  # Generates the spaces of unique annotations for each GO term type
+  # 'biological_process', 'cellular_component', and 'molecular_function'.
+  #
+  # Args:
+  #  go.type.annotation.matrices : list of GO annotation matrices as returned
+  #                                by 'goTypeAnnotationMatrices'.
+  #  unknown.annot               : Set to NULL, if the UNKNOWN annotation
+  #                                should be excluded from each annotation
+  #                                space. Set to any other convenient
+  #                                character, otherwise.
+  #
+  # Returns: A list of lists. Names are the GO term types and contained lists
+  # are the unique GO term annotations as found in the argument
+  # 'go.type.annotation.matrices'.
+  #   
+  setNames(
+    lapply( names( go.type.annotation.matrices ), function( go.type ) {
+      as <- annotationSpace( go.type.annotation.matrices[[ go.type ]] )
+      if ( ! is.null( unknown.annot ) )
+        as <- c( as, unknown.annot )
+      as
+    }),
+    names( go.type.annotation.matrices )
+ )
+}
+
+annotationSpace <- function( annotation.matrix, annotation.type='GO' ) {
+  # Generates the set of unique anntations found in the columns of argument
+  # 'annotation.matrix' in row 'annotation.type'.
+  #
+  # IMPORTANT NOTE: This function expects each proteins annotations vector to
+  # be alphabetically sorted! - See function goTypeAnnotationMatrices for
+  # further details.
+  #
+  # Args:
+  #  annotation.matrix : The matrix of protein annotations as returned by
+  #                      retrieveAnnotationsBiomart.
+  #  annotation.type   : The type of annotations to select, default 'GO'.
+  #
+  # Returns: A character vector of unique annotations.
+  #   
+  unique( annotation.matrix[ annotation.type, ] )
+}
+
+bayesNodes <- function( phylo.tree, annotation.matrix, annotation.space,
   mutation.probability.tables.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
-  unknown.annot='unknown'
-  ) {
+  unknown.annot='unknown' ) {
   # Constructs a bayesian network from the argument phylogenetic tree assigns
-  # each node the annotation mutation probability distribution. 
+  # each node the annotation mutation probability distribution. Note: PhyloFun
+  # calls this function thrice, once for each type of GO term type
+  # 'biological_process', 'cellular_component', and 'molecular_function'.
   #
   # Args:
   #  phylo.tree                       : Argument phylogenetic tree as returned
   #                                     by funtion 'read.tree'.
   #  annotation.matrix                : The function annotations for the leaves
   #                                     in the phylogenetic tree.
+  #  annotation.space                 : The set of unique compound annotations,
+  #                                     i.e. entry 'molecular_function' of the
+  #                                     list returned by function
+  #                                     'goAnnotationSpaceList'.
   #  mutation.probability.tables.list : The list of conditional annotation
   #                                     mutation probabilities as generated by
   #                                     function 'mutationProbabilityDistribution'.
@@ -158,20 +274,20 @@ bayesNodes <- function( phylo.tree, annotation.matrix, annotation.type='GO',
   # Returns: a list of bayesian network nodes as generated by function
   # 'cptable' from library 'gRain'.
   #   
-  annotations <- validAnnotations( annotation.matrix, unknown.annot,
-    annotation.type, names( mutation.probability.tables.list )
-  )
+  annotations <- lapply( annotation.space, annotationToString )
   no.evidence <- as.numeric( matrix( 1.0, nrow=1, ncol=length( annotations ) ) )
   nds <- list(
     cptable( eval( bquote( ~ .( get.root.node( phylo.tree ) ) ) ),
       values=no.evidence, levels=annotations )
   )
   for( i in 1:nrow( phylo.tree$edge ) ) {
-    nds <- append( nds,
-       list( cptable( edge.to.formula( phylo.tree, i ),
-           values=conditional.probs.tbl( phylo.tree$edge.length[[i]], annotations,
-             mutation.probability.tables.list, unknown.annot=unknown.annot ),
-           levels=annotations ) )
+    nds <- append( nds, list(
+      cptable( edge.to.formula( phylo.tree, i ),
+        values=conditional.probs.tbl( phylo.tree$edge.length[[i]],
+          annotation.space, mutation.probability.tables.list,
+          unknown.annot=unknown.annot ),
+        levels=annotations
+      ) )
     )
   }
   nds

@@ -76,7 +76,7 @@ goTermsForAccessionWithLevel <- function( accessions, con=connectToGeneOntology(
       "t.id = g.term2_id WHERE g.term1_id = ( SELECT r.id FROM term r WHERE r.is_root = 1 ) ",
       "AND t.acc in (",
       do.call( 'join.funk', as.list( paste( "'", accessions, "'", sep="" ) ) ),
-      ")"
+      ") GROUP BY t.id"
     ) 
   )
 }
