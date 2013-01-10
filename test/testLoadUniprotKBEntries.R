@@ -21,6 +21,28 @@ src.project.file('src','loadUniprotKBEntries.R')
 # Accessions of Proteins involved in the following tests:
 test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
 
+# Test extractName
+print("Testing extractName(...)")
+res.extractName <- extractName(
+  xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) ),
+  xpath.prefix='//xmlns:entry/'
+)
+exp.extractName <- "Q9ZZX1"
+checkEquals( res.extractName, exp.extractName ) 
+# With the result of getEntries:
+res.extractName <- extractName( getEntries(
+  readLines( project.file.path( "test", "Q9ZZX1.xml" ) ) )[[ 1 ]] )
+exp.extractName <- "Q9ZZX1"
+checkEquals( res.extractName, exp.extractName ) 
+# NULL argument should return NULL accession:
+checkTrue( is.null( extractName( NULL ) ) )
+
+# Test downloadUniprotDocuments
+print("Testing downloadUniprotDocuments(...)")
+res.downloadUniprotDocuments <- downloadUniprotDocuments( test.accessions )
+# print( res.downloadUniprotDocuments )
+checkEquals( length( res.downloadUniprotDocuments ), 3 ) 
+
 # Test retrieveAnnotationsBiomart
 print("Testing retrieveAnnotationsBiomart(...)")
 bm.annos <- retrieveAnnotationsBiomart(test.accessions)

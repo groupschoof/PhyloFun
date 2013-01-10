@@ -198,6 +198,48 @@ retrieveAnnotationsBiomart <- function( accs,
   )
 }
 
+extractName <- function( uniprot.entry, xpath.prefix='./', noverbose=T,
+  return.error=F ) {
+  # Finds and returns the content of the first accession tag inside the
+  # argument 'uniprot.entry'.
+  #
+  # Args:
+  #  uniprot.entry : Either the character content of a Uniprot XML document or
+  #                  a _single_ result of function 'getEntries'.
+  #  xpath.prefix  : Depends on type of argument 'uniprot.entry'. If first
+  #                  option was chosen, use '//xmlns:entry/', if second option
+  #                  was chosen, use the default './'.
+  #  noverbose     : Set to FALSE, if error messages should be printed to
+  #                  stderr.
+  #  return.error  : If TRUE and an error occured the message will be returned,
+  #                  in case of an error and this switch set to FAlSE NULL will
+  #                  be returned.
+  #
+  # Returns: A character, content of the first accession tag in argument
+  # 'uniprot.entry', or NULL.
+  #   
+  block <- function() {
+    if ( ! is.null(uniprot.entry) ) {
+      ns <- c(xmlns="http://uniprot.org/uniprot");
+      if ( is.character(uniprot.entry) ) {
+        uniprot.entry <- xmlInternalTreeParse( uniprot.entry )
+      }
+      xmlValue(
+        getNodeSet(
+          uniprot.entry,
+          paste( xpath.prefix, "xmlns:accession", sep='' ),
+          ns
+        )[[ 1 ]]
+      )
+    }
+  }
+  accession <- try( block(), silent=noverbose )
+  if ( class( accession ) == "try-error" && ! return.error ) {
+    accession <- NULL
+  }
+  accession
+}
+
 downloadUniprotDocuments <- function( uniprot.accessions, frmt='xml',
   uniprot.webfetch.max.ids=200 ) {
   # Downloads the documents from the RESTful Uniprot web service.
@@ -229,7 +271,10 @@ downloadUniprotDocuments <- function( uniprot.accessions, frmt='xml',
       frmt=frmt
     )
     uniprot.entries <- getEntries( getURL( fetch.url ) )
-    names( uniprot.entries ) <- uniprot.accessions
+    if ( ! is.null( uniprot.entries ) )
+      names( uniprot.entries ) <- unlist(
+        lapply( uniprot.entries, extractName )
+      )
     uniprot.entries
   }
 }

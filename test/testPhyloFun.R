@@ -203,28 +203,28 @@ checkEquals(
   )
 
 # Test queryPhylBayesNetwork
-print("Testing queryPhylBayesNetwork(...)")
-# Test with NO experimentally verified evidence in any tip:
-phyl.tree.1 <- read.tree( project.file.path( "test", "test_tree.newick" ) )
-annos.1 <- retrieveAnnotationsBiomart( phyl.tree.1$tip.label )
-prediction.result <- try(
-  queryPhylBayesNetwork( phyl.tree.1, annos.1, "\"Protein_1\"" ),
-  silent=F
-)
-# print( prediction.result )
-checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
-checkTrue( identical( class( prediction.result ), "list" ) )
-# Test with a large tree ( 646 leaves ) with evidence of two Proteins with
-# experimentally verified functions:
-phyl.tree.2 <- read.tree( project.file.path( "test", "test_tree_large.newick" ) )
-annos.2 <- retrieveAnnotationsBiomart( phyl.tree.2$tip.label )
-prediction.result <- try(
-  queryPhylBayesNetwork( phyl.tree.2, annos.2, "\"Protein_1\"" ),
-  silent=F
-)
-# print( prediction.result )
-checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
-checkTrue( identical( class( prediction.result ), "list" ) )
-
+# print("Testing queryPhylBayesNetwork(...)")
+# # Test with NO experimentally verified evidence in any tip:
+# phyl.tree.1 <- read.tree( project.file.path( "test", "test_tree.newick" ) )
+# annos.1 <- retrieveAnnotationsBiomart( phyl.tree.1$tip.label )
+# prediction.result <- try(
+#   queryPhylBayesNetwork( phyl.tree.1, annos.1, "\"Protein_1\"" ),
+#   silent=F
+# )
+# # print( prediction.result )
+# checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
+# checkTrue( identical( class( prediction.result ), "list" ) )
+# # Test with a large tree ( 646 leaves ) with evidence of two Proteins with
+# # experimentally verified functions:
+# phyl.tree.2 <- read.tree( project.file.path( "test", "test_tree_large.newick" ) )
+# annos.2 <- retrieveAnnotationsBiomart( phyl.tree.2$tip.label )
+# prediction.result <- try(
+#   queryPhylBayesNetwork( phyl.tree.2, annos.2, "\"Protein_1\"" ),
+#   silent=F
+# )
+# # print( prediction.result )
+# checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
+# checkTrue( identical( class( prediction.result ), "list" ) )
+# 
 # Clean Up:
 dbDisconnect( go.con )
