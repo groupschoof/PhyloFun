@@ -71,3 +71,37 @@ parseInterProScanTable <- function( ipr.scn.lines,
   }
   do.call( 'cbind', ipr.res )
 }
+
+commandLineArguments <- function( trailing.args, default.args ) {
+  # Reads out command line arguments like '-foo bar -franky jr' passed as
+  # argument trailing.args. Merges named lists trailing.args and default.args
+  # giving precedence to arguments in trailing.args over default.args.
+  #
+  # Args:
+  #  trailing.args : Character, Rscript command line arguments as returned by
+  #                  commandArgs(trailingOnly = TRUE).
+  #  default.args  : Named list of required default arguments, to fill in for
+  #                  missing arguments in trailing.args.
+  #
+  # Returns: A named list of arguments for the R code to be run.
+  #   
+  sub.funk <- function( a ) sub('^-', '', a)
+  arg.names <- sapply( trailing.args[ which( grepl( '^-', trailing.args[] ) ) ],
+    sub.funk, USE.NAMES=F
+  ) 
+  arg.values <- sapply( trailing.args[ which( grepl( '^[^-]', trailing.args[] ) ) ],
+    sub.funk, USE.NAMES=F
+  ) 
+  names( arg.values ) <- arg.names
+  all.arg.names <- unique( c( arg.names, names( default.args ) ) )
+  setNames( 
+    lapply( all.arg.names, function( arg.nm ) {
+      if ( arg.nm %in% arg.names ) {
+        arg.values[[ arg.nm ]]
+      } else if ( arg.nm %in% names( default.args ) ) {
+        default.args[[ arg.nm ]]
+      }
+    }),
+    all.arg.names
+  )
+}

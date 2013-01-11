@@ -21,9 +21,18 @@ src.project.file <- function(...) {
 }
 # Helper functions:
 src.project.file( "src", "phyloFunTools.R" )
+load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
-print( "Usage: Rscript runPhyloFun.R path/2/query_proteins.fasta path/2/jackhmmer_results.tbl [ query-accession-regex='^\\s*(\\S+)\\s' ]")
+print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -f path/2/FastTree[MP] ] [ -g path/2/GBlocks ] [ -m path/2/MAFFT ]")
+print( '' )
+print(
+  paste( "WARNING: The PhyloFun pipeline uses other programs to generate multiple sequence alignments (MAFFT),",
+    "filter them for conserved regions (GBlocks), and generate a phylogenetic tree of the MSA (FastTree[MP]).",
+    "These programs need to be in your $PATH and require protein accessions of your JACKHMMER homolgy searches to be Uniprot accessions.",
+    "Finally the accessions of your query proteins should consist only of the following character class [a-zA-Z0-9_-]"
+  )
+)
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
@@ -39,7 +48,7 @@ jr <- parseJackhmmerTable(
 print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hit-pairs" ) )
 
 # Parse accessions as String between '>' and the first blank character:
-query.acc.regex <- if ( length(trailing.args) == 3 ) trailing.args[[3]] else '^\\s*(\\S+)\\s' 
+query.acc.regex <- if ( length(trailing.args) == 3 ) trailing.args[[3]] else '^\\s*([a-zA-Z0-9_-]+)\\s*' 
 accs <- unlist( setNames( lapply( names(aa.seqs), function(n) str_match( n, query.acc.regex )[[ 1, 2 ]] ), names(aa.seqs) ) )
 print( paste( "Parsed the query proteins' accessions as text matching",
   query.acc.regex, "after the '>' character in file", trailing.args[[ 1 ]],
@@ -84,6 +93,11 @@ for ( acc in accs ) {
       'molecular_function' ), function( go.type ) {
 
     })
+    acc.go.type.annos <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
+    acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
+    
+    # TODO: Manually test construction of bayes network and its evaluation.
+    # Then pass that code into queryPhylBayesNetwork
 
   }
 }

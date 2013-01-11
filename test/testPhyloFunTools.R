@@ -52,3 +52,12 @@ checkEquals( ipr.res[[ "InterPro", "Protein_5" ]], "IPR011990" )
 checkEquals( ipr.res[[ "InterPro", "Protein_4" ]], 
   c("IPR011650", "IPR017439", "IPR002933")
 )
+
+# Test commandLineArguments
+print("Testing commandLineArguments(...)")
+res.commandLineArguments <- commandLineArguments(
+  c( '-a', '1', '-b', '2' ), list('b'='0', 'c'='3')
+)
+exp.commandLineArguments <- list( 'a'='1', 'b'='2', 'c'='3' )
+# print( res.commandLineArguments )
+checkEquals( res.commandLineArguments, exp.commandLineArguments ) 

@@ -345,7 +345,7 @@ diagnosticEvidence <- function( uniprot.accessions,
 queryPhylBayesNetwork <- function( phylo.tree, response, annotation.matrix,
   annotation.space, diagnostic.evidence, annotation.type='GO',
   bayes.netw=grain( compileCPT( bayesNodes( phylo.tree,
-        annotation.matrix, annotation.type ) )
+        annotation.matrix, annotation.space, annotation.type ) )
   ), type='distribution' ) {
   # Creates and queries the Bayesian independence network. Argument
   # 'diagnostic.evidence' holds the predictor variables and their states those
