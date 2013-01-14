@@ -35,6 +35,21 @@ close(fl)
 
 go.con <- connectToGeneOntology()
 
+# Test annotationMatrixForBayesNetwork
+print("Testing annotationMatrixForBayesNetwork(...)")
+res.annotationMatrixForBayesNetwork <- annotationMatrixForBayesNetwork( annotation.matrix )
+# print( res.annotationMatrixForBayesNetwork )
+checkTrue( ! is.null( res.annotationMatrixForBayesNetwork ) )
+checkEquals( class( res.annotationMatrixForBayesNetwork ), 'matrix' )
+checkEquals( ncol( res.annotationMatrixForBayesNetwork ),
+  ncol( annotation.matrix ) )
+checkEquals( rownames( res.annotationMatrixForBayesNetwork ), 'GO' )
+checkEquals( colnames( res.annotationMatrixForBayesNetwork ),
+  surroundEachWithQuotes( colnames( annotation.matrix ) ) )
+checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"A0RLX8"' ]],
+  "GO:0003688 & GO:0005524 & GO:0005737 & GO:0006270 & GO:0006275 & GO:0017111"
+)
+
 # Test annotationToString
 print("Testing annotationToString(...)")
 res.annotationToString <- annotationToString(  c( "GO_A", "GO_B", "GO_C" ) )

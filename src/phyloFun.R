@@ -313,6 +313,29 @@ surroundEachWithQuotes <- function(char.vector) {
     USE.NAMES=F)
 }
 
+annotationMatrixForBayesNetwork <- function( annotation.matrix,
+  annotation.type='GO' ) {
+  # Prepares an annotation.matrix to be used i.e. as diagnostic evidence inside
+  # an Bayesian independence network.
+  #
+  # Args:
+  #  annotation.matrix : A matrix of function annotations for some leaves in a phylogenetic tree. Use for example all experimentally verified molecular function annotations. The matrix's columns should be the protein accessions and the row the type of annotation, i.e. 'GO'.
+  #  annotation.type   : The row of the 'annotation.matrix' to select.
+  #
+  # Returns: An annotation matrix, in which each protein accession is
+  # surrounded by escaped quotes (surroundEachWithQuotes) and each cell is the
+  # compound and sorted set of annotation terms (annotationToString). 
+  #   
+  am <- do.call( 'cbind', setNames(
+    lapply( annotation.matrix[ annotation.type, ],
+      function( a ) annotationToString( sort( a ) ) ),
+    surroundEachWithQuotes( colnames( annotation.matrix ) )
+    )
+  )
+  rownames( am ) <- annotation.type
+  am
+}
+
 diagnosticEvidence <- function( uniprot.accessions,
   valid.go.annos=names(GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE)
   ) {
