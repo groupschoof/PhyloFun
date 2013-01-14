@@ -278,21 +278,18 @@ bayesNodes <- function( phylo.tree, annotation.matrix, annotation.space,
   #   
   annotations <- lapply( annotation.space, annotationToString )
   no.evidence <- as.numeric( matrix( 1.0, nrow=1, ncol=length( annotations ) ) )
-  nds <- list(
-    cptable( eval( bquote( ~ .( get.root.node( phylo.tree ) ) ) ),
-      values=no.evidence, levels=annotations )
-  )
-  lapply.funk( 1:nrow( phylo.tree$edge ), function( i ) {
-    nds <<- append( nds, list(
+  c(
+    list( cptable( eval( bquote( ~ .( get.root.node( phylo.tree ) ) ) ),
+      values=no.evidence, levels=annotations ) ),
+    lapply.funk( 1:nrow( phylo.tree$edge ), function( i ) {
       cptable( edge.to.formula( phylo.tree, i ),
         values=conditional.probs.tbl( phylo.tree$edge.length[[i]],
           annotation.space, mutation.probability.tables.list,
           unknown.annot=unknown.annot ),
         levels=annotations
-      ) )
-    )
-  })
-  nds
+      )
+    })
+  )
 }
 
 # Returns the labels of phylo.tree's tips, that have no annotation of specified
