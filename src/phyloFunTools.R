@@ -105,3 +105,26 @@ commandLineArguments <- function( trailing.args, default.args ) {
     all.arg.names
   )
 }
+
+sanitizeUniprotAccession <- function( protein.name ) {
+  # Sanitized protein accessions to be used with PhyloFun's pipeline programs,
+  # i.e. 'GBlocks'. Trims whitespaces and extracts word between pipes, if pipes
+  # are found.
+  #
+  # Args:
+  #  protein.name : The name of the protein, i.e. sp|MyAccession|MOUSE_SHEEP
+  #
+  # Returns: Returns the sanitied protein accession as character vector of
+  # length one, i.e. 'MyAccession'.
+  #   
+  if ( is.null( protein.name ) )
+    return( protein.name )
+  no.blanks <- '^\\s*(\\S+)\\s*'
+  ua <- str_match( protein.name, no.blanks )[[ 1, 2 ]]
+  between.pipes <- '\\S+\\|(\\S+)\\|\\S+'
+  if ( grepl( between.pipes, ua, perl=T ) ) {
+    str_match( ua, between.pipes )[[ 1, 2 ]]
+  } else {
+    ua
+  }
+}

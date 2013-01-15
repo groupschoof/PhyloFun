@@ -4,6 +4,7 @@ library(RCurl)
 library(stringr)
 library(gRain)
 library(XML)
+library(parallel)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -87,17 +88,25 @@ for ( acc in accs ) {
     # Compute probability distributions for GO terms of the three different
     # types 'biological_process', 'cellular_component', and
     # 'molecular_function':
-    acc.phyl.tree <- read.tree( acc.phyl.tree.file )
-    acc.hmlgs.annos <- retrieveExperimentallyVerifiedGOAnnotations( acc.phyl.tree$tip.label )
+    acc.phyl.tree      <- read.tree( acc.phyl.tree.file )
+    acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations( acc.phyl.tree$tip.label )
+    acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
+    acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
+
     acc.go.predictions <- lapply( c( 'biological_process', 'cellular_component',
       'molecular_function' ), function( go.type ) {
-
+      acc.bayes.evdnc <- annotationMatrixForBayesNetwork( acc.go.type.annos[[ go.type ]] )
+      acc.bayes.netw <- grain( compileCPT(
+        bayesNodes( acc.phyl.tree, acc.go.type.annos[[ go.type ]], acc.go.anno.spaces[[ go.type ]], lapply.funk=mclapply )
+      ) )
+      predict.grain( acc.bayes.netw, response=surroundEachWithQuotes( acc ),
+        newdata=acc.bayes.evdnc, type='dist'
+      )
     })
-    acc.go.type.annos <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
-    acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
     
     # TODO: Manually test construction of bayes network and its evaluation.
     # Then pass that code into queryPhylBayesNetwork
+
 
   }
 }

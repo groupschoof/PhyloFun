@@ -1,5 +1,6 @@
 library(RUnit)
 library(tools)
+library(stringr)
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
 # This method ONLY works for project files in depth one sub dirs!
@@ -61,3 +62,15 @@ res.commandLineArguments <- commandLineArguments(
 exp.commandLineArguments <- list( 'a'='1', 'b'='2', 'c'='3' )
 # print( res.commandLineArguments )
 checkEquals( res.commandLineArguments, exp.commandLineArguments ) 
+
+# Test sanitizeUniprotAccession
+print("Testing sanitizeUniprotAccession(...)")
+res.sanitizeUniprotAccession <- sanitizeUniprotAccession( '  sp|MyAccession|MOUSE_SHEEP   ' )
+exp.sanitizeUniprotAccession <- 'MyAccession'
+checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession ) 
+# without pipes
+res.sanitizeUniprotAccession <- sanitizeUniprotAccession( '  MyAccession   ' )
+exp.sanitizeUniprotAccession <- 'MyAccession'
+checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession ) 
+# test NULL:
+checkTrue( is.null( sanitizeUniprotAccession( NULL ) ) )
