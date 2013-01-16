@@ -16,6 +16,6 @@ project.file.path <- function(...) {
 system( 
   paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
     '-q', project.file.path( 'test', 'protein_1.fasta' ),
-    '-j', project.file.path( 'test', 'jackhmmer_out_10_prots.tbl' )
+    '-j', project.file.path( 'test', 'protein_1_jackhmmer_out.tbl' )
   )
 )
