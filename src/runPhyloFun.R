@@ -3,6 +3,7 @@ library(Biostrings)
 library(RCurl)
 library(stringr)
 library(gRain)
+library(RMySQL)
 library(XML)
 library(parallel)
 
@@ -22,6 +23,9 @@ src.project.file <- function(...) {
 }
 # Helper functions:
 src.project.file( "src", "phyloFunTools.R" )
+src.project.file( "src", "phyloFun.R" )
+src.project.file( "src", "loadUniprotKBEntries.R" )
+src.project.file( "src", "geneOntologySQL.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
@@ -36,24 +40,25 @@ print(
 )
 
 # Input
-trailing.args <- commandArgs(trailingOnly = TRUE)
+phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'f'='FastTreeMP', 'g'='GBlocks', 'm'='mafft' ) )
 
 # Read fasta:
-aa.seqs <- sapply( read.AAStringSet( trailing.args[[1]] ), function(s) toString(s) )
-print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[1]]) )
+aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
+print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] )
 
 # Parse Jackhmmer results:
 jr <- parseJackhmmerTable( 
-  scan( file=trailing.args[[2]], what=character(), sep="\n" )
+  scan( file=phylo.fun.args[[ 'j' ]], what=character(), sep="\n" )
 )
 print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hit-pairs" ) )
 
-# Parse accessions as String between '>' and the first blank character:
-query.acc.regex <- if ( length(trailing.args) == 3 ) trailing.args[[3]] else '^\\s*([a-zA-Z0-9_-]+)\\s*' 
-accs <- unlist( setNames( lapply( names(aa.seqs), function(n) str_match( n, query.acc.regex )[[ 1, 2 ]] ), names(aa.seqs) ) )
-print( paste( "Parsed the query proteins' accessions as text matching",
-  query.acc.regex, "after the '>' character in file", trailing.args[[ 1 ]],
-  "If your query accessions are not matching, PhyloFun will fail to find their accessions in the JACKHMMER results, nor will Gblocks accept such sequence names!" )
+# Sanitize protein accessions:
+accs <- unlist( setNames( lapply( names(aa.seqs), sanitizeUniprotAccession ), names(aa.seqs) ) )
+print( "Parsed the query proteins' accessions using function sanitizeUniprotAccession(...) ." )
+print( 
+  paste( "WARNING: If your query accessions are not matching, PhyloFun will fail to find their",
+  "accessions in the JACKHMMER results, nor will Gblocks accept such sequence names!",
+  "See function sanitizeUniprotAccession for details." )
 )
 
 # Will need DB access to gene ontology:
@@ -80,7 +85,7 @@ for ( acc in accs ) {
     acc.filtered.msa.file <- paste( acc.hmlgs.file, '-gb', sep='' )
     system( paste( 'Gblocks', acc.msa.file, '-b5=h -t=p -p=n' ) )
 
-    # Construct the phylogenetic max likelihoo tree of the above alignment
+    # Construct the phylogenetic max likelihood tree of the above alignment
     # using FastTree[MP]:
     acc.phyl.tree.file <- gsub( '|', '\\|', paste( acc, '/ml_tree.newick', sep='' ), fixed=T )
     system( paste( 'FastTreeMP <', acc.filtered.msa.file, '>', acc.phyl.tree.file ) ) 
@@ -104,9 +109,8 @@ for ( acc in accs ) {
       )
     })
     
-    # TODO: Manually test construction of bayes network and its evaluation.
-    # Then pass that code into queryPhylBayesNetwork
-
-
+    f <- file( paste( acc, "/phyloFun_R_serialized.txt", sep="" ), "w" )
+    serialize( acc.go.predictions, f )
+    close( f )
   }
 }
