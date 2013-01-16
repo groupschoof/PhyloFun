@@ -40,7 +40,7 @@ print(
 )
 
 # Input
-phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'f'='FastTreeMP', 'g'='GBlocks', 'm'='mafft' ) )
+phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'f'='FastTreeMP', 'g'='Gblocks', 'm'='mafft' ) )
 
 # Read fasta:
 aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
