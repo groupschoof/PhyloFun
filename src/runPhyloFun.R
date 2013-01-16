@@ -45,13 +45,13 @@ phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 
 
 # Read fasta:
 aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
-print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] )
+print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
 
 # Parse Jackhmmer results:
 jr <- parseJackhmmerTable( 
   scan( file=phylo.fun.args[[ 'j' ]], what=character(), sep="\n" )
 )
-print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hit-pairs" ) )
+print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hitirs" ) )
 
 # Sanitize protein accessions:
 accs <- unlist( setNames( lapply( names(aa.seqs), sanitizeUniprotAccession ), names(aa.seqs) ) )
@@ -61,6 +61,7 @@ print(
   "accessions in the JACKHMMER results, nor will Gblocks accept such sequence names!",
   "See function sanitizeUniprotAccession for details." )
 )
+print( accs )
 
 # Will need DB access to gene ontology:
 go.con <- connectToGeneOntology()
