@@ -29,7 +29,7 @@ src.project.file( "src", "geneOntologySQL.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
-print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -f path/2/FastTree[MP] ] [ -g path/2/GBlocks ] [ -m path/2/MAFFT ]")
+print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -f path/2/FastTree[MP] ] [ -g path/2/GBlocks ] [ -m path/2/MAFFT ]" )
 print( '' )
 print(
   paste( "WARNING: The PhyloFun pipeline uses other programs to generate multiple sequence alignments (MAFFT),",
@@ -76,9 +76,9 @@ for ( acc in accs ) {
     
     # Generate multiple sequence alignment ( MSA ) using MAFFT:
     acc.hmlgs <- setNames( c( hit.seqs, aa.seqs[ orig.acc ] ), c( names(hit.seqs), acc ) )
-    acc.hmlgs.file <- gsub( '|', '\\|', paste( acc, '/homologs.fasta', sep='' ) )
+    acc.hmlgs.file <- paste( acc, '/homologs.fasta', sep='' )
     write.XStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
-    acc.msa.file <- gsub( '|', '\\|', paste( acc, "/msa.fasta", sep="" ) )
+    acc.msa.file <- paste( acc, "/msa.fasta", sep="" )
     system( paste( "mafft --auto", acc.hmlgs.file, ">", acc.msa.file ) )
 
     # Filter the MSA for highly conserved regions using GBlocks:
@@ -87,7 +87,7 @@ for ( acc in accs ) {
 
     # Construct the phylogenetic max likelihood tree of the above alignment
     # using FastTree[MP]:
-    acc.phyl.tree.file <- gsub( '|', '\\|', paste( acc, '/ml_tree.newick', sep='' ), fixed=T )
+    acc.phyl.tree.file <- paste( acc, '/ml_tree.newick', sep='' )
     system( paste( 'FastTreeMP <', acc.filtered.msa.file, '>', acc.phyl.tree.file ) ) 
 
     # Compute probability distributions for GO terms of the three different
