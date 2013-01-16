@@ -13,9 +13,22 @@ project.file.path <- function(...) {
   normalizePath(file.path(project.dir,...))
 }
 
+fastTreeCall <- if( try( system( 'FastTreeMP' ), silent=T ) == 0 ) 'FastTreeMP' else 'FastTree'
+
 system( 
   paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
     '-q', project.file.path( 'test', 'protein_1.fasta' ),
-    '-j', project.file.path( 'test', 'protein_1_jackhmmer_out.tbl' )
+    '-j', project.file.path( 'test', 'protein_1_jackhmmer_out.tbl' ),
+    '-f', fastTreeCall
   )
 )
+
+checkTrue( file.exists( project.file.path( 'Protein_1', 'go_term_predictions.tbl' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'homologs.fasta' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'ml_tree.newick' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta-gb' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'phyloFun_R_serialized.txt' ) ) )
+
+# clean up:
+unlink( "Protein_1", recursive=T )

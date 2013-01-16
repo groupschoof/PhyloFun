@@ -30,7 +30,7 @@ src.project.file( "src", "geneOntologySQL.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
-print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -f path/2/FastTree[MP] ] [ -g path/2/GBlocks ] [ -m path/2/MAFFT ]" )
+print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]" )
 print( '' )
 print(
   paste( "WARNING: The PhyloFun pipeline uses other programs to generate multiple sequence alignments (MAFFT),",
@@ -41,10 +41,10 @@ print(
 )
 
 # Input
-phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'f'='FastTreeMP', 'g'='Gblocks', 'm'='mafft' ) )
+phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP' ) )
 
 # Read fasta:
-aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
+aa.seqs <- sapply( readAAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
 print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
 
 # Parse Jackhmmer results:
@@ -61,28 +61,30 @@ print(
   "accessions in the JACKHMMER results, nor will Gblocks accept such sequence names!",
   "See function sanitizeUniprotAccession for details." )
 )
-print( accs )
+
+# Set cores to use:
+options( 'mc.cores'=detectCores() )
 
 # Will need DB access to gene ontology:
 go.con <- connectToGeneOntology()
 
 # For each query protein, do:
-for ( acc in accs ) {
-  homologs <- jr[ which( jr[ , 'query.name' ] == acc ), , drop=F ]
+for ( prot.acc in accs ) {
+  homologs <- jr[ which( jr[ , 'query.name' ] == prot.acc ), , drop=F ]
   if ( nrow( homologs ) > 0 ) {
-    orig.acc <- names( accs[ accs[] == acc ] )
-    if ( ! file.exists( acc ) )
-      dir.create( acc )
+    orig.acc <- names( accs[ accs[] == prot.acc ] )
+    if ( ! file.exists( prot.acc ) )
+      dir.create( prot.acc )
     hit.accs <- homologs[ , 'hit.name' ]
     hit.uniprot.docs <- downloadUniprotDocuments( hit.accs )
     hit.seqs <- unlist( lapply( hit.uniprot.docs, retrieveSequence, return.error=F ) )
     
     # Generate multiple sequence alignment ( MSA ) using MAFFT:
     print( "Generating multiple sequence alignment (MSA)" )
-    acc.hmlgs <- setNames( c( hit.seqs, aa.seqs[ orig.acc ] ), c( names(hit.seqs), acc ) )
-    acc.hmlgs.file <- paste( acc, '/homologs.fasta', sep='' )
-    write.XStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
-    acc.msa.file <- paste( acc, "/msa.fasta", sep="" )
+    acc.hmlgs <- setNames( c( hit.seqs, aa.seqs[ orig.acc ] ), c( names(hit.seqs), prot.acc ) )
+    acc.hmlgs.file <- paste( prot.acc, '/homologs.fasta', sep='' )
+    writeXStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
+    acc.msa.file <- paste( prot.acc, "/msa.fasta", sep="" )
     system( paste( "mafft --auto", acc.hmlgs.file, ">", acc.msa.file ) )
 
     # Filter the MSA for highly conserved regions using GBlocks:
@@ -93,8 +95,8 @@ for ( acc in accs ) {
     # Construct the phylogenetic max likelihood tree of the above alignment
     # using FastTree[MP]:
     print( "Constructing maximum likelihood phylogenetic tree" )
-    acc.phyl.tree.file <- paste( acc, '/ml_tree.newick', sep='' )
-    system( paste( 'FastTreeMP <', acc.filtered.msa.file, '>', acc.phyl.tree.file ) ) 
+    acc.phyl.tree.file <- paste( prot.acc, '/ml_tree.newick', sep='' )
+    system( paste( phylo.fun.args[[ 'f' ]], '<', acc.filtered.msa.file, '>', acc.phyl.tree.file ) ) 
 
     # Compute probability distributions for GO terms of the three different
     # types 'biological_process', 'cellular_component', and
@@ -104,27 +106,48 @@ for ( acc in accs ) {
     acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations( acc.phyl.tree$tip.label )
     acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
     acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
+    quoted.acc <- surroundEachWithQuotes( prot.acc )
 
     go.types <- c( 'biological_process', 'cellular_component', 'molecular_function' )
     acc.go.predictions <- setNames(
       lapply( go.types, function( go.type ) {
         acc.bayes.evdnc <- annotationMatrixForBayesNetwork( acc.go.type.annos[[ go.type ]] )
-        acc.bayes.netw <- grain( compileCPT(
-          bayesNodes( acc.phyl.tree, acc.go.type.annos[[ go.type ]], acc.go.anno.spaces[[ go.type ]], lapply.funk=mclapply )
-        ) )
-        predict.grain( acc.bayes.netw, response=surroundEachWithQuotes( acc ),
-          newdata=acc.bayes.evdnc, type='dist'
-        )
+        if ( ! is.null( acc.bayes.evdnc ) ) {
+          acc.bayes.netw <- grain( compileCPT(
+            bayesNodes( acc.phyl.tree, acc.go.type.annos[[ go.type ]], acc.go.anno.spaces[[ go.type ]], lapply.funk=mclapply )
+          ) )
+          predict.grain( acc.bayes.netw, response=quoted.acc,
+            newdata=acc.bayes.evdnc, type='dist'
+          )
+        } else {
+          NULL
+        }
       }),
       go.types
     )
     
-    f <- file( paste( acc, "/phyloFun_R_serialized.txt", sep="" ), "w" )
+    # Write out complete results:
+    f <- file( paste( prot.acc, "/phyloFun_R_serialized.txt", sep="" ), "w" )
     serialize( acc.go.predictions, f )
     close( f )
+
+    # Human readable results:
+    go.terms <- unlist(
+      lapply( names( acc.go.predictions ), function( go.type ) {
+        preds <- acc.go.predictions[[ go.type ]]$pred[[ quoted.acc ]][ 1, ]
+        annotationToCharacterVector( names( sort( preds )[ length(preds) ] ) )
+      })
+    )
+    write.table( goTermsForAccessionWithLevel( go.terms, con=go.con ),
+      file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
+      row.names=F
+    )
 
     print( paste( "Finished computations for", orig.acc ) )
   }
 }
+
+# Clean up:
+dbDisconnect( go.con )
 
 print( "DONE" )

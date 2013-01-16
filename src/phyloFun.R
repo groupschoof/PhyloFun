@@ -202,6 +202,17 @@ annotationToString <- function( compound.annotation ) {
   paste( compound.annotation, collapse=" & " )
 }
 
+annotationToCharacterVector <- function( compound.annotation ) {
+  # Deconstructs a compound annotation into a character vector.
+  #
+  # Args:
+  #  compound.annotation : Result of annotationToString
+  #
+  # Returns: A split character vector. 'GO_A & GO_B' -> c( 'GO_A', 'GO_B' )
+  #   
+  strsplit( compound.annotation, '\\s*&\\s*' )[[ 1 ]]
+}
+
 goAnnotationSpaceList <- function( go.type.annotation.matrices,
   unknown.annot='unknown' ) {
   # Generates the spaces of unique annotations for each GO term type
