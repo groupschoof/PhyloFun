@@ -50,5 +50,8 @@ fScore <- function( predicted.gos, true.gos, beta.param=1 ) {
   prcsn <- precision( predicted.gos, true.gos )
   rcll <- recall( predicted.gos, true.gos )
   bp <- beta.param^2
-  ( 1 + bp ) * ( prcsn * rcll ) / ( bp * prcsn + rcll )
+  if ( 0 == (prcsn + rcll) )
+    0
+  else
+    ( 1 + bp ) * ( prcsn * rcll ) / ( bp * prcsn + rcll )
 }

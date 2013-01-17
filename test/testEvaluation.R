@@ -71,3 +71,24 @@ res.recall <- recall( c( ), true.gos )
 exp.recall <- 0
 checkEquals( res.recall, exp.recall ) 
 
+# Test fScore
+print("Testing fScore(...)")
+res.fScore <- fScore( true.gos, true.gos )
+exp.fScore <- 1.0
+checkEquals( res.fScore, exp.fScore ) 
+
+res.fScore <- fScore( c( 'A' ), true.gos )
+exp.fScore <- 0.5
+checkEquals( res.fScore, exp.fScore ) 
+
+res.fScore <- fScore( c(), c() )
+exp.fScore <- 1.0
+checkEquals( res.fScore, exp.fScore ) 
+
+res.fScore <- fScore( c(), true.gos )
+exp.fScore <- 0
+checkEquals( res.fScore, exp.fScore ) 
+
+res.fScore <- fScore( c( 'A' ), c() )
+exp.fScore <- 0
+checkEquals( res.fScore, exp.fScore ) 
