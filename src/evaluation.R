@@ -55,3 +55,28 @@ fScore <- function( predicted.gos, true.gos, beta.param=1 ) {
   else
     ( 1 + bp ) * ( prcsn * rcll ) / ( bp * prcsn + rcll )
 }
+
+parseBlast2GOresults <- function( b2g.res ) {
+  # Parses the output of a Blast2GO annot file and returns an annotation matrix
+  # as it is used throughout PhyloFun.
+  #
+  # Args:
+  #  b2g.res : Result of calling readLines on a Blast2GO annot file.
+  #
+  # Returns: An annotation matrix in which the columns are the GO annotated
+  # protein accessions and the single row 'GO' holds in each of its cells the
+  # character vector o GO terms each protein has been annotated with.
+  #   
+  b2g.sanitized <- as.character(
+    lapply(  b2g.res, function( l ) {
+      str_match( l, '^[^\\t]+\\tGO:\\d{7}' )[[ 1, 1 ]]
+    })
+  )
+  b2g.tbl <- read.table( text=b2g.sanitized[ ! is.na( b2g.sanitized[] ) ] )
+  do.call( 'cbind', lapply( unique( b2g.tbl$V1 ), function( acc ) {
+      mtrx <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', acc ) )
+      mtrx[[ 1, 1 ]]  <- as.character( b2g.tbl[ b2g.tbl$V1 == acc, 2 ] )
+      mtrx
+    })
+  )
+}

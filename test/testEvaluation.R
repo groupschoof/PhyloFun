@@ -1,5 +1,6 @@
 library(RUnit)
 library(tools)
+library(stringr)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -92,3 +93,12 @@ checkEquals( res.fScore, exp.fScore )
 res.fScore <- fScore( c( 'A' ), c() )
 exp.fScore <- 0
 checkEquals( res.fScore, exp.fScore ) 
+
+# Test parseBlast2GOresults
+print("Testing parseBlast2GOresults(...)")
+res.parseBlast2GOresults <- parseBlast2GOresults( readLines( project.file.path( 'test', 'blast2GO.annot' ) ) )
+checkTrue( ! is.null( res.parseBlast2GOresults ) )
+checkEquals( class( res.parseBlast2GOresults ), 'matrix' )
+checkEquals( ncol( res.parseBlast2GOresults ), 97 )
+checkEquals( res.parseBlast2GOresults[[ 'GO', 'G4MTK6' ]], 'GO:0043581' )
+checkEquals( res.parseBlast2GOresults[[ 'GO', 'Q9USJ5' ]], c( "GO:0006779", "GO:0004853" ) )
