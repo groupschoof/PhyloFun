@@ -50,5 +50,91 @@ fScore <- function( predicted.gos, true.gos, beta.param=1 ) {
   prcsn <- precision( predicted.gos, true.gos )
   rcll <- recall( predicted.gos, true.gos )
   bp <- beta.param^2
-  ( 1 + bp ) * ( prcsn * rcll ) / ( bp * prcsn + rcll )
+  if ( 0 == (prcsn + rcll) )
+    0
+  else
+    ( 1 + bp ) * ( prcsn * rcll ) / ( bp * prcsn + rcll )
+}
+
+parseBlast2GOresults <- function( b2g.res ) {
+  # Parses the output of a Blast2GO annot file and returns an annotation matrix
+  # as it is used throughout PhyloFun.
+  #
+  # Args:
+  #  b2g.res : Result of calling readLines on a Blast2GO annot file.
+  #
+  # Returns: An annotation matrix in which the columns are the GO annotated
+  # protein accessions and the single row 'GO' holds in each of its cells the
+  # character vector o GO terms each protein has been annotated with.
+  #   
+  b2g.sanitized <- as.character(
+    lapply(  b2g.res, function( l ) {
+      str_match( l, '^[^\\t]+\\tGO:\\d{7}' )[[ 1, 1 ]]
+    })
+  )
+  b2g.tbl <- read.table( text=b2g.sanitized[ ! is.na( b2g.sanitized[] ) ] )
+  do.call( 'cbind', lapply( unique( b2g.tbl$V1 ), function( acc ) {
+      mtrx <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', acc ) )
+      mtrx[[ 1, 1 ]]  <- as.character( b2g.tbl[ b2g.tbl$V1 == acc, 2 ] )
+      mtrx
+    })
+  )
+}
+
+parseInterProScan2GOresults <- function( ipr.scn.res ) {
+  # Parses a typical InterProScan result file for GO annotations. Uses function
+  # parseInterProScanTable with a different ipr.regex argument. 
+  #
+  # Args:
+  #  ipr.scn.lines : Lines of the InterProScan result file to parse as result of 'readLines'.
+  #
+  # Returns:  An annotation matrix in which the columns are the GO annotated
+  # protein accessions and the single row 'GO' holds in each of its cells the
+  # character vector o GO terms each protein has been annotated with.
+  #   
+  ipr.go.annos <- parseInterProScanTable( ipr.scn.res, ipr.regex='.*(GO:\\d{7}).*' )
+  rownames( ipr.go.annos ) <- 'GO'
+  ipr.go.annos
+}
+
+fScores <- function( protein.accessions, predicted.annotations,
+  annotation.type='GO', beta.param=1,
+  reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
+    protein.accessions ) ) {
+  # Computes the fScores for all predicted annotations.
+  #
+  # Args:
+  #  protein.accessions    : The reference proteins to compute the fScores for
+  #  predicted.annotations : The predictions, if any, for the reference
+  #                          proteins. Note, that some might be missing.
+  #                          Argument should be an annotation matrix with the
+  #                          protein accessions as columns and cells the
+  #                          predicted annotations.
+  #  annotation.type       : The type of annotation predicted, default 'GO'.
+  #  beta.param            : Passed to function fScore, see its docu for more
+  #                          details.
+  #  reference.annotations : The annotations of the reference proteins, default
+  #                          experimentally verified GO annotations as
+  #                          retrievable from UniProt.
+  #
+  # Returns: A named list with the predictions' fScores of each reference
+  # protein.
+  #   
+  setNames(
+    lapply( protein.accessions, function( a ) {
+      # predicted annos for 'a'
+      pa <- if ( a %in% colnames( predicted.annotations ) )
+        predicted.annotations[[ annotation.type, a ]]
+      else 
+        c()
+      # experimentally verified annos for 'a'
+      oa <- if ( a %in% colnames( reference.annotations ) )
+        reference.annotations[[ annotation.type, a ]]
+      else 
+        c()
+      # fScore for predictions on 'a'
+      fScore( pa, oa )
+    }),
+    protein.accessions
+  )
 }
