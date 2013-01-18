@@ -44,14 +44,14 @@ print(
 phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP' ) )
 
 # Read fasta:
-aa.seqs <- sapply( readAAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
+aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
 print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
 
 # Parse Jackhmmer results:
 jr <- parseJackhmmerTable( 
   scan( file=phylo.fun.args[[ 'j' ]], what=character(), sep="\n" )
 )
-print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hitirs" ) )
+print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hit pairs" ) )
 
 # Sanitize protein accessions:
 accs <- unlist( setNames( lapply( names(aa.seqs), sanitizeUniprotAccession ), names(aa.seqs) ) )
@@ -63,7 +63,7 @@ print(
 )
 
 # Set cores to use:
-options( 'mc.cores'=detectCores() )
+options( 'mc.cores'=phylo.fun.args[[ 'c' ]] )
 
 # Will need DB access to gene ontology:
 go.con <- connectToGeneOntology()
@@ -83,7 +83,7 @@ for ( prot.acc in accs ) {
     print( "Generating multiple sequence alignment (MSA)" )
     acc.hmlgs <- setNames( c( hit.seqs, aa.seqs[ orig.acc ] ), c( names(hit.seqs), prot.acc ) )
     acc.hmlgs.file <- paste( prot.acc, '/homologs.fasta', sep='' )
-    writeXStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
+    write.XStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
     acc.msa.file <- paste( prot.acc, "/msa.fasta", sep="" )
     system( paste( "mafft --auto", acc.hmlgs.file, ">", acc.msa.file ) )
 
