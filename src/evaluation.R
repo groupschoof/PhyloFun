@@ -80,3 +80,19 @@ parseBlast2GOresults <- function( b2g.res ) {
     })
   )
 }
+
+parseInterProScan2GOresults <- function( ipr.scn.res ) {
+  # Parses a typical InterProScan result file for GO annotations. Uses function
+  # parseInterProScanTable with a different ipr.regex argument. 
+  #
+  # Args:
+  #  ipr.scn.lines : Lines of the InterProScan result file to parse as result of 'readLines'.
+  #
+  # Returns:  An annotation matrix in which the columns are the GO annotated
+  # protein accessions and the single row 'GO' holds in each of its cells the
+  # character vector o GO terms each protein has been annotated with.
+  #   
+  ipr.go.annos <- parseInterProScanTable( ipr.scn.res, ipr.regex='.*(GO:\\d{7}).*' )
+  rownames( ipr.go.annos ) <- 'GO'
+  ipr.go.annos
+}

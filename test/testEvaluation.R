@@ -17,6 +17,7 @@ src.project.file <- function(...) {
   source(project.file.path(...))
 }
 src.project.file( 'src', 'evaluation.R' )
+src.project.file( 'src', 'phyloFunTools.R' )
 
 # Test precision
 print("Testing precision(...)")
@@ -102,3 +103,12 @@ checkEquals( class( res.parseBlast2GOresults ), 'matrix' )
 checkEquals( ncol( res.parseBlast2GOresults ), 97 )
 checkEquals( res.parseBlast2GOresults[[ 'GO', 'G4MTK6' ]], 'GO:0043581' )
 checkEquals( res.parseBlast2GOresults[[ 'GO', 'Q9USJ5' ]], c( "GO:0006779", "GO:0004853" ) )
+
+# Test parseInterProScan2GOresults
+print("Testing parseInterProScan2GOresults(...)")
+res.parseInterProScan2GOresults <- parseInterProScan2GOresults( readLines( project.file.path( 'test', 'interproscan_out.tsv' ) ) )
+checkTrue( ! is.null( res.parseInterProScan2GOresults ) )
+checkEquals( class( res.parseInterProScan2GOresults ), 'matrix' )
+checkEquals( ncol( res.parseInterProScan2GOresults ), 7 )
+checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
+checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
