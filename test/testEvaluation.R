@@ -112,3 +112,8 @@ checkEquals( class( res.parseInterProScan2GOresults ), 'matrix' )
 checkEquals( ncol( res.parseInterProScan2GOresults ), 7 )
 checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
 checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
+
+# Test fScores
+print("Testing fScores(...)")
+print( "TODO: Write test for fScroes!" )
+checkTrue( F )

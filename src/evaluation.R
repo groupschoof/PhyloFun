@@ -96,3 +96,45 @@ parseInterProScan2GOresults <- function( ipr.scn.res ) {
   rownames( ipr.go.annos ) <- 'GO'
   ipr.go.annos
 }
+
+fScores <- function( protein.accessions, predicted.annotations,
+  annotation.type='GO', beta.param=1,
+  reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
+    protein.accessions ) ) {
+  # Computes the fScores for all predicted annotations.
+  #
+  # Args:
+  #  protein.accessions    : The reference proteins to compute the fScores for
+  #  predicted.annotations : The predictions, if any, for the reference
+  #                          proteins. Note, that some might be missing.
+  #                          Argument should be an annotation matrix with the
+  #                          protein accessions as columns and cells the
+  #                          predicted annotations.
+  #  annotation.type       : The type of annotation predicted, default 'GO'.
+  #  beta.param            : Passed to function fScore, see its docu for more
+  #                          details.
+  #  reference.annotations : The annotations of the reference proteins, default
+  #                          experimentally verified GO annotations as
+  #                          retrievable from UniProt.
+  #
+  # Returns: A named list with the predictions' fScores of each reference
+  # protein.
+  #   
+  setNames(
+    lapply( protein.accessions, function( a ) {
+      # predicted annos for 'a'
+      pa <- if ( a %in% colnames( predicted.annotations ) )
+        predicted.annotations[[ annotation.type, a ]]
+      else 
+        c()
+      # experimentally verified annos for 'a'
+      oa <- if ( a %in% colnames( reference.annotations ) )
+        reference.annotations[[ annotation.type, a ]]
+      else 
+        c()
+      # fScore for predictions on 'a'
+      fScore( pa, oa )
+    }),
+    protein.accessions
+  )
+}
