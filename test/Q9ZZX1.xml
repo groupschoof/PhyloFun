@@ -180,6 +180,10 @@
 <property type="term" value="C:mitochondrion"/>
 <property type="evidence" value="TAS:SGD"/>
 </dbReference>
+<dbReference type="GO" id="GO:6969696">
+<property type="term" value="F:Invented for testing"/>
+<property type="evidence" value="IC"/>
+</dbReference>
 <dbReference type="GO" id="GO:0004129">
 <property type="term" value="F:cytochrome-c oxidase activity"/>
 <property type="evidence" value="IEA:InterPro"/>

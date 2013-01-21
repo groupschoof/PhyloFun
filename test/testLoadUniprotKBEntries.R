@@ -228,6 +228,14 @@ rslt <- extractExperimentallyVerifiedGoAnnos(
 exp.rslt <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', 'Q9ZZX1' ) )
 exp.rslt[[ 1, 1 ]] <- c( "GO:0004519", "GO:0006316" )
 checkEquals( exp.rslt, rslt )
+# including evidence codes TAS and IC
+rslt <- extractExperimentallyVerifiedGoAnnos(
+  xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) ),
+  evidence.codes=c( 'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC' )
+)
+exp.rslt <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', 'Q9ZZX1' ) )
+exp.rslt[[ 1, 1 ]] <- c( "GO:0005739", "GO:6969696", "GO:0004519", "GO:0006316" )
+checkEquals( exp.rslt, rslt )
 
 # Test retrieveExperimentallyVerifiedGOAnnotations
 print("Testing retrieveExperimentallyVerifiedGOAnnotations(...)")
