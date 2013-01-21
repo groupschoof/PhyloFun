@@ -136,7 +136,6 @@ for ( prot.acc in accs ) {
       lapply( names( acc.go.predictions ), function( go.type ) {
         agps <- acc.go.predictions[[ go.type ]]
         if ( ! is.null( agps ) ) {
-          print( agps )
           preds <- agps$pred[[ quoted.acc ]][ 1, ]
           annotationToCharacterVector( names( sort( preds )[ length(preds) ] ) )
         }
