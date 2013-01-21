@@ -134,8 +134,12 @@ for ( prot.acc in accs ) {
     # Human readable results:
     go.terms <- unlist(
       lapply( names( acc.go.predictions ), function( go.type ) {
-        preds <- acc.go.predictions[[ go.type ]]$pred[[ quoted.acc ]][ 1, ]
-        annotationToCharacterVector( names( sort( preds )[ length(preds) ] ) )
+        agps <- acc.go.predictions[[ go.type ]]
+        if ( ! is.null( agps ) ) {
+          print( agps )
+          preds <- agps$pred[[ quoted.acc ]][ 1, ]
+          annotationToCharacterVector( names( sort( preds )[ length(preds) ] ) )
+        }
       })
     )
     write.table( goTermsForAccessionWithLevel( go.terms, con=go.con ),
