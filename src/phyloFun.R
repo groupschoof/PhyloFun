@@ -334,14 +334,16 @@ annotationMatrixForBayesNetwork <- function( annotation.matrix,
   # surrounded by escaped quotes (surroundEachWithQuotes) and each cell is the
   # compound and sorted set of annotation terms (annotationToString). 
   #   
-  am <- do.call( 'cbind', setNames(
-    lapply( annotation.matrix[ annotation.type, ],
-      function( a ) annotationToString( sort( a ) ) ),
-    surroundEachWithQuotes( colnames( annotation.matrix ) )
+  if ( ! is.null( annotation.matrix ) ) {
+    am <- do.call( 'cbind', setNames(
+      lapply( annotation.matrix[ annotation.type, ],
+        function( a ) annotationToString( sort( a ) ) ),
+      surroundEachWithQuotes( colnames( annotation.matrix ) )
+      )
     )
-  )
-  rownames( am ) <- annotation.type
-  am
+    rownames( am ) <- annotation.type
+    am
+  }
 }
 
 diagnosticEvidence <- function( uniprot.accessions,

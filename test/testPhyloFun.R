@@ -49,6 +49,7 @@ checkEquals( colnames( res.annotationMatrixForBayesNetwork ),
 checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"A0RLX8"' ]],
   "GO:0003688 & GO:0005524 & GO:0005737 & GO:0006270 & GO:0006275 & GO:0017111"
 )
+checkTrue( is.null( annotationMatrixForBayesNetwork( NULL ) ) )
 
 # Test annotationToString
 print("Testing annotationToString(...)")
