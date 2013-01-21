@@ -30,7 +30,7 @@ src.project.file( "src", "geneOntologySQL.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
-print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]" )
+print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ] [ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified ) ]" )
 print( '' )
 print(
   paste( "WARNING: The PhyloFun pipeline uses other programs to generate multiple sequence alignments (MAFFT),",
@@ -42,6 +42,13 @@ print(
 
 # Input
 phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP' ) )
+
+# Evidence codes of GO annotations to accept:
+go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[ 'e' ] ) ) {
+    EVIDENCE.CODES
+  } else {
+    c( EVIDENCE.CODES, str_split( phylo.fun.args[[ 'e' ]], ',' )[[ 1 ]] )
+  }
 
 # Read fasta:
 aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
@@ -103,7 +110,8 @@ for ( prot.acc in accs ) {
     # 'molecular_function':
     print( "Starting PhyloFun on phylogenetic tree" )
     acc.phyl.tree      <- read.tree( acc.phyl.tree.file )
-    acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations( acc.phyl.tree$tip.label )
+    acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations(
+      acc.phyl.tree$tip.label, evidence.codes=go.anno.evdnc.cds )
     acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
     acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
     quoted.acc <- surroundEachWithQuotes( prot.acc )
