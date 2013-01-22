@@ -80,3 +80,10 @@ goTermsForAccessionWithLevel <- function( accessions, con=connectToGeneOntology(
     ) 
   )
 }
+
+isConnectionAlive <- function( go.con ) {
+  if ( class( try( dbGetInfo( go.con ), silent=T ) ) == 'try-error' )
+    FALSE
+  else
+    TRUE
+}

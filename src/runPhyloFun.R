@@ -44,7 +44,10 @@ print(
 phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP' ) )
 
 # Evidence codes of GO annotations to accept:
-go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[ 'e' ] ) ) {
+print( phylo.fun.args )
+print( is.null( phylo.fun.args[ 'e' ] ) )
+print( is.null( phylo.fun.args[[  'e' ]] ) )
+go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
     EVIDENCE.CODES
   } else {
     c( EVIDENCE.CODES, str_split( phylo.fun.args[[ 'e' ]], ',' )[[ 1 ]] )
@@ -112,6 +115,12 @@ for ( prot.acc in accs ) {
     acc.phyl.tree      <- read.tree( acc.phyl.tree.file )
     acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations(
       acc.phyl.tree$tip.label, evidence.codes=go.anno.evdnc.cds )
+    
+    # Validate connection to Gene Ontology is still up and running:
+    if ( ! isConnectionAlive( go.con ) ) {
+      go.con <- connectToGeneOntology()
+    }
+
     acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
     acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
     quoted.acc <- surroundEachWithQuotes( prot.acc )
@@ -133,6 +142,7 @@ for ( prot.acc in accs ) {
       }),
       go.types
     )
+    # Finished predicting GO term annotations.
     
     # Write out complete results:
     f <- file( paste( prot.acc, "/phyloFun_R_serialized.txt", sep="" ), "w" )
