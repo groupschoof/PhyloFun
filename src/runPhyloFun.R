@@ -158,7 +158,7 @@ for ( prot.acc in accs ) {
     go.con <- reConnectIfExpired( go.con )
     write.table( goTermsForAccessionWithLevel( go.terms, con=go.con ),
       file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
-      row.names=F
+      row.names=F, quote=F
     )
 
     print( paste( "Finished computations for", orig.acc ) )
