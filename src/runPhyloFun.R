@@ -44,9 +44,6 @@ print(
 phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP' ) )
 
 # Evidence codes of GO annotations to accept:
-print( phylo.fun.args )
-print( is.null( phylo.fun.args[ 'e' ] ) )
-print( is.null( phylo.fun.args[[  'e' ]] ) )
 go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
     EVIDENCE.CODES
   } else {
