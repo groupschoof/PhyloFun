@@ -87,3 +87,19 @@ isConnectionAlive <- function( go.con ) {
   else
     TRUE
 }
+
+reConnectIfExpired <- function( go.con ) {
+  # If database connection go.con has expired returns a new connection to Gene
+  # Ontology, retruns argument go.con otherwise.
+  #
+  # Args:
+  #  go.con : A database connection as obtainable by connectToGeneOntology()
+  #
+  # Returns: An active database connection to the Gene Ontology database.
+  #   
+  if ( isConnectionAlive( go.con ) ) {
+    go.con
+  } else {
+    connectToGeneOntology()
+  }
+}

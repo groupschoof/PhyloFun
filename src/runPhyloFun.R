@@ -116,11 +116,7 @@ for ( prot.acc in accs ) {
     acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations(
       acc.phyl.tree$tip.label, evidence.codes=go.anno.evdnc.cds )
     
-    # Validate connection to Gene Ontology is still up and running:
-    if ( ! isConnectionAlive( go.con ) ) {
-      go.con <- connectToGeneOntology()
-    }
-
+    go.con <- reConnectIfExpired( go.con )
     acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
     acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
     quoted.acc <- surroundEachWithQuotes( prot.acc )
@@ -159,6 +155,7 @@ for ( prot.acc in accs ) {
         }
       })
     )
+    go.con <- reConnectIfExpired( go.con )
     write.table( goTermsForAccessionWithLevel( go.terms, con=go.con ),
       file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
       row.names=F
