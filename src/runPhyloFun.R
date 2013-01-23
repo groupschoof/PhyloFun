@@ -72,9 +72,6 @@ print(
 # Set cores to use:
 options( 'mc.cores'=phylo.fun.args[[ 'c' ]] )
 
-# Will need DB access to gene ontology:
-go.con <- connectToGeneOntology()
-
 # For each query protein, do:
 for ( prot.acc in accs ) {
   homologs <- jr[ which( jr[ , 'query.name' ] == prot.acc ), , drop=F ]
@@ -113,8 +110,9 @@ for ( prot.acc in accs ) {
     acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations(
       acc.phyl.tree$tip.label, evidence.codes=go.anno.evdnc.cds )
     
-    go.con <- reConnectIfExpired( go.con )
+    go.con <- connectToGeneOntology()
     acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
+    dbDisconnect( go.con )
     acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
     quoted.acc <- surroundEachWithQuotes( prot.acc )
 
@@ -152,17 +150,15 @@ for ( prot.acc in accs ) {
         }
       })
     )
-    go.con <- reConnectIfExpired( go.con )
+    go.con <- connectToGeneOntology()
     write.table( goTermsForAccessionWithLevel( go.terms, con=go.con ),
       file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
       row.names=F, quote=F
     )
+    dbDisconnect( go.con )
 
     print( paste( "Finished computations for", orig.acc ) )
   }
 }
-
-# Clean up:
-dbDisconnect( go.con )
 
 print( "DONE" )
