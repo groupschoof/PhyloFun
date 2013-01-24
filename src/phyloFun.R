@@ -313,17 +313,25 @@ bayesNodes <- function( phylo.tree, annotation.matrix, annotation.space,
   annotations <- lapply( annotation.space, annotationToString )
   no.evidence <- as.numeric( matrix( 1.0, nrow=1, ncol=length( annotations ) ) )
   c(
+    # Generate the root node of the Bayesian network:
     list( cptable( eval( bquote( ~ .( get.root.node( phylo.tree ) ) ) ),
       values=no.evidence, levels=annotations ) ),
+    # Generate the dependent nodes of the Bayesian nodes:
     lapply.funk( 1:nrow( phylo.tree$edge ), function( i ) {
+      # conditional probability table:
+      cpt <- eliminateUnreachableStates(
+        conditionalProbsTbl( phylo.tree$edge.length[[i]],
+          annotation.space, mutation.probability.tables.list,
+          unknown.annot=unknown.annot )
+      )
+      # Generate levels of current bayesian node. Can't use object
+      # 'annotations', because unreachable states might have been excluded:
+      cpt.levels <- lapply( colnames(cpt), annotationToString )
+      # Generate the conditional probability table for current Bayesian node:
       cptable(
         edge.to.formula( phylo.tree, i ),
-        values=eliminateUnreachableStates(
-          conditionalProbsTbl( phylo.tree$edge.length[[i]],
-            annotation.space, mutation.probability.tables.list,
-            unknown.annot=unknown.annot )
-        ),
-        levels=annotations
+        values=cpt,
+        levels=cpt.levels
       )
     })
   )
