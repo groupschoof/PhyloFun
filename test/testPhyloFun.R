@@ -133,15 +133,37 @@ mtch.col.4 <- findMatchingColumn(
 )
 checkEquals( matrix( c(0.66, 1.0), ncol=2 ), mtch.col.4 )
 
-# Test conditional.probs.tbl
-print("Testing conditional.probs.tbl(...)")
+# Test eliminateUnreachableStates
+print("Testing eliminateUnreachableStates(...)")
+cpt.states <- c( 'GO_1', 'GO_2', 'unknown' )
+cpt <- matrix( c( 0.5, 0.5, 0, 1, 0, 0, 0.5, 0.5, 0 ),
+  nrow=3, ncol=3, byrow=T,
+  dimnames=list( cpt.states, cpt.states )
+)
+res.eliminateUnreachableStates <- eliminateUnreachableStates( cpt )
+exp.cpt.states <- c( 'GO_1', 'GO_2' )
+exp.eliminateUnreachableStates <- matrix( c( 0.5, 0.5, 1, 0 ),
+  nrow=2, ncol=2, byrow=T,
+  dimnames=list( exp.cpt.states, exp.cpt.states )
+)
+checkEquals( res.eliminateUnreachableStates, exp.eliminateUnreachableStates ) 
+# No state is unreachable -> check equality:
+cpt <- matrix( c( 0.5, 0.3, 0.2, 1, 0, 0, 0.5, 0.5, 0 ),
+  nrow=3, ncol=3, byrow=T,
+  dimnames=list( cpt.states, cpt.states )
+)
+res.eliminateUnreachableStates <- eliminateUnreachableStates( cpt )
+checkEquals( res.eliminateUnreachableStates, cpt ) 
+
+# Test conditionalProbsTbl
+print("Testing conditionalProbsTbl(...)")
 ua <- list( c( "GO_1", "GO_2", "GO_3" ), c( "GO_1", "GO_2" ), "GO_3" )
 p.mut.tbl.lst <- list()
 p.mut.tbl.lst[[ "GO_1" ]] <- matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_2" ]] <- matrix( c(0.25, 0.5, 0.75, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_3" ]] <- matrix( c(0.45, 0.75, 0.98, 0.5, 1.0, 1.5), ncol=2 )
 # print( p.mut.tbl.lst )
-con.prbs.tbl <- conditional.probs.tbl( 0.9, c( ua, 'unknown' ), p.mut.tbl.lst, 2 )
+con.prbs.tbl <- conditionalProbsTbl( 0.9, c( ua, 'unknown' ), p.mut.tbl.lst, 2 )
 # print( con.prbs.tbl )
 checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) )
 # print( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]] )
