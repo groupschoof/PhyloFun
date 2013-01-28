@@ -124,7 +124,8 @@ for ( prot.acc in accs ) {
     acc.go.predictions <- setNames(
       lapply( go.types, function( go.type ) {
         acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
-          acc.go.type.annos[[ go.type ]]
+          acc.go.type.annos[[ go.type ]], 
+          all.accessions=setdiff( acc.phyl.tree$tip.label, prot.acc )
         )
         if ( ! is.null( acc.bayes.evdnc ) ) {
           acc.bayes.netw <- grain( compileCPT(
