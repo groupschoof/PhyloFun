@@ -71,6 +71,7 @@ print(
 
 # Set cores to use:
 options( 'mc.cores'=phylo.fun.args[[ 'c' ]] )
+lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 
 # For each query protein, do:
 for ( prot.acc in accs ) {
