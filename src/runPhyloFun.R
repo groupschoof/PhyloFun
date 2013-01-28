@@ -74,7 +74,7 @@ options( 'mc.cores'=phylo.fun.args[[ 'c' ]] )
 lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 
 # For each query protein, do:
-for ( prot.acc in accs ) {
+dump.reslt <- lapply.funk( accs, function( prot.acc ) {
   homologs <- jr[ which( jr[ , 'query.name' ] == prot.acc ), , drop=F ]
   if ( nrow( homologs ) > 0 ) {
     orig.acc <- names( accs[ accs[] == prot.acc ] )
@@ -167,6 +167,6 @@ for ( prot.acc in accs ) {
 
     print( paste( "Finished computations for", orig.acc ) )
   }
-}
+})
 
 print( "DONE" )
