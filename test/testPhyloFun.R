@@ -33,7 +33,20 @@ fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
 annotation.matrix <- unserialize(fl)
 close(fl)
 
+# Test tree whose Baysian network representation has nodes with unreachable
+# states:
+phylo.tree.unreachbl.stts <- read.tree(
+  project.file.path( 'test', 'test_tree_unreachbl_stts.newick')
+)
+
 go.con <- connectToGeneOntology()
+
+# Test getDescendantNodes
+print("Testing getDescendantNodes(...)")
+res.getDescendantNodes <- getDescendantNodes( phylo.tree, 12 )
+exp.getDescendantNodes <- c( 13, 14 )
+checkEquals( res.getDescendantNodes, exp.getDescendantNodes ) 
+checkTrue( is.null( getDescendantNodes( phylo.tree, 8 ) ) )
 
 # Test annotationMatrixForBayesNetwork
 print("Testing annotationMatrixForBayesNetwork(...)")
@@ -50,6 +63,19 @@ checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"A0RLX8"' ]],
   "GO:0003688 & GO:0005524 & GO:0005737 & GO:0006270 & GO:0006275 & GO:0017111"
 )
 checkTrue( is.null( annotationMatrixForBayesNetwork( NULL ) ) )
+# Check with homologs missing experimentally verified function annotations:
+res.annotationMatrixForBayesNetwork <- annotationMatrixForBayesNetwork(
+  annotation.matrix, all.accessions=c( colnames( annotation.matrix ),
+    'Protein_A', 'Protein_B' )
+)
+# print( res.annotationMatrixForBayesNetwork )
+checkTrue( ! is.null( res.annotationMatrixForBayesNetwork ) )
+checkEquals( ncol( res.annotationMatrixForBayesNetwork ),
+  ncol( annotation.matrix ) + 2 )
+checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"Protein_A"' ]],
+  'unknown' )
+checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"Protein_B"' ]],
+  'unknown' )
 
 # Test annotationToString
 print("Testing annotationToString(...)")
@@ -141,10 +167,9 @@ cpt <- matrix( c( 0.5, 0.5, 0, 1, 0, 0, 0.5, 0.5, 0 ),
   dimnames=list( cpt.states, cpt.states )
 )
 res.eliminateUnreachableStates <- eliminateUnreachableStates( cpt )
-exp.cpt.states <- c( 'GO_1', 'GO_2' )
-exp.eliminateUnreachableStates <- matrix( c( 0.5, 0.5, 1, 0 ),
-  nrow=2, ncol=2, byrow=T,
-  dimnames=list( exp.cpt.states, exp.cpt.states )
+exp.eliminateUnreachableStates <- matrix( c( 0.5, 0.5, 1, 0, 0.5, 0.5 ),
+  nrow=3, ncol=2, byrow=T,
+  dimnames=list( cpt.states, c( 'GO_1', 'GO_2' ) )
 )
 checkEquals( res.eliminateUnreachableStates, exp.eliminateUnreachableStates ) 
 # No state is unreachable -> check equality:
@@ -165,15 +190,15 @@ p.mut.tbl.lst[[ "GO_3" ]] <- matrix( c(0.45, 0.75, 0.98, 0.5, 1.0, 1.5), ncol=2 
 # print( p.mut.tbl.lst )
 con.prbs.tbl <- conditionalProbsTbl( 0.9, c( ua, 'unknown' ), p.mut.tbl.lst, 2 )
 # print( con.prbs.tbl )
-checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) )
+checkEquals( 1.0, sum( con.prbs.tbl[ , 1 ] ) )
 # print( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]] )
 checkEquals( 1 - p.mut.tbl.lst[[ 3 ]][[ 2, 1 ]], con.prbs.tbl[[ 1, 1 ]] ) 
-checkEquals( 1.0, sum( con.prbs.tbl[ 1, ] ) ) 
+checkEquals( 1.0, sum( con.prbs.tbl[ , 1 ] ) ) 
 checkEquals( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]], con.prbs.tbl[[ 2, 2 ]] ) 
-checkEquals( 1.0, sum( con.prbs.tbl[ 3, ] ) ) 
+checkEquals( 1.0, sum( con.prbs.tbl[ , 3 ] ) ) 
 checkEquals( 1 - p.mut.tbl.lst[[ 3 ]][[ 2, 1 ]], con.prbs.tbl[[ 3, 3 ]] ) 
 checkEquals( 0, con.prbs.tbl[[ 'unknown', 'unknown' ]] )
-checkEquals( 1.0, sum( con.prbs.tbl[ 'unknown', ] ) )
+checkEquals( 1.0, sum( con.prbs.tbl[ , 'unknown' ] ) )
 
 # Test mutationProbability
 print("Testing mutationProbability(...)")
@@ -204,12 +229,38 @@ frml <- edge.to.formula(phylo.tree, indx)
 checkTrue(! grepl('[a-zA-Z]+', as.character(frml)[[2]], perl=T))
 
 # Test bayesNodes
+# Tree in which the state 'unknown' is unreachable
 print("Testing bayesNodes(...)")
+res.bayesNodes <- bayesNodes( 
+  phylo.tree.unreachbl.stts, c( 'GO:0043047', 'unknown' )
+)
+exp.anno.space <- c( 'GO:0043047', 'unknown' )
+# print( res.bayesNodes )
+checkEquals( length( res.bayesNodes ), 38 ) 
+root.cpt <- res.bayesNodes[[ 1 ]]
+checkEquals( root.cpt[[ 'values' ]],
+   matrix( c( 1, 1 ), ncol=1, dimnames=list( exp.anno.space, c() ) )
+)
+print( exp.anno.space )
+print( root.cpt[[ 'levels' ]] )
+checkEquals( exp.anno.space, root.cpt[[ 'levels' ]] )
+for( i in 2:length(res.bayesNodes) ) {
+  desc.cpt <- res.bayesNodes[[ i ]]
+  print( 
+    checkEquals( desc.cpt[[ 'values' ]],
+      matrix( c( 1, 0, 1, 0 ), nrow=2, ncol=2,
+        dimnames=list( exp.anno.space, exp.anno.space )
+      )
+    )
+  )
+  print( checkEquals( exp.anno.space, desc.cpt[[ 'levels' ]] ) )
+}
+
+# Test tree without unreachable 'unkown' state:
 go.type.annos <- goTypeAnnotationMatrices( annotation.matrix, go.con=go.con )
 anno.space.lst <- goAnnotationSpaceList( go.type.annos )
-bys.nds <- bayesNodes( phylo.tree, go.type.annos$molecular_function, anno.space.lst$molecular_function )
-# print( bys.nds )
-checkTrue( length( bys.nds ) == nrow( phylo.tree$edge ) + 1 )
+bys.nds <- bayesNodes( phylo.tree, anno.space.lst$molecular_function )
+checkTrue( length( bys.nds ) == 21 )
 root.bys.nd <- bys.nds[[ 1 ]]
 # print( root.bys.nd )
 # print( uniq.annos )
@@ -217,13 +268,26 @@ root.bys.nd <- bys.nds[[ 1 ]]
 # print( root.bys.nd$values )
 # print( anno.space.lst$molecular_function )
 checkTrue( length( root.bys.nd$values ) == length( anno.space.lst$molecular_function ) )
-checkEquals( root.bys.nd$levels, lapply( anno.space.lst$molecular_function, annotationToString ) )
+checkEquals( root.bys.nd$levels, as.character( lapply( anno.space.lst$molecular_function, annotationToString ) ) )
 # print(bys.nds[[2]]$values)
 
 # Test create bayesian Network
 print( "Testing create bayesian Network" )
-grain.res <- try( grain( compileCPT( bys.nds ) ), silent=T )
+plist <- compileCPT( bys.nds )
+grain.res <- try( grain( plist ), silent=T )
 checkTrue( ! identical( 'try-error', class( grain.res ) ) )
+
+# Check conditional probability table for leaf '"A0KEC3"':
+print( "Testing conditional probability tables of compiled Bayesian network" )
+res.cpt <- as.matrix( plist$'"A0KEC3"' )
+exp.states <- c( "GO:0005524 & GO:0017111", "GO:0005524", "unknown" )
+checkTrue( ! is.null( res.cpt ) )
+checkEquals( class( res.cpt ), c( "parray", "array" ) )
+checkEquals( rownames( res.cpt ), exp.states )
+checkEquals( colnames( res.cpt ), exp.states )
+checkEquals( as.numeric( res.cpt[ , 1 ] ), c( 0.46, 0.27, 0.27 ) )
+checkEquals( as.numeric( res.cpt[ , 2 ] ), c( 0.12, 0.76, 0.12 ) )
+checkEquals( as.numeric( res.cpt[ , 3 ] ), c( 0.5, 0.5, 0 ) )
 
 # Test getTipsWithNaAnnotation
 print("Testing getTipsWithNaAnnotation(...)")
@@ -240,29 +304,5 @@ checkEquals(
     "\"A0KR35\"", "\"A0KEC3\"", "\"A0Q3U7\"", "\"A0L3I7\"")
   )
 
-# Test queryPhylBayesNetwork
-# print("Testing queryPhylBayesNetwork(...)")
-# # Test with NO experimentally verified evidence in any tip:
-# phyl.tree.1 <- read.tree( project.file.path( "test", "test_tree.newick" ) )
-# annos.1 <- retrieveAnnotationsBiomart( phyl.tree.1$tip.label )
-# prediction.result <- try(
-#   queryPhylBayesNetwork( phyl.tree.1, annos.1, "\"Protein_1\"" ),
-#   silent=F
-# )
-# # print( prediction.result )
-# checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
-# checkTrue( identical( class( prediction.result ), "list" ) )
-# # Test with a large tree ( 646 leaves ) with evidence of two Proteins with
-# # experimentally verified functions:
-# phyl.tree.2 <- read.tree( project.file.path( "test", "test_tree_large.newick" ) )
-# annos.2 <- retrieveAnnotationsBiomart( phyl.tree.2$tip.label )
-# prediction.result <- try(
-#   queryPhylBayesNetwork( phyl.tree.2, annos.2, "\"Protein_1\"" ),
-#   silent=F
-# )
-# # print( prediction.result )
-# checkTrue( ! identical( class( prediction.result ), 'try-error' ) )
-# checkTrue( identical( class( prediction.result ), "list" ) )
-# 
 # Clean Up:
 dbDisconnect( go.con )

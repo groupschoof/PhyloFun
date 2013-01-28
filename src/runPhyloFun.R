@@ -111,18 +111,24 @@ for ( prot.acc in accs ) {
       acc.phyl.tree$tip.label, evidence.codes=go.anno.evdnc.cds )
     
     go.con <- connectToGeneOntology()
-    acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos, go.con=go.con )
+    acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos,
+      go.con=go.con
+    )
     dbDisconnect( go.con )
     acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
     quoted.acc <- surroundEachWithQuotes( prot.acc )
 
-    go.types <- c( 'biological_process', 'cellular_component', 'molecular_function' )
+    go.types <- c( 'biological_process', 'cellular_component',
+      'molecular_function'
+    )
     acc.go.predictions <- setNames(
       lapply( go.types, function( go.type ) {
-        acc.bayes.evdnc <- annotationMatrixForBayesNetwork( acc.go.type.annos[[ go.type ]] )
+        acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
+          acc.go.type.annos[[ go.type ]]
+        )
         if ( ! is.null( acc.bayes.evdnc ) ) {
           acc.bayes.netw <- grain( compileCPT(
-            bayesNodes( acc.phyl.tree, acc.go.type.annos[[ go.type ]], acc.go.anno.spaces[[ go.type ]], lapply.funk=mclapply )
+            bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]] )
           ) )
           predict.grain( acc.bayes.netw, response=quoted.acc,
             newdata=acc.bayes.evdnc, type='dist'

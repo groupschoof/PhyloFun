@@ -9,6 +9,21 @@ get.root.node <- function(phylTree) {
     )
 }
 
+getDescendantNodes <- function( phylo.tree, node.index ) {
+  # Looks up all direct descendants of 'node.index'.
+  #
+  # Args:
+  #  phylo.tree : An object of class phylo as returned by read.tree.
+  #  node.index : The integer index of the node to find direct descendants for.
+  #               See phylo.tree$edge for more details.
+  #
+  # Returns: The integer vector of those node indices being direct descendants
+  # of argument 'node.index', or NULL if no descendants can be found.
+  #   
+  desc.nds <- phylo.tree$edge[ phylo.tree$edge[ , 1 ] == node.index, 2 ]
+  if ( length( desc.nds ) > 0 ) desc.nds
+}
+
 get.node.label <- function(phylTree, node.index) {
   res <- try(phylTree$tip.label[[node.index]], silent=T)
   if(identical("try-error", class(res))) as.character(node.index) else res
@@ -146,8 +161,7 @@ conditionalProbsTbl <- function( edge.length, annos,
   # Args:
   #  edge.length : sequence distance as the current branch's length.
   #  annos : The unique anntotations as they appear in the current phylogenetic
-  #          tree. Should NOT contain NULL or NA values. Use function
-  #          'validAnnotations' to generate this argument.
+  #          tree. Should NOT contain NULL or NA values. 
   #  annots.mut.prob.table.list : The list of empirical mutation probabilities
   #                               for each annotation.
   #  mut.tbl.length.col.indx : The index of the mutation probability table's
@@ -158,16 +172,16 @@ conditionalProbsTbl <- function( edge.length, annos,
   #
   # Returns: 
   #   A length(annos)*length(annos) probability matrix with
-  #   the m[i, j] := P(j | i), i = parent function, j = child function
+  #   the m[i, j] := P(j | i), i = child function, j = parent function
   #   
-  do.call( 'rbind', 
+  do.call( 'cbind', 
     lapply( annos, function( anno ) {
       a <- annotationToString( anno )
-      colnms <- lapply( annos, annotationToString )
+      rownms <- lapply( annos, annotationToString )
       if ( identical( a, unknown.annot ) ) {
         trans.probs <- matrix( 1 / ( length( annos ) - 1 ),
-          nrow=1, ncol=length( annos ),
-          dimnames=list( a, colnms )
+          ncol=1, nrow=length( annos ),
+          dimnames=list( rownms, a )
         )
         # unknown retainment probability:
         trans.probs[[ a, a ]] <- 0
@@ -177,8 +191,8 @@ conditionalProbsTbl <- function( edge.length, annos,
           annots.mut.prob.table.list, mut.tbl.length.col.indx
         )
         trans.probs <- matrix( ( p.mut / ( length( annos ) - 1 ) ),
-          nrow=1, ncol=length( annos ),
-          dimnames=list( a, colnms )
+          ncol=1, nrow=length( annos ),
+          dimnames=list( rownms, a )
         )
         # annotation retainment probability:
         trans.probs[[ a, a ]] <- 1 - p.mut
@@ -203,9 +217,7 @@ eliminateUnreachableStates <- function( conditional.probs.tbl ) {
   #   
   zero.cols <- apply( conditional.probs.tbl, 2, function( x ) sum(x) == 0 )
   if ( any( zero.cols ) ) {
-    inds <- which( zero.cols )
-    cpt <- conditional.probs.tbl[ , - inds, drop=F ]
-    cpt[ - inds, , drop=F ]
+    cpt <- conditional.probs.tbl[ , - which( zero.cols ), drop=F ]
   } else {
     conditional.probs.tbl # unchanged
   }
@@ -282,59 +294,67 @@ annotationSpace <- function( annotation.matrix, annotation.type='GO' ) {
   unique( annotation.matrix[ annotation.type, ] )
 }
 
-bayesNodes <- function( phylo.tree, annotation.matrix, annotation.space,
+bayesNodes <- function( phylo.tree, annotation.space, node.index=get.root.node( phylo.tree ),
   mutation.probability.tables.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
-  unknown.annot='unknown', lapply.funk=lapply ) {
-  # Constructs a bayesian network from the argument phylogenetic tree assigns
-  # each node the annotation mutation probability distribution. Note: PhyloFun
-  # calls this function thrice, once for each type of GO term type
-  # 'biological_process', 'cellular_component', and 'molecular_function'.
+  unknown.annot='unknown' ) {
+  # Recursively compiles the conditional probability tables for argument
+  # phylogenetic tree node 'node.index' and all its descendants. 
   #
   # Args:
-  #  phylo.tree                       : Argument phylogenetic tree as returned
-  #                                     by funtion 'read.tree'.
-  #  annotation.matrix                : The function annotations for the leaves
-  #                                     in the phylogenetic tree.
-  #  annotation.space                 : The set of unique compound annotations,
-  #                                     i.e. entry 'molecular_function' of the
-  #                                     list returned by function
-  #                                     'goAnnotationSpaceList'.
-  #  mutation.probability.tables.list : The list of conditional annotation
-  #                                     mutation probabilities as generated by
-  #                                     function 'mutationProbabilityDistribution'.
-  #  unknown.annot                    : UNKNOWN annotation, can be set to any
-  #                                     convenient name.
-  #  lapply.funk                      : Set to mclapply, if parallel execution
-  #                                     is wanted.
+  #  phylo.tree                       : An object of class phylo representing
+  #                                     the phylogenetic tree to translate into
+  #                                     a Bayesian network.
+  #  annotation.space                 : The set of annotations as found in the
+  #                                     parent node of siblings 'node.indices'.
+  #  node.index                       : The indices of all sibling nodes
+  #                                     sharing the same parent. See class
+  #                                     phylo for more details.
+  #  mutation.probability.tables.list : The list of mutation probabilities for
+  #                                     measured branch lengths.
+  #  unknown.annot                    : The label of the unknown annotation.
+  #                                     Default is 'unknown'.
   #
-  # Returns: a list of bayesian network nodes as generated by function
-  # 'cptable' from library 'gRain'.
+  # Returns: A named list with conditional probability tables for each node in
+  # argument 'node.indices'.
   #   
-  annotations <- lapply( annotation.space, annotationToString )
-  no.evidence <- as.numeric( matrix( 1.0, nrow=1, ncol=length( annotations ) ) )
-  c(
-    # Generate the root node of the Bayesian network:
-    list( cptable( eval( bquote( ~ .( get.root.node( phylo.tree ) ) ) ),
-      values=no.evidence, levels=annotations ) ),
-    # Generate the dependent nodes of the Bayesian nodes:
-    lapply.funk( 1:nrow( phylo.tree$edge ), function( i ) {
-      # conditional probability table:
-      cpt <- eliminateUnreachableStates(
-        conditionalProbsTbl( phylo.tree$edge.length[[i]],
-          annotation.space, mutation.probability.tables.list,
-          unknown.annot=unknown.annot )
-      )
-      # Generate levels of current bayesian node. Can't use object
-      # 'annotations', because unreachable states might have been excluded:
-      cpt.levels <- lapply( colnames(cpt), annotationToString )
-      # Generate the conditional probability table for current Bayesian node:
-      cptable(
-        edge.to.formula( phylo.tree, i ),
-        values=cpt,
-        levels=cpt.levels
+  edge.ind <- as.integer( which( phylo.tree$edge[ , 2 ] == node.index ) )
+  is.root.node <- node.index == get.root.node( phylo.tree )
+  annotations <- as.character( lapply( annotation.space, annotationToString ) )
+  # conditional probability table:
+  cond.prob.mtrx <- if ( is.root.node ) {
+    matrix( 1.0, ncol=1, nrow=length( annotation.space ), 
+      dimnames=list( annotations, c() )
+    )
+  } else {
+    conditionalProbsTbl( phylo.tree$edge.length[[ edge.ind ]],
+      annotation.space, mutation.probability.tables.list,
+      unknown.annot=unknown.annot )
+  }
+  # Generate the conditional probability table for current Bayesian node:
+  edge.formula <- if ( is.root.node ) {
+    eval( bquote( ~ .( get.root.node( phylo.tree ) ) ) )
+  } else {
+    edge.to.formula( phylo.tree, edge.ind )
+  }
+  cpt <- list(
+    cptable(
+      edge.formula,
+      values=cond.prob.mtrx,
+      levels=annotations
+    )
+  )
+  # Recursively add CPTs of children:
+  desc.nds <- getDescendantNodes( phylo.tree, node.index )
+  if ( ! is.null( desc.nds ) ) {
+    desc.nds.cpts <- lapply( desc.nds, function( desc.node ) {
+      bayesNodes( phylo.tree, annotation.space,
+        desc.node, mutation.probability.tables.list, unknown.annot
       )
     })
-  )
+    c( cpt, unlist( desc.nds.cpts, recursive=F ) )
+  } else {
+    cpt
+  }
 }
 
 # Returns the labels of phylo.tree's tips, that have no annotation of specified
@@ -356,17 +376,30 @@ surroundEachWithQuotes <- function(char.vector) {
 }
 
 annotationMatrixForBayesNetwork <- function( annotation.matrix,
-  annotation.type='GO' ) {
+  all.accessions=colnames( annotation.matrix ), annotation.type='GO',
+  unknown.annot='unknown' ) {
   # Prepares an annotation.matrix to be used i.e. as diagnostic evidence inside
   # an Bayesian independence network.
   #
   # Args:
-  #  annotation.matrix : A matrix of function annotations for some leaves in a phylogenetic tree. Use for example all experimentally verified molecular function annotations. The matrix's columns should be the protein accessions and the row the type of annotation, i.e. 'GO'.
+  #  annotation.matrix : A matrix of function annotations for some leaves in a
+  #                      phylogenetic tree. Use for example all experimentally
+  #                      verified molecular function annotations. The matrix's
+  #                      columns should be the protein accessions and the row
+  #                      the type of annotation, i.e. 'GO'.
+  #  all.accessions    : The accessions of the query protein's homologs. If
+  #                      more than in colnames( annotation.matrix ) those
+  #                      without an experimentally verified function annotation
+  #                      will be annotated with 'unknown.annot'.
   #  annotation.type   : The row of the 'annotation.matrix' to select.
+  #  unknown.annot     : The unkown function annotation, set to any convenient
+  #                      string.
   #
   # Returns: An annotation matrix, in which each protein accession is
   # surrounded by escaped quotes (surroundEachWithQuotes) and each cell is the
-  # compound and sorted set of annotation terms (annotationToString). 
+  # compound and sorted set of annotation terms (annotationToString). If
+  # requested unkown annotations are added for protein accessions missing
+  # annotations in argument 'annotation.matrix'.
   #   
   if ( ! is.null( annotation.matrix ) ) {
     am <- do.call( 'cbind', setNames(
@@ -376,6 +409,19 @@ annotationMatrixForBayesNetwork <- function( annotation.matrix,
       )
     )
     rownames( am ) <- annotation.type
+    # Add 'unkown' annotations, if needed:
+    accs.without.annos <- setdiff( all.accessions,
+      colnames( annotation.matrix )
+    )
+    if ( length( accs.without.annos ) > 0 ) {
+      am <- cbind( am,
+        matrix( unknown.annot, ncol=length( accs.without.annos ), nrow=1,
+          dimnames=list( annotation.type, surroundEachWithQuotes(
+           accs.without.annos ) )
+        )
+      )
+    }
+    # return
     am
   }
 }
@@ -416,6 +462,8 @@ queryPhylBayesNetwork <- function( phylo.tree, response, annotation.matrix,
   bayes.netw=grain( compileCPT( bayesNodes( phylo.tree,
         annotation.matrix, annotation.space, annotation.type ) )
   ), type='distribution' ) {
+  # DEPRECATED!
+  #
   # Creates and queries the Bayesian independence network. Argument
   # 'diagnostic.evidence' holds the predictor variables and their states those
   # tips of the phylogenetic tree, that are not referenced in the evidence will
@@ -461,6 +509,7 @@ queryPhylBayesNetwork <- function( phylo.tree, response, annotation.matrix,
   # Returns: The result of calling either querygrain or predict.grain. A named
   # list with a data.frame for each node in argument 'response'. 
   #
+  warning( "queryPhylBayesNetwork is DEPRECATED" )
   if ( ncol(diagnostic.evidence) == 0 && nrow(diagnostic.evidence) == 0 ) {
     # Just propagate the probability distributions from root to leaves, without
     # any diagnostic.evidence:
