@@ -92,6 +92,10 @@ dump.reslt <- lapply.funk( accs, function( prot.acc ) {
     acc.msa.file <- paste( prot.acc, "/msa.fasta", sep="" )
     system( paste( "mafft --auto", acc.hmlgs.file, ">", acc.msa.file ) )
 
+    # Remove duplicated accessions from MSA:
+    print( "Removing duplicated accessions -if existing- from MSA" )
+    uniqueHomologs( acc.hmlgs.file )
+
     # Filter the MSA for highly conserved regions using GBlocks:
     print( "Filtering MSA for highly conserved regions" )
     acc.filtered.msa.file <- paste( acc.msa.file, '-gb', sep='' )
