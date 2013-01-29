@@ -1,6 +1,7 @@
 library(RUnit)
 library(tools)
 library(stringr)
+library(Biostrings)
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
 # This method ONLY works for project files in depth one sub dirs!
@@ -25,7 +26,7 @@ print("Testing parseJackhmmerTable(...)")
 jr <- scan( file=project.file.path( 'test', 'jackhmmer_out_10_prots.tbl' ),
   what=character(), sep="\n" )
 jack.mat <- parseJackhmmerTable( jr )
-print( jack.mat[1,] )
+# print( jack.mat[1,] )
 checkTrue( ! is.null( jack.mat ) )
 checkEquals( class(jack.mat) , 'matrix' )
 checkEquals( nrow(jack.mat), length(jr) - 3 )
@@ -74,3 +75,50 @@ exp.sanitizeUniprotAccession <- 'MyAccession'
 checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession ) 
 # test NULL:
 checkTrue( is.null( sanitizeUniprotAccession( NULL ) ) )
+
+# Test uniqueHomologs
+print("Testing uniqueHomologs(...)")
+uniqueHomologs( project.file.path( 'test', 'non_unique_hmlgs.fasta' ),
+  'tmp.fasta', FALSE )
+res.uniqueHomologs <- read.AAStringSet( 'tmp.fasta' )
+checkTrue( ! is.null( res.uniqueHomologs ) )
+checkEquals( length( res.uniqueHomologs ), 167 )
+exp.unique.hmlgs.names <- c( "Q8K4K1", "Q9S744", "Q9FYK2", "Q8VHC5", "Q9SRE6",
+                            "O35648", "Q545L8", "Q9C8Y1", "O88751", "B1AKR1",
+                            "O15182", "P08590", "P02600", "Q9NZU7", "Q8TD86",
+                            "P05976", "Q9NPB3", "P57796", "Q9ZSA2", "P12829",
+                            "Q9SRR7", "Q38868", "Q9NP86", "O23184", "P25070",
+                            "Q9SU00", "Q3E9C0", "Q8RWL2", "A2AVY6", "Q9CQ19",
+                            "Q9FMP5", "Q06850", "Q3THE2", "P18666", "Q8VZ50",
+                            "Q9ZR02", "Q94AZ4", "Q9S9V0", "Q38870", "Q38872",
+                            "Q39016", "Q9ZSA4", "O74435", "P13832", "Q6ZWQ9",
+                            "Q38871", "Q38869", "Q42479", "Q9LE22", "Q5XJC3",
+                            "Q9ZQE6", "P06704", "Q9ZSA3", "Q9M101", "E5RJF8",
+                            "Q38873", "E5RK82", "Q9SSF8", "Q1PFH8", "Q9C9U8",
+                            "Q6NLQ6", "Q99MJ8", "Q99MJ7", "Q09510", "Q42438",
+                            "Q9FI19", "P93759", "P10916", "Q9XVI9", "P08733",
+                            "P51667", "Q9FIH9", "P13833", "P48593", "P63100",
+                            "Q63810", "P40423", "Q9M9V8", "Q95XF6", "O14008",
+                            "Q8W4I7", "E9QNY3", "Q62082", "Q08331", "Q9SVG9",
+                            "Q8CCS7", "Q52K82", "P04466", "P97457", "P22676",
+                            "Q9SS31", "Q24214", "P53141", "P48451", "Q801M3",
+                            "Q9UU93", "P28470", "Q5SVI8", "Q9QVP4", "Q5NCJ7",
+                            "Q86V35", "Q91ZM8", "Q01449", "P19626", "P19625",
+                            "Q5AK12", "P53014", "Q9BUA6", "Q55G87", "Q7XJR9",
+                            "Q09196", "Q9FKW4", "P25296", "Q9BXU9", "P30188",
+                            "E9Q8Y0", "B1AUQ7", "A1BN54", "Q542R1", "Q9JJG7",
+                            "P05094", "F8WHE1", "P61601", "P61602", "Q5PQN0",
+                            "Q6ZM98", "Q8CBJ9", "Q3B7N2", "P12814", "D3YUI7",
+                            "Q7TPR4", "Q9Z1P2", "P09402", "Q9SRE7", "P35609",
+                            "P42324", "D3ZCV0", "Q9JI91", "Q5FW75", "Q9UUG5",
+                            "P42325", "O88990", "Q08043", "P12815", "P20111",
+                            "P04354", "O75340", "P62748", "Q9QXQ0", "P57780",
+                            "Q3ULT2", "O43707", "A8Y589", "E9PV73", "P84074",
+                            "P84075", "P84076", "Q9FDX6", "Q54X77", "A6NER6",
+                            "P18432", "P07171", "A2AS59", "P12658", "P05937",
+                            "P06742", "Q8UUX9" )
+
+checkEquals( names( res.uniqueHomologs ), exp.unique.hmlgs.names )
+# clean up:
+unlink( 'tmp.fasta' )
+

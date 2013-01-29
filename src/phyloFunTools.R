@@ -128,3 +128,32 @@ sanitizeUniprotAccession <- function( protein.name ) {
     ua
   }
 }
+
+uniqueHomologs <- function( path.2.homlgs.fasta,
+  path.2.unique.hmlgs.fasta=path.2.homlgs.fasta, print.warning=T ) {
+  # Looks up duplicated accessions in file 'path.2.homlgs.fasta' and removes
+  # those duplicated entries, saving the result into
+  # 'path.2.unique.hmlgs.fasta'.
+  #
+  # Args:
+  #  path.2.homlgs.fasta       : The file path to the FASTA input.
+  #  path.2.unique.hmlgs.fasta : The file path to the FASTA output. Default is
+  #                              to overwrite input.
+  #  print.warning             : If TRUE duplicated accessions are printed out
+  #                              in a warning message.
+  #
+  # Returns: TRUE if no error occurred.
+  #   
+  hmlgs <- read.AAStringSet( path.2.homlgs.fasta )
+  dplcts <- duplicated( names( hmlgs ) )
+  if ( any( dplcts ) ) {
+    uniq.hmlgs <- hmlgs[ - which( dplcts ) ]
+    write.XStringSet( uniq.hmlgs, path.2.unique.hmlgs.fasta )
+    if ( print.warning ) {
+      warning( "Removed duplicated Accessions:",
+        names( hmlgs )[ which( dplcts ) ]
+      )
+    }
+  }
+  T
+}
