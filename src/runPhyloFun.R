@@ -27,6 +27,7 @@ src.project.file( "src", "phyloFunTools.R" )
 src.project.file( "src", "phyloFun.R" )
 src.project.file( "src", "loadUniprotKBEntries.R" )
 src.project.file( "src", "geneOntologySQL.R" )
+src.project.file( "src", "domainArchitectureSimilarity.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
@@ -51,7 +52,7 @@ go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
   }
 
 # Read fasta:
-aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) toString(s) )
+aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) replaceSelenocystein( toString(s) ) )
 print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
 
 # Parse Jackhmmer results:
@@ -82,7 +83,12 @@ dump.reslt <- lapply.funk( accs, function( prot.acc ) {
       dir.create( prot.acc )
     hit.accs <- homologs[ , 'hit.name' ]
     hit.uniprot.docs <- downloadUniprotDocuments( hit.accs )
-    hit.seqs <- unlist( lapply( hit.uniprot.docs, retrieveSequence, return.error=F ) )
+    hit.seqs <- unlist( 
+      lapply(
+        lapply( hit.uniprot.docs, retrieveSequence, return.error=F ),
+        replaceSelenocystein
+      )
+    )
     
     # Generate multiple sequence alignment ( MSA ) using MAFFT:
     print( "Generating multiple sequence alignment (MSA)" )
