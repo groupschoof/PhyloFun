@@ -1,5 +1,5 @@
-connectToGeneOntology <- function( driver=MySQL(), user="go_select",
-  password="amigo", dbname="go_latest", host="mysql.ebi.ac.uk", port=4085 ) {
+connectToGeneOntology <- function( driver=MySQL(), user="experiment",
+  password="go2hell", dbname="exp_gene_ontology", host="mysql-server", port=3306 ) {
   # Connects to the latest gene ontology database using DBI and MySQL.
   #
   # Args:
