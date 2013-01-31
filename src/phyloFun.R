@@ -202,6 +202,48 @@ conditionalProbsTbl <- function( edge.length, annos,
   )
 }
 
+conditionalProbsTables <- function( phylo.tree, annos,
+  annots.mut.prob.table.list, mut.tbl.length.col.indx=5, p.mut.col.indx=1,
+  unknown.annot='unknown', lapply.funk=mclapply ) {
+  # For each UNIQUE branch length in the argument 'phylo.tree' a conditional
+  # mutation probability table (CPT) of argument protein annotations 'annos' is
+  # created using function 'conditionalProbsTbl'.
+  #
+  # Args:
+  #  phylo.tree                 : An object of class phylo as returned by
+  #                               read.tree
+  #  annos                      : A vector of unique and possibly compound
+  #                               function annotations. See function
+  #                               'goAnnotationSpaceList' for details.
+  #  annots.mut.prob.table.list : The list of function mutation probabilities
+  #                               dependent on branch lengths.
+  #  mut.tbl.length.col.indx    : The column index in which to lookup the
+  #                               branch length in each table of argument
+  #                               'annots.mut.prob.table.list'.
+  #  p.mut.col.indx             : The column index of matrices in
+  #                               'annots.mut.prob.table.list' in which to
+  #                               lookup the mutation probability dependent on
+  #                               the current branch length.
+  #  unknown.annot              : The string representing the UNKNOWN
+  #                               annotation.
+  #  lapply.funk                : The default mclapply forces parallel
+  #                               computation of the CPTs, set to lapply if
+  #                               serial computation is wanted.
+  #
+  # Returns: A named list of CPTs for each unique branch length in argument
+  # 'phylo.tree'.
+  #   
+  uniq.edge.lengths <- unique( phylo.tree$edge.length )
+  setNames(
+    lapply.funk( uniq.edge.lengths, function( edge.length ) {
+      conditionalProbsTbl( edge.length, annos, annots.mut.prob.table.list,
+        mut.tbl.length.col.indx, p.mut.col.indx, unknown.annot
+      )
+    }),
+    uniq.edge.lengths
+  )
+}
+
 eliminateUnreachableStates <- function( conditional.probs.tbl ) {
   # gRain throws errors if conditional probability tables have unreachable
   # stated. This function identifies them by looking up indices of those
@@ -294,7 +336,7 @@ annotationSpace <- function( annotation.matrix, annotation.type='GO' ) {
   unique( annotation.matrix[ annotation.type, ] )
 }
 
-bayesNode <- function( phylo.tree, annotation.space, node.index,
+bayesNode <- function( phylo.tree, annotation.space, node.index, cond.prob.tbls,
   mutation.probability.tables.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
   unknown.annot='unknown' ) {
   # Compiles the conditional probability tables for argument phylogenetic tree
@@ -308,6 +350,10 @@ bayesNode <- function( phylo.tree, annotation.space, node.index,
   #                                     parent node of siblings 'node.indices'.
   #  node.index                       : The index of the node to compile the
   #                                     CPT for.
+  #  cond.prob.tbls                   : The named list of annotation mutation
+  #                                     conditional probability tables as
+  #                                     returned by function
+  #                                     conditionalProbsTables. 
   #  mutation.probability.tables.list : The list of mutation probabilities for
   #                                     measured branch lengths.
   #  unknown.annot                    : The label of the unknown annotation.
@@ -325,9 +371,7 @@ bayesNode <- function( phylo.tree, annotation.space, node.index,
       dimnames=list( annotations, c() )
     )
   } else {
-    conditionalProbsTbl( phylo.tree$edge.length[[ edge.ind ]],
-      annotation.space, mutation.probability.tables.list,
-      unknown.annot=unknown.annot )
+    cond.prob.tbls[[ as.character( phylo.tree$edge.length[[ edge.ind ]] ) ]]
   }
   # Generate the conditional probability table for current Bayesian node:
   edge.formula <- if ( is.root.node ) {
@@ -369,10 +413,14 @@ bayesNodes <- function( phylo.tree, annotation.space,
   # Returns: A list of CPTs, one for each phylogenetic node in argument
   # 'phylo.tree'.
   #   
+  cpts <- conditionalProbsTables( phylo.tree, annotation.space,
+    mutation.probability.tables.list, unknown.annot=unknown.annot,
+    lapply.funk=lapply.funk
+  )
   phylo.nodes <- c( get.root.node( phylo.tree ), phylo.tree$edge[ , 2 ] )
   unlist(
     lapply.funk( phylo.nodes, function( phylo.node ) {
-      bayesNode( phylo.tree, annotation.space, phylo.node,
+      bayesNode( phylo.tree, annotation.space, phylo.node, cpts,
         mutation.probability.tables.list, unknown.annot
       )
     }),
