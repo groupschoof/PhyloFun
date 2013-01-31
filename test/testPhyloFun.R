@@ -232,7 +232,7 @@ checkTrue(! grepl('[a-zA-Z]+', as.character(frml)[[2]], perl=T))
 # Tree in which the state 'unknown' is unreachable
 print("Testing bayesNodes(...)")
 res.bayesNodes <- bayesNodes( 
-  phylo.tree.unreachbl.stts, c( 'GO:0043047', 'unknown' )
+  phylo.tree.unreachbl.stts, c( 'GO:0043047', 'unknown' ), lapply.funk=lapply
 )
 exp.anno.space <- c( 'GO:0043047', 'unknown' )
 # print( res.bayesNodes )
@@ -241,8 +241,8 @@ root.cpt <- res.bayesNodes[[ 1 ]]
 checkEquals( root.cpt[[ 'values' ]],
    matrix( c( 1, 1 ), ncol=1, dimnames=list( exp.anno.space, c() ) )
 )
-print( exp.anno.space )
-print( root.cpt[[ 'levels' ]] )
+# print( exp.anno.space )
+# print( root.cpt[[ 'levels' ]] )
 checkEquals( exp.anno.space, root.cpt[[ 'levels' ]] )
 for( i in 2:length(res.bayesNodes) ) {
   desc.cpt <- res.bayesNodes[[ i ]]
@@ -259,7 +259,8 @@ for( i in 2:length(res.bayesNodes) ) {
 # Test tree without unreachable 'unkown' state:
 go.type.annos <- goTypeAnnotationMatrices( annotation.matrix, go.con=go.con )
 anno.space.lst <- goAnnotationSpaceList( go.type.annos )
-bys.nds <- bayesNodes( phylo.tree, anno.space.lst$molecular_function )
+bys.nds <- bayesNodes( phylo.tree, anno.space.lst$molecular_function,
+  lapply.funk=lapply )
 checkTrue( length( bys.nds ) == 21 )
 root.bys.nd <- bys.nds[[ 1 ]]
 # print( root.bys.nd )

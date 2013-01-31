@@ -75,7 +75,7 @@ options( 'mc.cores'=phylo.fun.args[[ 'c' ]] )
 lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 
 # For each query protein, do:
-dump.reslt <- lapply.funk( accs, function( prot.acc ) {
+for ( prot.acc in accs ) {
   homologs <- jr[ which( jr[ , 'query.name' ] == prot.acc ), , drop=F ]
   if ( nrow( homologs ) > 0 ) {
     orig.acc <- names( accs[ accs[] == prot.acc ] )
@@ -140,7 +140,9 @@ dump.reslt <- lapply.funk( accs, function( prot.acc ) {
         )
         if ( ! is.null( acc.bayes.evdnc ) ) {
           acc.bayes.netw <- grain( compileCPT(
-            bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]] )
+            bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
+              lapply.funk=lapply.funk
+            )
           ) )
           predict.grain( acc.bayes.netw, response=quoted.acc,
             newdata=acc.bayes.evdnc, type='dist'
@@ -177,6 +179,6 @@ dump.reslt <- lapply.funk( accs, function( prot.acc ) {
 
     print( paste( "Finished computations for", orig.acc ) )
   }
-})
+}
 
 print( "DONE" )

@@ -294,11 +294,11 @@ annotationSpace <- function( annotation.matrix, annotation.type='GO' ) {
   unique( annotation.matrix[ annotation.type, ] )
 }
 
-bayesNodes <- function( phylo.tree, annotation.space, node.index=get.root.node( phylo.tree ),
+bayesNode <- function( phylo.tree, annotation.space, node.index,
   mutation.probability.tables.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
   unknown.annot='unknown' ) {
-  # Recursively compiles the conditional probability tables for argument
-  # phylogenetic tree node 'node.index' and all its descendants. 
+  # Compiles the conditional probability tables for argument phylogenetic tree
+  # node 'node.index'. 
   #
   # Args:
   #  phylo.tree                       : An object of class phylo representing
@@ -306,16 +306,15 @@ bayesNodes <- function( phylo.tree, annotation.space, node.index=get.root.node( 
   #                                     a Bayesian network.
   #  annotation.space                 : The set of annotations as found in the
   #                                     parent node of siblings 'node.indices'.
-  #  node.index                       : The indices of all sibling nodes
-  #                                     sharing the same parent. See class
-  #                                     phylo for more details.
+  #  node.index                       : The index of the node to compile the
+  #                                     CPT for.
   #  mutation.probability.tables.list : The list of mutation probabilities for
   #                                     measured branch lengths.
   #  unknown.annot                    : The label of the unknown annotation.
   #                                     Default is 'unknown'.
   #
-  # Returns: A named list with conditional probability tables for each node in
-  # argument 'node.indices'.
+  # Returns: The compiled conditional probability table (CPT) for argument node
+  # 'node.index' as a list.
   #   
   edge.ind <- as.integer( which( phylo.tree$edge[ , 2 ] == node.index ) )
   is.root.node <- node.index == get.root.node( phylo.tree )
@@ -336,25 +335,49 @@ bayesNodes <- function( phylo.tree, annotation.space, node.index=get.root.node( 
   } else {
     edge.to.formula( phylo.tree, edge.ind )
   }
-  cpt <- list(
+  list(
     cptable(
       edge.formula,
       values=cond.prob.mtrx,
       levels=annotations
     )
   )
-  # Recursively add CPTs of children:
-  desc.nds <- getDescendantNodes( phylo.tree, node.index )
-  if ( ! is.null( desc.nds ) ) {
-    desc.nds.cpts <- lapply( desc.nds, function( desc.node ) {
-      bayesNodes( phylo.tree, annotation.space,
-        desc.node, mutation.probability.tables.list, unknown.annot
+}
+
+bayesNodes <- function( phylo.tree, annotation.space,
+  mutation.probability.tables.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
+  unknown.annot='unknown', lapply.funk=mclapply ) {
+  # Computes the conditional probability tables (CPT) for each node in the
+  # argument 'phylo.tree' using function 'bayesNode'.
+  #
+  # Args:
+  #  phylo.tree                       : An object of class phylo as returned by
+  #                                     function 'read.tree' of library ape.
+  #  annotation.space                 : The set of annotations as found in the
+  #                                     parent node of siblings 'node.indices'.
+  #  mutation.probability.tables.list : The list of mutation probabilities for
+  #                                     measured branch lengths.
+  #  unknown.annot                    : The label of the unknown annotation.
+  #                                     Default is 'unknown'.
+  #  lapply.funk                      : Set to 'mclapply' if parallel
+  #                                     computation of CPTs is wanted, set to
+  #                                     lapply, if serial computation is
+  #                                     preferred. 'mclapply' is *strongly*
+  #                                     recommended when used on trees with more
+  #                                     than 250 nodes. Default is 'mclapply'.
+  #
+  # Returns: A list of CPTs, one for each phylogenetic node in argument
+  # 'phylo.tree'.
+  #   
+  phylo.nodes <- c( get.root.node( phylo.tree ), phylo.tree$edge[ , 2 ] )
+  unlist(
+    lapply.funk( phylo.nodes, function( phylo.node ) {
+      bayesNode( phylo.tree, annotation.space, phylo.node,
+        mutation.probability.tables.list, unknown.annot
       )
-    })
-    c( cpt, unlist( desc.nds.cpts, recursive=F ) )
-  } else {
-    cpt
-  }
+    }),
+    recursive=F
+  )
 }
 
 # Returns the labels of phylo.tree's tips, that have no annotation of specified
