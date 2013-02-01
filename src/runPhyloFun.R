@@ -173,7 +173,7 @@ for ( prot.acc in accs ) {
     go.con <- connectToGeneOntology()
     write.table( goTermsForAccessionWithLevel( go.terms, con=go.con ),
       file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
-      row.names=F, quote=F
+      row.names=F
     )
     dbDisconnect( go.con )
 

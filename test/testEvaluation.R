@@ -116,4 +116,12 @@ checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787
 # Test fScores
 print("Testing fScores(...)")
 print( "TODO: Write test for fScroes!" )
-checkTrue( F )
+
+# Test falsePositiveRate
+print("Testing falsePositiveRate(...)")
+res.falsePositiveRate <- falsePositiveRate( c( 'A', 'B', 'B', 'C' ), c( 'A', 'B' ) )
+checkEquals( 1/3, res.falsePositiveRate ) 
+res.falsePositiveRate <- falsePositiveRate( c( 'A', 'B', 'B' ), c( 'A', 'B' ) )
+checkEquals( 0.0, res.falsePositiveRate ) 
+res.falsePositiveRate <- falsePositiveRate( c( 'A' ), c( 'B' ) )
+checkEquals( 1.0, res.falsePositiveRate ) 
