@@ -61,7 +61,6 @@ LEGEND.TEMPLATE <-
   <table id="go_annotation_legend">
     <tr><th>GO accession</th><th>GO name</th><th>distance to root</th></tr>
     <% anno.colors <- rainbow( sum( as.integer( lapply( names( go.anno.spaces ), function( go.type ) length( go.anno.spaces[[ go.type ]] ) ) ) ) ) %>
-    <% go.terms.table <- goTermsTable( go.anno.spaces ) %>
     <% i <- 1 %>
     <% for ( go.type in names( go.anno.spaces ) ) { %>
       <tr><th colspan="3"><%= go.type %></th></tr>
@@ -101,10 +100,14 @@ PHYLO.XML.CLADE.TEMPLATE <-
     <branch_length><%= branch.length %></branch_length>
   <% } %>
   <% if ( is.leaf.node ) { %>
-    <name <%= if ( is.query.node ) \'bgStyle="query"\' %>><%= phylo.tree$tip.label[[ node.index ]] %></name>
+    <% prot.acc <- phylo.tree$tip.label[[ node.index ]] %>
+    <name <%= if ( is.query.node ) \'bgStyle="query"\' %>><%= prot.acc %></name>
     <% if ( ! is.query.node ) { %>
       <annotation>
-        <uri>http://www.uniprot.org/uniprot/<%= phylo.tree$tip.label[[ node.index ]] %></uri>
+        <% if ( ! is.query.node ) { %>
+          <uri>http://www.uniprot.org/uniprot/<%= prot.acc %></uri>
+        <% } %>
+        <desc><%= popUpAnnotations( go.terms.tbl, annotation.matrix, prot.acc )%></desc>
       </annotation>
     <% } %>
  </clade>
@@ -121,6 +124,20 @@ goTermsTable <- function( go.anno.spaces ) {
   )
 }
 
+popUpAnnotations <- function( go.terms.tbl, annotation.matrix, prot.acc ) {
+  prot.annos <- annotation.matrix[[ 'GO', prot.acc ]]
+  paste( as.character(
+      lapply( prot.annos, function( go.acc ) {
+        gt <- go.terms.tbl[ which( go.terms.tbl[ , 'acc' ] == go.acc ), , drop=F ]
+        if ( nrow( gt ) > 0 ) {
+          paste( go.acc, '(', gt[[ 1, 'name' ]], ')' )
+        }
+      })
+    ),
+    collapse='\r'
+  )
+}
+
 renderHTMLReport <- function( phylo.tree, annotation.matrix, annotation.space,
   query.accession ) {
   
@@ -132,7 +149,7 @@ renderHeader <- function( annotation.space ) {
 
 convertToJsPhyloXML <- function( phylo.tree,
   annotation.matrix, annotation.space, query.accession, 
-  node.index=as.integer( get.root.node( phylo.tree  ) ) ) {
+  go.terms.tbl, node.index=as.integer( get.root.node( phylo.tree  ) ) ) {
   desc.nds <- getDescendantNodes( phylo.tree, node.index )
   is.leaf.node <- is.null( desc.nds )
   is.root.node <- node.index == get.root.node( phylo.tree ) 
@@ -158,7 +175,7 @@ convertToJsPhyloXML <- function( phylo.tree,
       unlist(
         lapply( desc.nds, function( desc.node ) {
           convertToJsPhyloXML( phylo.tree, annotation.matrix, annotation.space,
-            query.accession, desc.node
+            query.accession, go.terms.tbl, desc.node
           )
         }),
         recursive=F
