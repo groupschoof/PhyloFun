@@ -25,8 +25,10 @@ getDescendantNodes <- function( phylo.tree, node.index ) {
 }
 
 get.node.label <- function(phylTree, node.index) {
-  res <- try(phylTree$tip.label[[node.index]], silent=T)
-  if(identical("try-error", class(res))) as.character(node.index) else res
+  if ( node.index <= length( phylTree$tip.label ) )
+    phylTree$tip.label[[ node.index ]]
+  else
+    as.character( node.index )
 }
 
 edge.to.formula <- function(phyloTree, edge.index) {
@@ -176,7 +178,7 @@ conditionalProbsTbl <- function( edge.length, annos,
   #   A length(annos)*length(annos) probability matrix with
   #   the m[i, j] := P(j | i), i = child function, j = parent function
   #   
-  do.call( 'cbind', 
+  do.call( 'cbind',  
     lapply.funk( annos, function( anno ) {
       a <- annotationToString( anno )
       rownms <- lapply( annos, annotationToString )
@@ -422,6 +424,8 @@ bayesNodes <- function( phylo.tree, annotation.space,
   phylo.nodes <- c( get.root.node( phylo.tree ), phylo.tree$edge[ , 2 ] )
   unlist(
     lapply.funk( phylo.nodes, function( phylo.node ) {
+      # Debug:
+      print( paste( 'Processing phylogenetic node', phylo.node ) )
       bayesNode( phylo.tree, annotation.space, phylo.node, cpts,
         mutation.probability.tables.list, unknown.annot
       )
