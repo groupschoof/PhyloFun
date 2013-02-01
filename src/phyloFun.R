@@ -151,7 +151,7 @@ mutationProbability <- function( annotation, branch.length,
 
 conditionalProbsTbl <- function( edge.length, annos,
   annots.mut.prob.table.list, mut.tbl.length.col.indx=5, p.mut.col.indx=1,
-  unknown.annot='unknown' ) {
+  unknown.annot='unknown', lapply.funk=mclapply ) {
   # Looks up the mutation probability tables for each annotation and constructs
   # the transition probabilities based on the current branch's length.
   # Introduces a new annotation 'UNKNOWN' which can mutate to every other
@@ -169,13 +169,15 @@ conditionalProbsTbl <- function( edge.length, annos,
   #                            sequence distance.
   #  p.mut.col.indx : The mutation probability column's index.
   #  unknown.annot : The UNKNOWN annotation, set to any convenient name.
+  #  lapply.funk : If set to mclapply the CPT's columns will be computed in
+  #                parallel. Set to lapply if serial computation is wanted.
   #
   # Returns: 
   #   A length(annos)*length(annos) probability matrix with
   #   the m[i, j] := P(j | i), i = child function, j = parent function
   #   
   do.call( 'cbind', 
-    lapply( annos, function( anno ) {
+    lapply.funk( annos, function( anno ) {
       a <- annotationToString( anno )
       rownms <- lapply( annos, annotationToString )
       if ( identical( a, unknown.annot ) ) {
@@ -235,9 +237,9 @@ conditionalProbsTables <- function( phylo.tree, annos,
   #   
   uniq.edge.lengths <- unique( phylo.tree$edge.length )
   setNames(
-    lapply.funk( uniq.edge.lengths, function( edge.length ) {
+    lapply( uniq.edge.lengths, function( edge.length ) {
       conditionalProbsTbl( edge.length, annos, annots.mut.prob.table.list,
-        mut.tbl.length.col.indx, p.mut.col.indx, unknown.annot
+        mut.tbl.length.col.indx, p.mut.col.indx, unknown.annot, lapply.funk
       )
     }),
     uniq.edge.lengths
