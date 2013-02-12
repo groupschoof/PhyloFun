@@ -424,8 +424,6 @@ bayesNodes <- function( phylo.tree, annotation.space,
   phylo.nodes <- c( get.root.node( phylo.tree ), phylo.tree$edge[ , 2 ] )
   unlist(
     lapply.funk( phylo.nodes, function( phylo.node ) {
-      # Debug:
-      print( paste( 'Processing phylogenetic node', phylo.node ) )
       bayesNode( phylo.tree, annotation.space, phylo.node, cpts,
         mutation.probability.tables.list, unknown.annot
       )
