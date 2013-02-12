@@ -132,22 +132,27 @@ fScores <- function( protein.accessions, predicted.annotations,
   #                          retrievable from UniProt.
   #
   # Returns: A named list with the predictions' fScores of each reference
-  # protein.
+  # protein. The fScore NA is assigned whenever no reference annotations are
+  # found.
   #   
   setNames(
     lapply( protein.accessions, function( a ) {
-      # predicted annos for 'a'
-      pa <- if ( a %in% colnames( predicted.annotations ) )
-        predicted.annotations[[ annotation.type, a ]]
-      else 
-        c()
-      # experimentally verified annos for 'a'
-      oa <- if ( a %in% colnames( reference.annotations ) )
-        reference.annotations[[ annotation.type, a ]]
-      else 
-        c()
-      # fScore for predictions on 'a'
-      fScore( pa, oa, beta.param=beta.param )
+      if ( a %in% colnames( reference.annotations ) ) {
+        # predicted annos for 'a'
+        pa <- if ( a %in% colnames( predicted.annotations ) )
+         predicted.annotations[[ annotation.type, a ]]
+        else 
+         c()
+        # experimentally verified annos for 'a'
+        oa <- reference.annotations[[ annotation.type, a ]]
+        # fScore for predictions on 'a'
+        if ( ! is.null( oa ) && length( oa ) > 0 )
+          fScore( pa, oa, beta.param=beta.param )
+        else
+          NA
+      } else {
+        NA
+      }
     }),
     protein.accessions
   )
