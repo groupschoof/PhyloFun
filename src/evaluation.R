@@ -111,6 +111,54 @@ parseInterProScan2GOresults <- function( ipr.scn.res ) {
   ipr.go.annos
 }
 
+rates <- function( protein.accessions, predicted.annotations,
+    rate.funk, annotation.type='GO',
+    reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
+      protein.accessions
+    )
+  ) {
+  # Computes for each predicted annotation the rates of interest, specified by
+  # function argument 'rate.funk'.
+  #
+  # Args:
+  #  protein.accessions    : The query proteins' accessions.
+  #  predicted.annotations : The annotations predicted for the query proteins
+  #                          'protein.accessions'.
+  #  rate.funk             : The function to call to compute the rate of
+  #                          interest. This function MUST accept two arguments:
+  #                          'pa' a vector of predicted annotations and 'oa' a
+  #                          vector of original reference annotations.
+  #  annotation.type       : The row name of argument annotation.type to
+  #                          evaluate the FPRs for.
+  #  reference.annotations : The TRUE annotations to be used as reference.
+  #
+  # Returns: A named list of recall rates for each predicted annotation. Names
+  # are the query protein accessions. Every time no reference annotations are
+  # found the returned rate is 'NA'.
+  #   
+  setNames(
+    lapply( protein.accessions, function( a ) {
+      if ( a %in% colnames( reference.annotations ) ) {
+        # predicted annos for 'a'
+        pa <- if ( a %in% colnames( predicted.annotations ) )
+         predicted.annotations[[ annotation.type, a ]]
+        else 
+         c()
+        # experimentally verified annos for 'a'
+        oa <- reference.annotations[[ annotation.type, a ]]
+        # fScore for predictions on 'a'
+        if ( ! is.null( oa ) && length( oa ) > 0 )
+          rate.funk( pa, oa )
+        else
+          NA
+      } else {
+        NA
+      }
+    }),
+    protein.accessions
+  )
+}
+
 fScores <- function( protein.accessions, predicted.annotations,
   annotation.type='GO', beta.param=1,
   reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
@@ -135,27 +183,9 @@ fScores <- function( protein.accessions, predicted.annotations,
   # protein. The fScore NA is assigned whenever no reference annotations are
   # found.
   #   
-  setNames(
-    lapply( protein.accessions, function( a ) {
-      if ( a %in% colnames( reference.annotations ) ) {
-        # predicted annos for 'a'
-        pa <- if ( a %in% colnames( predicted.annotations ) )
-         predicted.annotations[[ annotation.type, a ]]
-        else 
-         c()
-        # experimentally verified annos for 'a'
-        oa <- reference.annotations[[ annotation.type, a ]]
-        # fScore for predictions on 'a'
-        if ( ! is.null( oa ) && length( oa ) > 0 )
-          fScore( pa, oa, beta.param=beta.param )
-        else
-          NA
-      } else {
-        NA
-      }
-    }),
-    protein.accessions
-  )
+  rate.funk <- function ( pa, oa ) fScore( pa, oa, beta.param=beta.param )
+  rates( protein.accessions, predicted.annotations, rate.funk, annotation.type,
+    reference.annotations )
 }
 
 falsePositiveRates <- function( protein.accessions, predicted.annotations,
@@ -177,21 +207,30 @@ falsePositiveRates <- function( protein.accessions, predicted.annotations,
   # Returns: A named list of false positive rates for each predicted
   # annotation. Names are the query protein accessions.
   #   
-  setNames(
-    lapply( protein.accessions, function( a ) {
-      # predicted annos for 'a'
-      pa <- if ( a %in% colnames( predicted.annotations ) )
-        predicted.annotations[[ annotation.type, a ]]
-      else 
-        c()
-      # experimentally verified annos for 'a'
-      oa <- if ( a %in% colnames( reference.annotations ) )
-        reference.annotations[[ annotation.type, a ]]
-      else 
-        c()
-      # false positive rate:
-      falsePositiveRate( pa, oa )
-    }),
-    protein.accessions
-  )
+  rates( protein.accessions, predicted.annotations, falsePositiveRate,
+    annotation.type, reference.annotations )
 }
+
+recallRates <- function( protein.accessions, predicted.annotations,
+    annotation.type='GO',
+    reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
+      protein.accessions
+    )
+  ) {
+  # Computes for each predicted annotation the recall rate.
+  #
+  # Args:
+  #  protein.accessions    : The query proteins' accessions.
+  #  predicted.annotations : The annotations predicted for the query proteins
+  #                          'protein.accessions'.
+  #  annotation.type       : The row name of argument annotation.type to
+  #                          evaluate the FPRs for.
+  #  reference.annotations : The TRUE annotations to be used as reference.
+  #
+  # Returns: A named list of recall rates for each predicted
+  # annotation. Names are the query protein accessions.
+  #   
+  rates( protein.accessions, predicted.annotations, recall,
+    annotation.type, reference.annotations )
+}
+

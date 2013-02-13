@@ -113,10 +113,6 @@ checkEquals( ncol( res.parseInterProScan2GOresults ), 7 )
 checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
 checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
 
-# Test fScores
-print("Testing fScores(...)")
-print( "TODO: Write test for fScroes!" )
-
 # Test falsePositiveRate
 print("Testing falsePositiveRate(...)")
 res.falsePositiveRate <- falsePositiveRate( c( 'A', 'B', 'B', 'C' ), c( 'A', 'B' ) )
@@ -125,3 +121,40 @@ res.falsePositiveRate <- falsePositiveRate( c( 'A', 'B', 'B' ), c( 'A', 'B' ) )
 checkEquals( 0.0, res.falsePositiveRate ) 
 res.falsePositiveRate <- falsePositiveRate( c( 'A' ), c( 'B' ) )
 checkEquals( 1.0, res.falsePositiveRate ) 
+
+##############
+# Test rates #
+##############
+# Predicted annotations
+pred.annos <- matrix( list(), nrow=1, ncol=2,
+  dimnames=list( 'GO', c( 'Prot_A', 'Prot_B' ) )
+)
+pred.annos[[ 1, 1 ]] <- c( 'GO_1' )
+pred.annos[[ 1, 2 ]] <- c( 'GO_3' )
+# Reference annotations
+ref.annos <- matrix( list(), nrow=1, ncol=2,
+  dimnames=list( 'GO', c( 'Prot_A', 'Prot_B' ) )
+)
+ref.annos[[ 1, 1 ]] <- c( 'GO_1', 'GO_2' )
+ref.annos[[ 1, 2 ]] <- c( 'GO_3', 'GO_4' )
+# Protein accessions
+prot.accs <- colnames( ref.annos )
+
+# Test fScores
+print("Testing fScores(...)")
+checkEquals( c( 2/3, 2/3 ),
+  as.numeric( fScores( prot.accs, pred.annos, reference.annotations=ref.annos ) )
+)
+
+# Test falsePositiveRates
+print("Testing falsePositiveRates(...)")
+res.falsePositiveRates <- as.numeric( falsePositiveRates( prot.accs, pred.annos, reference.annotations=ref.annos ) )
+exp.falsePositiveRates <- c( 0, 0 )
+checkEquals( res.falsePositiveRates, exp.falsePositiveRates ) 
+
+# Test recallRates
+print("Testing recallRates(...)")
+res.recallRates <- as.numeric( recallRates( prot.accs, pred.annos, reference.annotations=ref.annos ) )
+exp.recallRates <- c( 0.5, 0.5 )
+# print( res.recallRates )
+checkEquals( res.recallRates, exp.recallRates ) 
