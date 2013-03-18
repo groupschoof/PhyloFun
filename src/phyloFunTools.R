@@ -157,3 +157,93 @@ uniqueHomologs <- function( path.2.homlgs.fasta,
   }
   T
 }
+
+filterMultipleSequenceAlignment <- function( msa.xstring.set, min.chars=30 ) {
+  # Discards all Amino Acid sequences shorter than 30 Amino Acids, that is NOT
+  # counting gaps.
+  #
+  # Args:
+  #  msa.xstring.set : An object of class XStringSet holding all AA seqs of the
+  #                    MSA ( see package Biostrings for details on
+  #                    readAAStringSet() )
+  #  min.chars       : The minimum number of Amino Acids to be present in any
+  #                    sequence of the MSA to be retained after filtering.
+  #
+  # Returns: The filtered MSA from which all AA sequences with less then
+  # min.chars AAs have been discarded. Or null, if the whole MSA is shorter
+  # than min.chars.
+  #   
+
+  # In a MSA all sequences have the same length:
+  if ( nchar( msa.xstring.set[ 1 ] ) < min.chars ) {
+    NULL # return
+  } else {
+    msa.aa.lens <- lapply( msa.xstring.set, function( aa.seq ) {
+      nchar( gsub( '-|\\s', '', toString( aa.seq ) ) )
+    })
+    msa.xstring.set[ which( msa.aa.lens[] > min.chars ) ]
+  }
+}
+
+chooseAlignment <- function( msa.unfiltered,
+  msa.filtered=filterMultipleSequenceAlignment( msa.unfiltered ),
+  min.fraction=0.5, min.no.seqs=2 ) {
+  # Chooses the Multiple Sequence Alignment to be used in further analyses.
+  # Discards the filtered MSA, if it is NULL or has not at least min.no.seqs or
+  # has just retained less than min.fraction sequences of the original
+  # msa.unfiltered. 
+  #
+  # Args:
+  #  msa.unfiltered : The unfiltered MSA as XStringSet
+  #  msa.filtered   : The filtered MSA as XStringSet
+  #  min.fraction   : The minimum fraction of the number of sequences that
+  #                   msa.filtered needs to be selectable.  
+  #  min.no.seqs    : The minimum number of sequences msa.filtered has to have
+  #                   to be selectable.
+  #
+  # Returns: The filtered MSA, if it meets the above criteria, or the
+  # unfiltered one.
+  #   
+  if ( is.null( msa.filtered ) ||
+    length( msa.filtered ) < min.no.seqs || 
+    length( msa.filtered ) / length( msa.unfiltered ) < min.fraction
+  ) {
+    msa.unfiltered
+  } else {
+    msa.filtered
+  }
+}
+
+filterPhylogeneticTree <- function( phyl.tree, leaves.to.retain,
+  leaves.to.check=1:length( phyl.tree$tip.label ), leave.annos,
+  annotation.type='GO' ) {
+  curr.leaf.parnt <- phyl.tree$edge[
+    phyl.tree$edge[ , 2 ] == leaves.to.check[[ 1 ]], 1, drop=T
+  ][[ 1 ]]
+  zero.len.edges <- phyl.tree$edge[
+    which( phyl.tree$edge.length[] == 0.0 ), , drop=F
+  ]
+  curr.leaves <- zero.len.edges[
+    which( zero.len.edges[ , 1 ] == curr.leaf.parnt ), 2
+  ]
+  curr.annos <- leave.annos[
+    annotation.type,
+    intersect( colnames( leave.annos ), phyl.tree$tip.label[ curr.leaves ] ),
+    drop=F
+  ]
+  curr.anno.space <- annotationSpace( curr.annos )
+  curr.leave.labels.to.retain <- union(
+    as.character(
+      lapply( curr.anno.space, function( anno.spc ) {
+        leave.ind <- which( as.logical(
+          lapply(
+            curr.annos[ annotation.type, ],
+            function( iter.anno ) identical( iter.anno, anno.spc )
+          )
+        ) )[[ 1 ]]
+       colnames( curr.annos[ annotation.type, leave.ind ] )
+      })
+    ),
+    intersect( leaves.to.retain, phyl.tree$tip.label[ curr.leaves ] )
+  )
+}

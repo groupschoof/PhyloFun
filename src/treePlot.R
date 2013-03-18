@@ -60,14 +60,13 @@ LEGEND.TEMPLATE <-
 '<div id="legend">
   <table id="go_annotation_legend">
     <tr><th>GO accession</th><th>GO name</th><th>distance to root</th></tr>
-    <% anno.colors <- rainbow( sum( as.integer( lapply( names( go.anno.spaces ), function( go.type ) length( go.anno.spaces[[ go.type ]] ) ) ) ) ) %>
     <% i <- 1 %>
     <% for ( go.type in names( go.anno.spaces ) ) { %>
       <tr><th colspan="3"><%= go.type %></th></tr>
       <% for ( go.anno in go.anno.spaces[[ go.type ]] ) { %> 
         <% for ( go.acc in go.anno ) { %>
           <% go.term <- go.terms.tbl[ which( go.terms.tbl[ , "acc" ] == go.acc ), ] %>
-          <tr style="background-color:rgb(<%= paste( as.character( col2rgb( anno.colors[[ i ]] ) ), collapse="," ) %>);">
+          <tr style="background-color:rgb(<%= paste( anno.colors[[ i ]], collapse="," ) %>);">
             <% if ( nrow( go.term ) > 0 ) { %>
               <td><%= go.term[[ "acc" ]] %></td>
               <td><%= go.term[[ "name" ]] %></td>
@@ -114,6 +113,24 @@ PHYLO.XML.CLADE.TEMPLATE <-
   <% } %>'
 
 PHYLO.XML.NAMESPACE <- c( xmlns="http://www.phyloxml.org" )
+
+annoColors <- function( go.anno.spaces ) {
+  setNames(
+    as.character(
+      lapply(
+        rainbow(
+          sum( as.integer(
+            lapply( names( go.anno.spaces ),
+              function( go.type ) length( go.anno.spaces[[ go.type ]] )
+            )
+          ) )
+        ),
+        col2rgb
+      )
+    ),
+    as.character( unlist( go.anno.spaces, recursive=F ) )
+  )
+}
 
 goTermsTable <- function( go.anno.spaces ) {
   goTermsForAccessionWithLevel(

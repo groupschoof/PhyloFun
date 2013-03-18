@@ -100,7 +100,7 @@ for ( prot.acc in accs ) {
 
     # Remove duplicated accessions from MSA:
     print( "Removing duplicated accessions -if existing- from MSA" )
-    uniqueHomologs( acc.hmlgs.file )
+    uniqueHomologs( acc.msa.file )
 
     # Filter the MSA for highly conserved regions using GBlocks:
     print( "Filtering MSA for highly conserved regions" )

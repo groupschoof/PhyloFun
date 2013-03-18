@@ -122,3 +122,40 @@ checkEquals( names( res.uniqueHomologs ), exp.unique.hmlgs.names )
 # clean up:
 unlink( 'tmp.fasta' )
 
+# compare Multiple Sequence Alignments (MSAs):
+msaEqual <- function( msa.one, msa.two ) {
+  if ( length( msa.one ) != length( msa.two ) ) {
+    FALSE
+  } else {
+    all( as.logical( lapply( 1:length( msa.one ), function( i ) {
+      toString( msa.one[ i ] ) == toString( msa.two[ i ] ) 
+    }) ) )
+  }
+}
+
+# Test filterMultipleSequenceAlignment
+print("Testing filterMultipleSequenceAlignment(...)")
+msa <- read.AAStringSet( project.file.path( 'test', 'test_msa.fasta' ) )
+res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa )
+exp.filterMultipleSequenceAlignment <- msa[ 1 ]
+checkTrue( msaEqual( res.filterMultipleSequenceAlignment, exp.filterMultipleSequenceAlignment ) ) 
+msa.empty <- read.AAStringSet( project.file.path( 'test', 'test_msa_empty.fasta' ) )
+res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa.empty )
+exp.filterMultipleSequenceAlignment <- NULL
+checkEquals( res.filterMultipleSequenceAlignment, exp.filterMultipleSequenceAlignment ) 
+
+# Test chooseAlignment
+print("Testing chooseAlignment(...)")
+res.chooseAlignment <- chooseAlignment( msa )
+exp.chooseAlignment <- msa
+# expected to choose unfiltered MSA
+checkTrue( msaEqual( res.chooseAlignment, exp.chooseAlignment ) )
+res.chooseAlignment <- chooseAlignment( msa.empty )
+exp.chooseAlignment <- msa.empty
+# expected to choose unfiltered MSA
+checkTrue( msaEqual( res.chooseAlignment, exp.chooseAlignment ) )
+msa.good <- read.AAStringSet( project.file.path( 'test', 'test_msa_good.fasta' ) )
+res.chooseAlignment <- chooseAlignment( msa.good )
+exp.chooseAlignment <- msa.good[ which( names( msa.good ) != 'E9PUF2' ) ]
+# expected to choose FILTERED MSA
+checkEquals( length( res.chooseAlignment ), length( exp.chooseAlignment ) )
