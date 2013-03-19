@@ -132,27 +132,26 @@ for ( prot.acc in accs ) {
     go.types <- c( 'biological_process', 'cellular_component',
       'molecular_function'
     )
-    acc.go.predictions <- setNames(
-      lapply( go.types, function( go.type ) {
-        acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
-          acc.go.type.annos[[ go.type ]], 
-          all.accessions=setdiff( acc.phyl.tree$tip.label, prot.acc )
-        )
-        if ( ! is.null( acc.bayes.evdnc ) ) {
-          acc.bayes.netw <- grain( compileCPT(
-            bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
-              lapply.funk=lapply.funk
-            )
-          ) )
-          predict.grain( acc.bayes.netw, response=quoted.acc,
-            newdata=acc.bayes.evdnc, type='dist'
+    acc.go.predictions <- list()
+    for ( go.type in go.types ) {
+      acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
+        acc.go.type.annos[[ go.type ]], 
+        all.accessions=setdiff( acc.phyl.tree$tip.label, prot.acc )
+      )
+      go.type.pred <- if ( ! is.null( acc.bayes.evdnc ) ) {
+        acc.bayes.netw <- grain( compileCPT(
+          bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
+            lapply.funk=lapply.funk
           )
-        } else {
-          NULL
-        }
-      }),
-      go.types
-    )
+        ) )
+        predict.grain( acc.bayes.netw, response=quoted.acc,
+          newdata=acc.bayes.evdnc, type='dist'
+        )
+      } else {
+        NULL
+      }
+      acc.go.predictions[[ go.type ]] <- go.type.pred
+    }
     # Finished predicting GO term annotations.
     
     # Write out complete results:
