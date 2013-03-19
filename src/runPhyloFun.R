@@ -107,11 +107,34 @@ for ( prot.acc in accs ) {
     acc.filtered.msa.file <- paste( acc.msa.file, '-gb', sep='' )
     system( paste( 'Gblocks', acc.msa.file, '-b5=h -t=p -p=n' ) )
 
+    # Phylo-Filter the GBlocks result discarding empty sequences or those
+    # consisting of too many gap characters:
+    acc.msa.phylo.filtered <- filterMultipleSequenceAlignment( read.AAStringSet( acc.filtered.msa.file ) )
+    # Should we use the original unfiltered MSA or the MSA filtered in two
+    # steps (Gblocks followed by phyloFun's filter)?
+    acc.msa.chosen.file <- if ( chooseFilteredAlignment(
+        read.AAStringSet( acc.msa.file ),
+        acc.msa.phylo.filtered
+      ) ) {
+      acc.msa.phylo.filtered.file <- paste( acc.filtered.msa.file, '-phylo_filtered', sep='' )
+      write.XStringSet( acc.msa.phylo.filtered, acc.msa.phylo.filtered.file )
+      acc.msa.phylo.filtered.file
+    } else {
+      acc.msa.file
+    }
+    # Tell the User, which MSA is going to be used:
+    print( paste( 'MSA has been filtered with Gblocks and PhyloFun. Going to use',
+      acc.msa.chosen.file, 'for the phylogenetic reconstruction' ) )
+    print( '' )
+    # ToDo: When out of beta state, delete not used MSAs in order to not
+    # confuse the User with up to three MSA files, of which the Gblocks and the
+    # PhyloFilter result might be identical!
+
     # Construct the phylogenetic max likelihood tree of the above alignment
     # using FastTree[MP]:
     print( "Constructing maximum likelihood phylogenetic tree" )
     acc.phyl.tree.file <- paste( prot.acc, '/ml_tree.newick', sep='' )
-    system( paste( phylo.fun.args[[ 'f' ]], '<', acc.filtered.msa.file, '>', acc.phyl.tree.file ) ) 
+    system( paste( phylo.fun.args[[ 'f' ]], '<', acc.msa.chosen.file, '>', acc.phyl.tree.file ) ) 
 
     # Compute probability distributions for GO terms of the three different
     # types 'biological_process', 'cellular_component', and
@@ -134,6 +157,9 @@ for ( prot.acc in accs ) {
     )
     acc.go.predictions <- setNames(
       lapply( go.types, function( go.type ) {
+
+        print( paste( 'Computing function predictions for GO type', go.type ) )
+
         acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
           acc.go.type.annos[[ go.type ]], 
           all.accessions=setdiff( acc.phyl.tree$tip.label, prot.acc )

@@ -28,6 +28,7 @@ checkTrue( file.exists( project.file.path( 'Protein_1', 'homologs.fasta' ) ) )
 checkTrue( file.exists( project.file.path( 'Protein_1', 'ml_tree.newick' ) ) )
 checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta' ) ) )
 checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta-gb' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta-gb-phylo_filtered' ) ) )
 checkTrue( file.exists( project.file.path( 'Protein_1', 'phyloFun_R_serialized.txt' ) ) )
 
 # clean up:
