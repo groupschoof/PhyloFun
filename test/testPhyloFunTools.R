@@ -144,18 +144,18 @@ res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa.empt
 exp.filterMultipleSequenceAlignment <- NULL
 checkEquals( res.filterMultipleSequenceAlignment, exp.filterMultipleSequenceAlignment ) 
 
-# Test chooseAlignment
-print("Testing chooseAlignment(...)")
-res.chooseAlignment <- chooseAlignment( msa )
-exp.chooseAlignment <- msa
+# Test chooseFilteredAlignment
+print("Testing chooseFilteredAlignment(...)")
+res.chooseAlignment <- chooseFilteredAlignment( msa )
+exp.chooseAlignment <- FALSE
 # expected to choose unfiltered MSA
-checkTrue( msaEqual( res.chooseAlignment, exp.chooseAlignment ) )
-res.chooseAlignment <- chooseAlignment( msa.empty )
-exp.chooseAlignment <- msa.empty
+checkTrue( ! exp.chooseAlignment )
+res.chooseAlignment <- chooseFilteredAlignment( msa.empty )
+exp.chooseAlignment <- FALSE
 # expected to choose unfiltered MSA
-checkTrue( msaEqual( res.chooseAlignment, exp.chooseAlignment ) )
+checkTrue( ! exp.chooseAlignment )
 msa.good <- read.AAStringSet( project.file.path( 'test', 'test_msa_good.fasta' ) )
-res.chooseAlignment <- chooseAlignment( msa.good )
-exp.chooseAlignment <- msa.good[ which( names( msa.good ) != 'E9PUF2' ) ]
+res.chooseAlignment <- chooseFilteredAlignment( msa.good )
+exp.chooseAlignment <- TRUE
 # expected to choose FILTERED MSA
-checkEquals( length( res.chooseAlignment ), length( exp.chooseAlignment ) )
+checkTrue( exp.chooseAlignment )

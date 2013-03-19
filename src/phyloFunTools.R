@@ -185,7 +185,7 @@ filterMultipleSequenceAlignment <- function( msa.xstring.set, min.chars=30 ) {
   }
 }
 
-chooseAlignment <- function( msa.unfiltered,
+chooseFilteredAlignment <- function( msa.unfiltered,
   msa.filtered=filterMultipleSequenceAlignment( msa.unfiltered ),
   min.fraction=0.5, min.no.seqs=2 ) {
   # Chooses the Multiple Sequence Alignment to be used in further analyses.
@@ -201,16 +201,16 @@ chooseAlignment <- function( msa.unfiltered,
   #  min.no.seqs    : The minimum number of sequences msa.filtered has to have
   #                   to be selectable.
   #
-  # Returns: The filtered MSA, if it meets the above criteria, or the
-  # unfiltered one.
+  # Returns: TRUE if the filtered Alignment meets the requirements and thus
+  # should be used, FALSE otherwise.
   #   
   if ( is.null( msa.filtered ) ||
     length( msa.filtered ) < min.no.seqs || 
     length( msa.filtered ) / length( msa.unfiltered ) < min.fraction
   ) {
-    msa.unfiltered
+    FALSE
   } else {
-    msa.filtered
+    TRUE
   }
 }
 
