@@ -1,6 +1,7 @@
 library(RUnit)
 library(tools)
 library(stringr)
+library( RMySQL )
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -18,32 +19,49 @@ src.project.file <- function(...) {
 }
 src.project.file( 'src', 'evaluation.R' )
 src.project.file( 'src', 'phyloFunTools.R' )
+src.project.file( 'src', 'geneOntologySQL.R' )
+
+# Setup:
+go.con <- connectToGeneOntology()
 
 # Test precision
 print("Testing precision(...)")
 true.gos <- c( 'A', 'B', 'C' )
-res.precision <- precision( true.gos, true.gos )
+res.precision <- precision( true.gos, true.gos, go.con=go.con )
 exp.precision <- 1.0
 checkEquals( res.precision, exp.precision ) 
 
-res.precision <- precision( c( true.gos, 'D' ), true.gos )
+res.precision <- precision( c( true.gos, 'D' ), true.gos, go.con=go.con )
 exp.precision <- 0.75
 checkEquals( res.precision, exp.precision ) 
 
-res.precision <- precision( c( 'A', 'B' ), true.gos )
+res.precision <- precision( c( 'A', 'B' ), true.gos, go.con=go.con )
 exp.precision <- 1.0
 checkEquals( res.precision, exp.precision ) 
 
-res.precision <- precision( c( 'D' ), true.gos )
+res.precision <- precision( c( 'D' ), true.gos, go.con=go.con )
 exp.precision <- 0
 checkEquals( res.precision, exp.precision ) 
 
-res.precision <- precision( c( 'A' ), c() )
+res.precision <- precision( c( 'A' ), c(), go.con=go.con )
 exp.precision <- 0
 checkEquals( res.precision, exp.precision ) 
 
-res.precision <- precision( c( ), true.gos )
+res.precision <- precision( c( ), true.gos, go.con=go.con )
 exp.precision <- 1.0
+checkEquals( res.precision, exp.precision ) 
+
+res.precision <- precision( c( ), true.gos, go.con=go.con )
+exp.precision <- 1.0
+checkEquals( res.precision, exp.precision ) 
+
+# pred.gos have just a single false positive:
+pred.gos <- c( "GO:0004252", "GO:0005634", "GO:0004175", "GO:0044699",
+  "GO:0000122" )
+ref.gos <- c( "GO:0004252", "GO:0005634", "GO:0021551" )
+res.precision <- precision( pred.gos, ref.gos, go.con=go.con )
+exp.precision <- 2 / 3
+# print( res.precision )
 checkEquals( res.precision, exp.precision ) 
 
 # Test recall
@@ -158,3 +176,15 @@ res.recallRates <- as.numeric( recallRates( prot.accs, pred.annos, reference.ann
 exp.recallRates <- c( 0.5, 0.5 )
 # print( res.recallRates )
 checkEquals( res.recallRates, exp.recallRates ) 
+
+# Test falsePositives
+print("Testing falsePositives(...)")
+pred.gos <- c( "GO:0004175", "GO:0044699", "GO:0000122" )
+ref.gos <- c( "GO:0004252", "GO:0005634", "GO:0021551" )
+res.falseNegatives <- falsePositives( pred.gos, ref.gos )
+exp.falseNegatives <- "GO:0000122"
+# print( res.falseNegatives )
+checkEquals( res.falseNegatives, exp.falseNegatives ) 
+
+# Clean up:
+dbDisconnect( go.con )
