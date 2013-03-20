@@ -16,13 +16,18 @@ precision <- function( predicted.gos, true.gos,
   # Precision for empty true.gos is always One.
   #   
   pgs <- unique( predicted.gos )
-  tgs <- unique( true.gos )
-  tp <- intersect( tgs, pgs )
-  fps <- falsePositives( pgs, tgs, go.con=go.con )
   if ( length( pgs ) == 0 )
     1
-  else
-    length( tp ) / ( length( tp ) + length( fps ) )
+  else {
+    tgs <- unique( true.gos )
+    tp <- intersect( tgs, pgs )
+    fps <- falsePositives( pgs, tgs, go.con=go.con )
+    denom <- length( tp ) + length( fps )
+    if ( denom == 0 )
+      1
+    else
+      length( tp ) / ( denom )
+  }
 }
 
 falsePositives <- function( predicted.gos, true.gos, 
