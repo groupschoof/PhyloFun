@@ -247,3 +247,26 @@ filterPhylogeneticTree <- function( phyl.tree, leaves.to.retain,
     intersect( leaves.to.retain, phyl.tree$tip.label[ curr.leaves ] )
   )
 }
+
+msaEqual <- function( msa.one, msa.two ) {
+  # Compares two multiple sequence alignments 'msa.one' and 'msa.two' for
+  # identity. Before comparison each sequence is sanitized removing all blank
+  # characters.
+  #
+  # Args:
+  #  msa.one : The first MSA 
+  #  msa.two : The second MSA
+  #
+  # Returns: TRUE if both MSAs have the same number of sequences and if each
+  # position has the same sequences.
+  #   
+  sanitize <- function( seqnc ) gsub( '\\s', '', seqnc )
+  if ( length( msa.one ) != length( msa.two ) ) {
+    FALSE
+  } else {
+    all( as.logical( lapply( 1:length( msa.one ), function( i ) {
+      sanitize( toString( msa.one[ i ] ) ) ==
+      sanitize( toString( msa.two[ i ] ) )
+    }) ) )
+  }
+}

@@ -122,17 +122,6 @@ checkEquals( names( res.uniqueHomologs ), exp.unique.hmlgs.names )
 # clean up:
 unlink( 'tmp.fasta' )
 
-# compare Multiple Sequence Alignments (MSAs):
-msaEqual <- function( msa.one, msa.two ) {
-  if ( length( msa.one ) != length( msa.two ) ) {
-    FALSE
-  } else {
-    all( as.logical( lapply( 1:length( msa.one ), function( i ) {
-      toString( msa.one[ i ] ) == toString( msa.two[ i ] ) 
-    }) ) )
-  }
-}
-
 # Test filterMultipleSequenceAlignment
 print("Testing filterMultipleSequenceAlignment(...)")
 msa <- read.AAStringSet( project.file.path( 'test', 'test_msa.fasta' ) )

@@ -76,7 +76,8 @@ falsePositiveRate <- function( predicted.gos, true.gos ) {
   length( setdiff( pgs, tgs ) ) / length( pgs )
 }
 
-fScore <- function( predicted.gos, true.gos, beta.param=1 ) {
+fScore <- function( predicted.gos, true.gos, beta.param=1,
+  go.con=connectToGeneOntology() ) {
   # Computes the weighted harmonic mean of precision and recall as a quality
   # measure of predicted.gos. The higher beta.param the more emphasis is put on
   # recall than on precision.
@@ -86,11 +87,13 @@ fScore <- function( predicted.gos, true.gos, beta.param=1 ) {
   #  true.gos      : The set of experimentally verified GO terms.
   #  beta.param    : The factor of how much more emphasis should be put on
   #                  recall than on precision.
+  #  go.con        : database connection to the Gene Ontology as returned by
+  #                  function connectToGeneOntology()
   #
   # Returns: The weighted harmonic mean of precision and recall as a numeric
   # between Zero and One.
   #   
-  prcsn <- precision( predicted.gos, true.gos )
+  prcsn <- precision( predicted.gos, true.gos, go.con=go.con )
   rcll <- recall( predicted.gos, true.gos )
   bp <- beta.param^2
   if ( 0 == (prcsn + rcll) )
@@ -191,7 +194,7 @@ rates <- function( protein.accessions, predicted.annotations,
 fScores <- function( protein.accessions, predicted.annotations,
   annotation.type='GO', beta.param=1,
   reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
-    protein.accessions ) ) {
+    protein.accessions ), go.con=connectToGeneOntology(), close.go.con=TRUE ) {
   # Computes the fScores for all predicted annotations.
   #
   # Args:
@@ -207,14 +210,23 @@ fScores <- function( protein.accessions, predicted.annotations,
   #  reference.annotations : The annotations of the reference proteins, default
   #                          experimentally verified GO annotations as
   #                          retrievable from UniProt.
+  #  go.con                : Database connection to the Gene Ontology as
+  #                          returned by function connectToGeneOntology()
+  #  close.go.con          : If set to TRUE the database connection 'go.con'
+  #                          will be automatically closed after executing this
+  #                          function and before returning its results.
   #
   # Returns: A named list with the predictions' fScores of each reference
   # protein. The fScore NA is assigned whenever no reference annotations are
   # found.
   #   
-  rate.funk <- function ( pa, oa ) fScore( pa, oa, beta.param=beta.param )
-  rates( protein.accessions, predicted.annotations, rate.funk, annotation.type,
-    reference.annotations )
+  rate.funk <- function ( pa, oa ) fScore( pa, oa, beta.param=beta.param,
+    go.con=go.con )
+  rts <- rates( protein.accessions, predicted.annotations, rate.funk,
+    annotation.type, reference.annotations )
+  if ( close.go.con ) dbDisconnect( go.con )
+  # return
+  rts
 }
 
 falsePositiveRates <- function( protein.accessions, predicted.annotations,
