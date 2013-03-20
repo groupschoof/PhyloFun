@@ -1,11 +1,16 @@
-precision <- function( predicted.gos, true.gos ) {
+precision <- function( predicted.gos, true.gos,
+  go.con=connectToGeneOntology() ) {
   # 'precision' is a statistical quality measure of predicted Gene Ontology
   # (GO) terms:
-  # precision( predicted.gos ) = | true_positives | / | predicted.gos |
+  # precision( predicted.gos ) = | true_positives | / ( | true_positives | + | false_negatives | )
+  # Predicted GO terms that are parents of reference terms are NOT counted as
+  # false negatives.
   #
   # Args:
   #  predicted.gos : The set of predicted GO terms
   #  true.gos      : The set of experimentally verified GO terms.
+  #  go.con        : A database connection to Gene Ontology as returned by
+  #                  function connectToGeneOntology().
   #
   # Returns: The precision of the prediction as a numeric between Zero and One.
   # Precision for empty true.gos is always One.
@@ -13,7 +18,31 @@ precision <- function( predicted.gos, true.gos ) {
   pgs <- unique( predicted.gos )
   tgs <- unique( true.gos )
   tp <- intersect( tgs, pgs )
-  if ( length( pgs ) == 0 ) 1 else length( tp ) / length( pgs )
+  fps <- falsePositives( pgs, tgs, go.con=go.con )
+  if ( length( pgs ) == 0 )
+    1
+  else
+    length( tp ) / ( length( tp ) + length( fps ) )
+}
+
+falsePositives <- function( predicted.gos, true.gos, 
+  go.con=connectToGeneOntology() ) {  
+  # Identifies those GO terms in 'predicted.gos' that are not equal to any term
+  # in 'true.gos' nor are any of their parent terms.
+  #
+  # Args:
+  #  predicted.gos : The GO terms that have been predicted
+  #  true.gos      : The reference GO terms
+  #  go.con        : A database connection to the Gene Ontology as returned by
+  #                  function connectToGeneOntology().
+  #
+  # Returns: Those predicted GO terms that are false positives.
+  #   
+  true.gos.tbl <- goTermsForAccessionWithLevel( true.gos, con=go.con )
+  all.parents <- do.call( 'rbind', lapply( true.gos.tbl$id, parentGoTerms,
+    con=go.con ) )
+  fn.candidates <- setdiff( predicted.gos, true.gos )
+  setdiff( fn.candidates, all.parents$acc )
 }
 
 recall <- function( predicted.gos, true.gos ) {
