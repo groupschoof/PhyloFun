@@ -122,6 +122,15 @@ checkEquals( names( res.uniqueHomologs ), exp.unique.hmlgs.names )
 # clean up:
 unlink( 'tmp.fasta' )
 
+# Test msaEqual
+print("Testing msaEqual(...)")
+msa.a <- read.AAStringSet( project.file.path( 'test', 'test_msa_equal_A.fasta' ) )
+msa.b <- read.AAStringSet( project.file.path( 'test', 'test_msa_equal_B.fasta' ) )
+msa.c <- read.AAStringSet( project.file.path( 'test', 'test_msa_equal_C.fasta' ) )
+checkTrue( msaEqual( msa.a, msa.b ) )
+checkTrue( ! msaEqual( msa.a, msa.c ) )
+checkTrue( ! msaEqual( msa.b, msa.c ) )
+
 # Test filterMultipleSequenceAlignment
 print("Testing filterMultipleSequenceAlignment(...)")
 msa <- read.AAStringSet( project.file.path( 'test', 'test_msa.fasta' ) )
