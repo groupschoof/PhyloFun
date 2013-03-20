@@ -104,21 +104,28 @@ for ( prot.acc in accs ) {
 
     # Filter the MSA for highly conserved regions using GBlocks:
     print( "Filtering MSA for highly conserved regions" )
-    acc.filtered.msa.file <- paste( acc.msa.file, '-gb', sep='' )
+    acc.gblocks.msa.file <- paste( acc.msa.file, '-gb', sep='' )
     system( paste( 'Gblocks', acc.msa.file, '-b5=h -t=p -p=n' ) )
 
     # Phylo-Filter the GBlocks result discarding empty sequences or those
     # consisting of too many gap characters:
-    acc.msa.phylo.filtered <- filterMultipleSequenceAlignment( read.AAStringSet( acc.filtered.msa.file ) )
+    acc.gblocks.msa <- read.AAStringSet( acc.gblocks.msa.file ) 
+    acc.msa.phylo.filtered <- filterMultipleSequenceAlignment( acc.gblocks.msa )
     # Should we use the original unfiltered MSA or the MSA filtered in two
     # steps (Gblocks followed by phyloFun's filter)?
     acc.msa.chosen.file <- if ( chooseFilteredAlignment(
         read.AAStringSet( acc.msa.file ),
         acc.msa.phylo.filtered
       ) ) {
-      acc.msa.phylo.filtered.file <- paste( acc.filtered.msa.file, '-phylo_filtered', sep='' )
-      write.XStringSet( acc.msa.phylo.filtered, acc.msa.phylo.filtered.file )
-      acc.msa.phylo.filtered.file
+      # Only write out PhyloFun filtered MSA, if it is different from the
+      # Gblocks' filtered one:
+      if ( ! msaEqual( acc.gblocks.msa, acc.msa.phylo.filtered ) ) {
+        acc.msa.phylo.filtered.file <- paste( acc.gblocks.msa.file, '-phylo_filtered', sep='' )
+        write.XStringSet( acc.msa.phylo.filtered, acc.msa.phylo.filtered.file )
+        acc.msa.phylo.filtered.file
+      } else {
+        acc.gblocks.msa.file
+      }
     } else {
       acc.msa.file
     }

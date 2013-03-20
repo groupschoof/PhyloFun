@@ -2,9 +2,9 @@ precision <- function( predicted.gos, true.gos,
   go.con=connectToGeneOntology() ) {
   # 'precision' is a statistical quality measure of predicted Gene Ontology
   # (GO) terms:
-  # precision( predicted.gos ) = | true_positives | / ( | true_positives | + | false_negatives | )
+  # precision( predicted.gos ) = | true_positives | / ( | true_positives | + | false_positives | )
   # Predicted GO terms that are parents of reference terms are NOT counted as
-  # false negatives.
+  # false positives.
   #
   # Args:
   #  predicted.gos : The set of predicted GO terms
