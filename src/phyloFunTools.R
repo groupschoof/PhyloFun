@@ -214,40 +214,6 @@ chooseFilteredAlignment <- function( msa.unfiltered,
   }
 }
 
-filterPhylogeneticTree <- function( phyl.tree, leaves.to.retain,
-  leaves.to.check=1:length( phyl.tree$tip.label ), leave.annos,
-  annotation.type='GO' ) {
-  curr.leaf.parnt <- phyl.tree$edge[
-    phyl.tree$edge[ , 2 ] == leaves.to.check[[ 1 ]], 1, drop=T
-  ][[ 1 ]]
-  zero.len.edges <- phyl.tree$edge[
-    which( phyl.tree$edge.length[] == 0.0 ), , drop=F
-  ]
-  curr.leaves <- zero.len.edges[
-    which( zero.len.edges[ , 1 ] == curr.leaf.parnt ), 2
-  ]
-  curr.annos <- leave.annos[
-    annotation.type,
-    intersect( colnames( leave.annos ), phyl.tree$tip.label[ curr.leaves ] ),
-    drop=F
-  ]
-  curr.anno.space <- annotationSpace( curr.annos )
-  curr.leave.labels.to.retain <- union(
-    as.character(
-      lapply( curr.anno.space, function( anno.spc ) {
-        leave.ind <- which( as.logical(
-          lapply(
-            curr.annos[ annotation.type, ],
-            function( iter.anno ) identical( iter.anno, anno.spc )
-          )
-        ) )[[ 1 ]]
-       colnames( curr.annos[ annotation.type, leave.ind ] )
-      })
-    ),
-    intersect( leaves.to.retain, phyl.tree$tip.label[ curr.leaves ] )
-  )
-}
-
 msaEqual <- function( msa.one, msa.two ) {
   # Compares two multiple sequence alignments 'msa.one' and 'msa.two' for
   # identity.
