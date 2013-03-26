@@ -30,9 +30,9 @@ jack.mat <- parseJackhmmerTable( jr )
 checkTrue( ! is.null( jack.mat ) )
 checkEquals( class(jack.mat) , 'matrix' )
 checkEquals( nrow(jack.mat), length(jr) - 3 )
-checkEquals( colnames(jack.mat), c( "hit.name", "query.name" ) )
+checkEquals( colnames(jack.mat), c( "hit.name", "query.name", "bit.score" ) )
 checkEquals( jack.mat[ 1, ],
-  list( "hit.name"="sp|B5YXA4|DNAA_ECO5E", "query.name"="Protein_1" )
+  list( "hit.name"="sp|B5YXA4|DNAA_ECO5E", "query.name"="Protein_1", "bit.score"="697.8" )
 )
 
 # Test extractUniprotAccessionFromUniprotName
@@ -131,6 +131,26 @@ checkTrue( msaEqual( msa.a, msa.b ) )
 checkTrue( ! msaEqual( msa.a, msa.c ) )
 checkTrue( ! msaEqual( msa.b, msa.c ) )
 
+# Test bestHits
+print("Testing bestHits(...)")
+seq.srch.rslt <- matrix( c( 'Query_A', 'Query_A', 'Query_A', 'Query_B',
+    'Hit_1', 'Hit_2', 'Hit_3', 'Hit_4', 4, 3, 2, 4 ),
+  ncol=3, nrow=4,
+  dimnames=list( c(), c( 'query.name', 'hit.name', 'bit.score' ) )
+)
+res.bestHits <- bestHits( seq.srch.rslt, 'Query_A', 2 )
+exp.bestHits <- matrix( c( 'Query_A', 'Query_A', 'Hit_1', 'Hit_2', 4, 3 ),
+  nrow=2, ncol=3, dimnames=list( c(),
+    c( 'query.name', 'hit.name', 'bit.score' ) )
+)
+checkEquals( res.bestHits, exp.bestHits ) 
+res.bestHits <- bestHits( seq.srch.rslt, 'Query_A', 4 )
+exp.bestHits <- matrix( c( 'Query_A', 'Query_A', 'Query_A', 'Hit_1', 'Hit_2', 'Hit_3',  4, 3, 2 ),
+  nrow=3, ncol=3, dimnames=list( c(),
+    c( 'query.name', 'hit.name', 'bit.score' ) )
+)
+checkEquals( res.bestHits, exp.bestHits ) 
+
 # Test filterMultipleSequenceAlignment
 print("Testing filterMultipleSequenceAlignment(...)")
 msa <- read.AAStringSet( project.file.path( 'test', 'test_msa.fasta' ) )
@@ -157,20 +177,3 @@ res.chooseAlignment <- chooseFilteredAlignment( msa.good )
 exp.chooseAlignment <- TRUE
 # expected to choose FILTERED MSA
 checkTrue( exp.chooseAlignment )
-
-# Test bestHits
-print("Testing bestHits(...)")
-res.bestHits <- bestHits( NULL )
-exp.bestHits <- NULL
-checkEquals( res.bestHits, exp.bestHits ) 
-seq.srch.rslt <- matrix( c( 'Query_A', 'Query_A', 'Query_A', 'Query_B',
-    'Hit_1', 'Hit_2', 'Hit_3', 'Hit_4', 4, 3, 2, 4 ),
-  ncol=3, nrow=4,
-  dimnames=list( c(), c( 'query.name', 'hit.name', 'bit.score' ) )
-)
-res.bestHits <- bestHits( seq.search.reslt.mtrx )
-exp.bestHits <- matrix( c( 'Query_A', 'Query_A', 'Hit_1', 'Hit_2', 4, 3 ),
-  nrow=2, ncol=3, dimnames=list( c(),
-    c( 'query.name', 'hit.name', 'bit.score' ) )
-)
-checkEquals( res.bestHits, exp.bestHits ) 
