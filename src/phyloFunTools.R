@@ -1,5 +1,7 @@
 parseJackhmmerTable <- function( jr,
-  skip.lines=3, parse.line=list( '1'='hit.name', '3'='query.name' ) ) {
+  skip.lines=3, parse.line=list( '1'='hit.name', '3'='query.name',
+    '6'='bit.score' )
+  ) {
   # Parses the table output of HMMER-3's Jackhmmer. Reads out hit accessions
   # and query accessions.
   #
