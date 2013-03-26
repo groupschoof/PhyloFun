@@ -157,3 +157,20 @@ res.chooseAlignment <- chooseFilteredAlignment( msa.good )
 exp.chooseAlignment <- TRUE
 # expected to choose FILTERED MSA
 checkTrue( exp.chooseAlignment )
+
+# Test bestHits
+print("Testing bestHits(...)")
+res.bestHits <- bestHits( NULL )
+exp.bestHits <- NULL
+checkEquals( res.bestHits, exp.bestHits ) 
+seq.srch.rslt <- matrix( c( 'Query_A', 'Query_A', 'Query_A', 'Query_B',
+    'Hit_1', 'Hit_2', 'Hit_3', 'Hit_4', 4, 3, 2, 4 ),
+  ncol=3, nrow=4,
+  dimnames=list( c(), c( 'query.name', 'hit.name', 'bit.score' ) )
+)
+res.bestHits <- bestHits( seq.search.reslt.mtrx )
+exp.bestHits <- matrix( c( 'Query_A', 'Query_A', 'Hit_1', 'Hit_2', 4, 3 ),
+  nrow=2, ncol=3, dimnames=list( c(),
+    c( 'query.name', 'hit.name', 'bit.score' ) )
+)
+checkEquals( res.bestHits, exp.bestHits ) 

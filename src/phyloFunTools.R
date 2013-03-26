@@ -28,6 +28,38 @@ parseJackhmmerTable <- function( jr,
   )
 }
 
+bestHits <- function( seq.search.reslt.mtrx, query.acc, n.best.hits=1000,
+  query.acc.column='query.name', sort.column.name='bit.score' ) {
+  # Filters the sequence similarity search result table for the n.best.hits
+  # using column 'sort.column.name' to sort the results.
+  #
+  # Args:
+  #  seq.search.reslt.mtrx : The matrix holding the sequence similarity search
+  #                          results. 
+  #  query.acc             : The accession of the query protein to obtain hits
+  #                          for.
+  #  n.best.hits           : The number of best hits to select, default is 1000
+  #  sort.column.name      : The name or index of the column to use for sorting
+  #                          the query's hits by.
+  #
+  # Returns: A matrix with the same columns as seq.search.reslt.mtrx and the
+  # subset of maximum n.best.hits rows which hold the sequence similarity
+  # search hits for query.acc. The returned Hits are the all or the n.best.hits
+  # best ones according to column sort.column.name.
+  #   
+  query.rslts <- seq.search.reslt.mtrx[
+    which( seq.search.reslt.mtrx[ , query.acc.column ] == query.acc ), , drop=F
+  ]
+  if ( nrow( query.rslts ) > n.best.hits ) {
+    query.rslts[
+      order( as.numeric( query.rslts[ , sort.column.name ] ), decreasing=T ),
+      , drop=F
+    ][ 1:n.best.hits, ]
+  } else {
+    query.rslts
+  }
+}
+
 extractUniprotAccessionFromUniprotName <- function( 
   uniprot.name ) {
   # Extracts the string in between "|" and returns it.
