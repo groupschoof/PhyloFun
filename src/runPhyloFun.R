@@ -31,7 +31,12 @@ src.project.file( "src", "domainArchitectureSimilarity.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
-print( "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl [ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ] [ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified ) ]" )
+print( paste(
+  "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl",
+  "[ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]",
+  "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified ) ]",
+  "[ -n n.best.hits Maximum number of best scoring results from sequence similarity search to use for each query protein. (default 1000) ]"
+) )
 print( '' )
 print(
   paste( "WARNING: The PhyloFun pipeline uses other programs to generate multiple sequence alignments (MAFFT),",
@@ -42,7 +47,7 @@ print(
 )
 
 # Input
-phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP' ) )
+phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP', 'n'=1000 ) )
 
 # Evidence codes of GO annotations to accept:
 go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
@@ -76,7 +81,7 @@ lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 
 # For each query protein, do:
 for ( prot.acc in accs ) {
-  homologs <- jr[ which( jr[ , 'query.name' ] == prot.acc ), , drop=F ]
+  homologs <- bestHits( jr, prot.acc, n.best.hits=phylo.fun.args[[ 'n' ]] )
   if ( nrow( homologs ) > 0 ) {
     orig.acc <- names( accs[ accs[] == prot.acc ] )
     if ( ! file.exists( prot.acc ) )
