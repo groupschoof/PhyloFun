@@ -29,7 +29,7 @@ print( "WARNING: Make sure the _complete_ sequence names in the FASTA file are _
 trailing.args <- commandArgs(trailingOnly = TRUE)
 
 # Read fasta:
-aa.seqs <- sapply( read.AAStringSet( trailing.args[[ 1 ]] ), function(s) toString(s) )
+aa.seqs <- sapply( readAAStringSet( trailing.args[[ 1 ]] ), function(s) toString(s) )
 print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[ 1 ]]) )
 
 # Load Uniprot function (InterPro and GO) Annotations:

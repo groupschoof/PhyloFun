@@ -57,7 +57,7 @@ go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
   }
 
 # Read fasta:
-aa.seqs <- sapply( read.AAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) replaceSelenocystein( toString(s) ) )
+aa.seqs <- sapply( readAAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) replaceSelenocystein( toString(s) ) )
 print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
 
 # Parse Jackhmmer results:
@@ -99,7 +99,7 @@ for ( prot.acc in accs ) {
     print( "Generating multiple sequence alignment (MSA)" )
     acc.hmlgs <- setNames( c( hit.seqs, aa.seqs[ orig.acc ] ), c( names(hit.seqs), prot.acc ) )
     acc.hmlgs.file <- paste( prot.acc, '/homologs.fasta', sep='' )
-    write.XStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
+    writeXStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
     acc.msa.file <- paste( prot.acc, "/msa.fasta", sep="" )
     system( paste( "mafft --auto", acc.hmlgs.file, ">", acc.msa.file ) )
 
@@ -114,19 +114,19 @@ for ( prot.acc in accs ) {
 
     # Phylo-Filter the GBlocks result discarding empty sequences or those
     # consisting of too many gap characters:
-    acc.gblocks.msa <- read.AAStringSet( acc.gblocks.msa.file ) 
+    acc.gblocks.msa <- readAAStringSet( acc.gblocks.msa.file ) 
     acc.msa.phylo.filtered <- filterMultipleSequenceAlignment( acc.gblocks.msa )
     # Should we use the original unfiltered MSA or the MSA filtered in two
     # steps (Gblocks followed by phyloFun's filter)?
     acc.msa.chosen.file <- if ( chooseFilteredAlignment(
-        read.AAStringSet( acc.msa.file ),
+        readAAStringSet( acc.msa.file ),
         acc.msa.phylo.filtered
       ) ) {
       # Only write out PhyloFun filtered MSA, if it is different from the
       # Gblocks' filtered one:
       if ( ! msaEqual( acc.gblocks.msa, acc.msa.phylo.filtered ) ) {
         acc.msa.phylo.filtered.file <- paste( acc.gblocks.msa.file, '-phylo_filtered', sep='' )
-        write.XStringSet( acc.msa.phylo.filtered, acc.msa.phylo.filtered.file )
+        writeXStringSet( acc.msa.phylo.filtered, acc.msa.phylo.filtered.file )
         acc.msa.phylo.filtered.file
       } else {
         acc.gblocks.msa.file
@@ -199,21 +199,10 @@ for ( prot.acc in accs ) {
     close( f )
 
     # Human readable results:
-    go.terms <- unlist(
-      lapply( names( acc.go.predictions ), function( go.type ) {
-        agps <- acc.go.predictions[[ go.type ]]
-        if ( ! is.null( agps ) ) {
-          preds <- agps$pred[[ quoted.acc ]][ 1, ]
-          annotationToCharacterVector( names( sort( preds )[ length(preds) ] ) )
-        }
-      })
-    )
-    go.con <- connectToGeneOntology()
-    write.table( goTermsForAccessionWithLevel( go.terms, con=go.con ),
+    write.table( goTermPredictionTable( acc.go.predictions, quoted.acc ),
       file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
       row.names=F
     )
-    dbDisconnect( go.con )
 
     print( paste( "Finished computations for", orig.acc ) )
   }

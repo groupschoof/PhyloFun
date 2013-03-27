@@ -178,11 +178,11 @@ uniqueHomologs <- function( path.2.homlgs.fasta,
   #
   # Returns: TRUE if no error occurred.
   #   
-  hmlgs <- read.AAStringSet( path.2.homlgs.fasta )
+  hmlgs <- readAAStringSet( path.2.homlgs.fasta )
   dplcts <- duplicated( names( hmlgs ) )
   if ( any( dplcts ) ) {
     uniq.hmlgs <- hmlgs[ - which( dplcts ) ]
-    write.XStringSet( uniq.hmlgs, path.2.unique.hmlgs.fasta )
+    writeXStringSet( uniq.hmlgs, path.2.unique.hmlgs.fasta )
     if ( print.warning ) {
       warning( "Removed duplicated Accessions:",
         names( hmlgs )[ which( dplcts ) ]

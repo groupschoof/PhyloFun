@@ -62,8 +62,24 @@ res.predictionsToCharacterVector <- predictionsToCharacterVector( phylo.fun.rslt
 checkEquals( res.predictionsToCharacterVector, exp.predictionsToCharacterVector ) 
 checkEquals( predictionsToCharacterVector( NULL, 'Query_Q9XWC3' ), 'unknown' )
 checkEquals( predictionsToCharacterVector( list(), 'Query_Q9XWC3' ), 'unknown' )
-phylo.fun.rslt$biological_process$pred[ '"Query_Q9XWC3"' ][[1]][[ 1, 'unknown' ]] <- 0.6
-checkEquals( predictionsToCharacterVector( phylo.fun.rslt, 'Query_Q9XWC3' ), 'unknown')
+phylo.fun.rslt.unknown <- phylo.fun.rslt
+phylo.fun.rslt.unknown$biological_process$pred[ '"Query_Q9XWC3"' ][[1]][[ 1, 'unknown' ]] <- 0.6
+checkEquals( predictionsToCharacterVector( phylo.fun.rslt.unknown, 'Query_Q9XWC3' ), 'unknown')
+
+# Test goTermPredictionTable
+print("Testing goTermPredictionTable(...)")
+res.goTermPredictionTable <- goTermPredictionTable( phylo.fun.rslt, 'Query_Q9XWC3' )
+checkEquals( class( res.goTermPredictionTable ), 'data.frame' ) 
+checkEquals( ncol( res.goTermPredictionTable ), 8 ) 
+checkTrue( nrow( res.goTermPredictionTable ) > 0 )
+res.goTermPredictionTable <- goTermPredictionTable( phylo.fun.rslt.unknown, 'Query_Q9XWC3' )
+checkEquals( res.goTermPredictionTable,
+  matrix(
+    c( NA, 'unknown', NA, NA, NA, NA, NA, NA ), byrow=T, ncol=8,
+    dimnames=list( c(), c( "id", "name", "term_type", "acc", "is_obsolete",
+      "is_root", "is_relation", "relation_distance" ) )
+  )
+)
 
 # Initialize a database connection to the Gene Ontology
 go.con <- connectToGeneOntology()

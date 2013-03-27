@@ -80,7 +80,7 @@ checkTrue( is.null( sanitizeUniprotAccession( NULL ) ) )
 print("Testing uniqueHomologs(...)")
 uniqueHomologs( project.file.path( 'test', 'non_unique_hmlgs.fasta' ),
   'tmp.fasta', FALSE )
-res.uniqueHomologs <- read.AAStringSet( 'tmp.fasta' )
+res.uniqueHomologs <- readAAStringSet( 'tmp.fasta' )
 checkTrue( ! is.null( res.uniqueHomologs ) )
 checkEquals( length( res.uniqueHomologs ), 167 )
 exp.unique.hmlgs.names <- c( "Q8K4K1", "Q9S744", "Q9FYK2", "Q8VHC5", "Q9SRE6",
@@ -124,9 +124,9 @@ unlink( 'tmp.fasta' )
 
 # Test msaEqual
 print("Testing msaEqual(...)")
-msa.a <- read.AAStringSet( project.file.path( 'test', 'test_msa_equal_A.fasta' ) )
-msa.b <- read.AAStringSet( project.file.path( 'test', 'test_msa_equal_B.fasta' ) )
-msa.c <- read.AAStringSet( project.file.path( 'test', 'test_msa_equal_C.fasta' ) )
+msa.a <- readAAStringSet( project.file.path( 'test', 'test_msa_equal_A.fasta' ) )
+msa.b <- readAAStringSet( project.file.path( 'test', 'test_msa_equal_B.fasta' ) )
+msa.c <- readAAStringSet( project.file.path( 'test', 'test_msa_equal_C.fasta' ) )
 checkTrue( msaEqual( msa.a, msa.b ) )
 checkTrue( ! msaEqual( msa.a, msa.c ) )
 checkTrue( ! msaEqual( msa.b, msa.c ) )
@@ -153,11 +153,11 @@ checkEquals( res.bestHits, exp.bestHits )
 
 # Test filterMultipleSequenceAlignment
 print("Testing filterMultipleSequenceAlignment(...)")
-msa <- read.AAStringSet( project.file.path( 'test', 'test_msa.fasta' ) )
+msa <- readAAStringSet( project.file.path( 'test', 'test_msa.fasta' ) )
 res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa )
 exp.filterMultipleSequenceAlignment <- msa[ 1 ]
 checkTrue( msaEqual( res.filterMultipleSequenceAlignment, exp.filterMultipleSequenceAlignment ) ) 
-msa.empty <- read.AAStringSet( project.file.path( 'test', 'test_msa_empty.fasta' ) )
+msa.empty <- readAAStringSet( project.file.path( 'test', 'test_msa_empty.fasta' ) )
 res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa.empty )
 exp.filterMultipleSequenceAlignment <- NULL
 checkEquals( res.filterMultipleSequenceAlignment, exp.filterMultipleSequenceAlignment ) 
@@ -172,7 +172,7 @@ res.chooseAlignment <- chooseFilteredAlignment( msa.empty )
 exp.chooseAlignment <- FALSE
 # expected to choose unfiltered MSA
 checkTrue( ! exp.chooseAlignment )
-msa.good <- read.AAStringSet( project.file.path( 'test', 'test_msa_good.fasta' ) )
+msa.good <- readAAStringSet( project.file.path( 'test', 'test_msa_good.fasta' ) )
 res.chooseAlignment <- chooseFilteredAlignment( msa.good )
 exp.chooseAlignment <- TRUE
 # expected to choose FILTERED MSA

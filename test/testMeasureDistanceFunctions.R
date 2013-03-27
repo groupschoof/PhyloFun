@@ -29,7 +29,7 @@ f <- file( project.file.path("test", "test_annotations.tbl"), "r" )
 annos <- unserialize(f)
 close(f)
 aa.seqs <- sapply(
-  read.AAStringSet( project.file.path("test", "measureDistanceFunctions.fasta") ),
+  readAAStringSet( project.file.path("test", "measureDistanceFunctions.fasta") ),
   function(s) toString(s)
 )
 blast.rslt.tbl <- matrix(

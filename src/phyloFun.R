@@ -378,6 +378,49 @@ predictionsToCharacterVector <- function( go.prediction.list,
   if ( is.null( annots ) || length( annots ) == 0 ) unknown.annot else annots 
 }
 
+goTermPredictionTable <- function( go.prediction.list, query.protein.accession,
+  unknown.annot='unknown', go.con=connectToGeneOntology(),
+  close.db.connection=TRUE ) {
+  # Finds for each category of the Gene Ontology 'biological_process',
+  # 'cellular_component', and 'molecular_function' the most appropriate
+  # annotation in the PhyloFun result 'go.prediction.list'. Most appropriate is
+  # defined in function mostAppropriateAnnotation(…). The resulting GO term
+  # accessions are used to query the Gene Ontology database and all available
+  # information is compiled into a table. See function
+  # goTermsForAccessionWithLevel(…) for more details.
+  #
+  # Args:
+  #  go.prediction.list : PhyloFun result list with entries for each GO type
+  #                       'biological_process', 'cellular_component', and
+  #                       'molecular_function'
+  #  query.protein.accession : The query protein's accession.
+  #  unknown.annot      : The string used as the empty annotation.
+  #  go.con : The database connection to the Gene Ontology as returned by
+  #                       function connectToGeneOntology.
+  #  close.db.connection : If set to TRUE, the database connection go.con will
+  #                       be closed automatically.
+  #
+  # Returns: A matrix with columns "id", "name", "term_type", "acc",
+  # "is_obsolete", "is_root", "is_relation", "relation_distance" in which each
+  # annotated Gene Ontology (GO) term fills up a row. If and only if no GO
+  # terms are annotated the UNKNOWN matrix is returned.
+  #   
+  go.accs <- predictionsToCharacterVector( go.prediction.list,
+    query.protein.accession, unknown.annot=unknown.annot )
+  go.tbl <- if ( length( go.accs ) == 1 && go.accs == unknown.annot ) 
+    matrix(
+      c( NA, 'unknown', NA, NA, NA, NA, NA, NA ), byrow=T, ncol=8,
+      dimnames=list( c(), c( "id", "name", "term_type", "acc", "is_obsolete",
+        "is_root", "is_relation", "relation_distance" ) )
+    )
+  else 
+    goTermsForAccessionWithLevel( go.accs, con=go.con )
+  # Close DB connection?
+  if ( close.db.connection ) dbDisconnect( go.con )
+  # return
+  go.tbl
+}
+
 goAnnotationSpaceList <- function( go.type.annotation.matrices,
   unknown.annot='unknown' ) {
   # Generates the spaces of unique annotations for each GO term type
