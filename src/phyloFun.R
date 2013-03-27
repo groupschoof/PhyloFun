@@ -294,6 +294,90 @@ annotationToCharacterVector <- function( compound.annotation ) {
   strsplit( compound.annotation, '\\s*&\\s*' )[[ 1 ]]
 }
 
+mostAppropriateAnnotation <- function( named.annotation.score.vector,
+  unknown.annot='unknown' ) {
+  # Returns the most appropriate annotation, fulfilling the following three
+  # criteria:
+  # 1. It is one of the highest scoring ( There might be more than one! )
+  # 2. Preferably it is not the unknown.annot
+  # 3. Preferably it is the longest annotation, that is it has the highest
+  #    number of terms annotated.
+  #
+  # Args:
+  #  named.annotation.score.vector : A vector of posterior probabilities whose
+  #     names are the actual compound annotations. This vector is the single entry
+  #     of a typical PhyloFun result list for a given Gene Ontology term type (
+  #     i.e. 'molecular_function' ).  
+  #  unknown.annot : The string used to represent the empty annotation
+  #     'UNKNOWN'.
+  #
+  # Returns: The selected annotation as character vector.
+  #   
+  score.srt <- sort( named.annotation.score.vector )
+  max.ind <- length( score.srt )
+  max.scr <- score.srt[[ max.ind ]]
+  # Check for equally scoring annots, prefer any other than 'unknown' in that
+  # case:
+  best.annos <- score.srt[ which( score.srt == max.scr ) ]
+  selected.ind <- if ( length( best.annos ) > 1 ) {
+    no.unknown <- setdiff( names( best.annos ), unknown.annot )
+    lns <- sort(
+      setNames( as.integer( lapply( no.unknown, nchar ) ), no.unknown )
+    )
+    names( lns[ length(lns) ] )
+  } else
+    max.ind
+  # Return annotated terms as a character vector:
+  annotationToCharacterVector(
+    names( score.srt[ selected.ind ] )
+  )
+}
+
+predictionsToCharacterVector <- function( go.prediction.list,
+  query.protein.accession, unknown.annot='unknown' ) {
+  # For each predicted Gene Ontology annotation the most appropriate is
+  # selected and returned as a character vector of the anntotated GO terms. 
+  #
+  # Args:
+  #  go.prediction.list : PhyloFun result list with entries for each GO type
+  #                       'biological_process', 'cellular_component', and
+  #                       'molecular_function'
+  #  query.protein.accession : The quoted query protein accession, as returned
+  #                       by calling function surroundEachWithQuotes(
+  #                       original.protein.accession ). If this protein
+  #                       accession does not start and end with '"' it will be
+  #                       passed to function surroundEachWithQuotes to quote
+  #                       it.
+  #  unknown.annot      : The string used as the empty annotation.
+  #
+  # Returns: A character vector of annotated GO terms that matched the most
+  # appropriate requirements. The string used to express PhyloFun could not
+  # annotate this query protein ( unknown.annot ) is returned, if and only if
+  # not a single term could be annotated.
+  #   
+  quoted.acc <- if ( grepl( '^".+"$', query.protein.accession ) )
+    query.protein.accession
+  else
+    surroundEachWithQuotes( query.protein.accession )
+  annots <- setdiff(
+    unique(
+      unlist(
+        lapply( names( go.prediction.list ), function( go.type ) {
+          agps <- go.prediction.list[[ go.type ]]
+          if ( ! is.null( agps ) ) {
+            preds <- agps$pred[[ quoted.acc ]][ 1, ]
+            if ( ! is.null( preds ) && length( preds ) > 0 ) {
+              mostAppropriateAnnotation( preds )
+            }
+          }
+        })
+      )
+    ),
+    unknown.annot
+  )
+  if ( is.null( annots ) || length( annots ) == 0 ) unknown.annot else annots 
+}
+
 goAnnotationSpaceList <- function( go.type.annotation.matrices,
   unknown.annot='unknown' ) {
   # Generates the spaces of unique annotations for each GO term type

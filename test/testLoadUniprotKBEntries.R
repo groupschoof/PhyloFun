@@ -256,3 +256,8 @@ checkEquals( ncol( exper.go.annos.550 ),
   length( unique( colnames( exper.go.annos.550 ) ) )
 )
 
+# Test extractRefSeqAccession
+print("Testing extractRefSeqAccession(...)")
+res.extractRefSeqAccession <- extractRefSeqAccession( 'gi|444722022|gb|ELW62727.1|' )
+exp.extractRefSeqAccession <- 'ELW62727.1'
+checkEquals( res.extractRefSeqAccession, exp.extractRefSeqAccession ) 

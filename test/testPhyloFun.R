@@ -33,12 +33,39 @@ fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
 annotation.matrix <- unserialize(fl)
 close(fl)
 
+# Test mostAppropriateAnnotation
+print("Testing mostAppropriateAnnotation(...)")
+preds <- setNames( c( 0.5, 0.5, 0.5 ),
+  c( 'GO:0009267 & GO:0036170 & GO:0036180 & GO:0071216', 'unknown',
+    'GO:0009267 & GO:0036170' )
+)
+res.mostAppropriateAnnotation <- mostAppropriateAnnotation( preds )
+exp.mostAppropriateAnnotation <- c( 'GO:0009267', 'GO:0036170', 'GO:0036180', 'GO:0071216' )
+checkEquals( res.mostAppropriateAnnotation, exp.mostAppropriateAnnotation ) 
+
 # Test tree whose Baysian network representation has nodes with unreachable
 # states:
 phylo.tree.unreachbl.stts <- read.tree(
   project.file.path( 'test', 'test_tree_unreachbl_stts.newick')
 )
 
+# Test predictionsToCharacterVector
+print("Testing predictionsToCharacterVector(...)")
+f <- file( project.file.path( 'test', 'test_phyloFun_serialized_result.bin' ), 'r' )
+phylo.fun.rslt <- unserialize( f )
+close( f )
+res.predictionsToCharacterVector <- predictionsToCharacterVector( phylo.fun.rslt, '"Query_Q9XWC3"' )
+exp.predictionsToCharacterVector <- c( 'GO:0009267', 'GO:0036170',
+  'GO:0036180', 'GO:0071216' )
+checkEquals( res.predictionsToCharacterVector, exp.predictionsToCharacterVector ) 
+res.predictionsToCharacterVector <- predictionsToCharacterVector( phylo.fun.rslt, 'Query_Q9XWC3' )
+checkEquals( res.predictionsToCharacterVector, exp.predictionsToCharacterVector ) 
+checkEquals( predictionsToCharacterVector( NULL, 'Query_Q9XWC3' ), 'unknown' )
+checkEquals( predictionsToCharacterVector( list(), 'Query_Q9XWC3' ), 'unknown' )
+phylo.fun.rslt$biological_process$pred[ '"Query_Q9XWC3"' ][[1]][[ 1, 'unknown' ]] <- 0.6
+checkEquals( predictionsToCharacterVector( phylo.fun.rslt, 'Query_Q9XWC3' ), 'unknown')
+
+# Initialize a database connection to the Gene Ontology
 go.con <- connectToGeneOntology()
 
 # Test getDescendantNodes

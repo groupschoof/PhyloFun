@@ -547,3 +547,12 @@ retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
     annos[ , as.character( annos[ 'GO', ] ) != 'NULL' , drop=F ]
   }
 }
+
+extractRefSeqAccession <- function( ref.seq.prot.name,
+  acc.regex='^[^\\|]+\\|[^\\|]+\\|[^\\|]+\\|([^\\|]+)\\|' ) {
+  str_match( ref.seq.prot.name, acc.regex )[[ 1, 2 ]]
+}
+mapUniprotIds <- function( aa.seq.set, id.mapping.table,
+  extract.acc.funk ) {
+
+}
