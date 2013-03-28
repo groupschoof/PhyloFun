@@ -32,7 +32,7 @@ load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
 print( paste(
-  "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta -j path/2/jackhmmer_results.tbl",
+  "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta ( -p path/2/phmmer_results.tbl OR -b path/2/blast_results.tbl )",
   "[ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]",
   "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified ) ]",
   "[ -n n.best.hits Maximum number of best scoring results from sequence similarity search to use for each query protein. (default 1000) ]"
@@ -41,7 +41,7 @@ print( '' )
 print(
   paste( "WARNING: The PhyloFun pipeline uses other programs to generate multiple sequence alignments (MAFFT),",
     "filter them for conserved regions (GBlocks), and generate a phylogenetic tree of the MSA (FastTree[MP]).",
-    "These programs need to be in your $PATH and require protein accessions of your JACKHMMER homolgy searches to be Uniprot accessions.",
+    "These programs need to be in your $PATH and require protein accessions of your PHMMER or Blast homolgy searches to be Uniprot accessions.",
     "Finally the accessions of your query proteins should consist only of the following character class [a-zA-Z0-9_-]"
   )
 )
@@ -60,19 +60,23 @@ go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
 aa.seqs <- sapply( readAAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) replaceSelenocystein( toString(s) ) )
 print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
 
-# Parse Jackhmmer results:
-jr <- parseJackhmmerTable( 
-  scan( file=phylo.fun.args[[ 'j' ]], what=character(), sep="\n" )
-)
-print( paste( "Parsed JACKHMMER result table. Got", nrow(jr), "query-hit pairs" ) )
+# Parse sequence similarity search results:
+seq.search.rslts <- if ( ! is.null( phylo.fun.args[[ 'b' ]] ) ) {
+  parseBlastTable( read.table( phylo.fun.args[[ 'b' ]] ) )
+} else if ( ! is.null( phylo.fun.args[[ 'p' ]] ) ) {
+  parsePhmmerTable( 
+    scan( file=phylo.fun.args[[ 'p' ]], what=character(), sep="\n" )
+  )
+}
+print( paste( "Parsed sequence similarity search results table. Got", nrow(seq.search.rslts), "query-hit pairs" ) )
 
 # Sanitize protein accessions:
 accs <- unlist( setNames( lapply( names(aa.seqs), sanitizeUniprotAccession ), names(aa.seqs) ) )
 print( "Parsed the query proteins' accessions using function sanitizeUniprotAccession(...) ." )
 print( 
   paste( "WARNING: If your query accessions are not matching, PhyloFun will fail to find their",
-  "accessions in the JACKHMMER results, nor will Gblocks accept such sequence names!",
-  "See function sanitizeUniprotAccession for details." )
+  "accessions in the sequence similarity search results, nor will Gblocks accept such sequence names!",
+  "See function sanitizeUniprotAccession(…) for details." )
 )
 
 # Set cores to use:
@@ -81,7 +85,7 @@ lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 
 # For each query protein, do:
 for ( prot.acc in accs ) {
-  homologs <- bestHits( jr, prot.acc, n.best.hits=phylo.fun.args[[ 'n' ]] )
+  homologs <- bestHits( seq.search.rslts, prot.acc, n.best.hits=phylo.fun.args[[ 'n' ]] )
   if ( nrow( homologs ) > 0 ) {
     orig.acc <- names( accs[ accs[] == prot.acc ] )
     if ( ! file.exists( prot.acc ) )

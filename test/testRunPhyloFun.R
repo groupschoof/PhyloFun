@@ -18,7 +18,7 @@ fastTreeCall <- if( try( system( 'FastTreeMP' ), silent=T ) == 0 ) 'FastTreeMP' 
 system( 
   paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
     '-q', project.file.path( 'test', 'protein_1.fasta' ),
-    '-j', project.file.path( 'test', 'protein_1_jackhmmer_out.tbl' ),
+    '-p', project.file.path( 'test', 'protein_1_jackhmmer_out.tbl' ),
     '-f', fastTreeCall
   )
 )

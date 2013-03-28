@@ -1,8 +1,8 @@
-parseJackhmmerTable <- function( jr,
+parsePhmmerTable <- function( jr,
   skip.lines=3, parse.line=list( '1'='hit.name', '3'='query.name',
     '6'='bit.score' )
   ) {
-  # Parses the table output of HMMER-3's Jackhmmer. Reads out hit accessions
+  # Parses the table output of HMMER-3's PHMMER. Reads out hit accessions
   # and query accessions.
   #
   # Args:
@@ -26,6 +26,27 @@ parseJackhmmerTable <- function( jr,
       parse.line )
     })
   )
+}
+
+parseBlastTable <- function( br,
+  parse.line=list( '1'='hit.name', '2'='query.name',
+    '12'='bit.score' )
+  ) {
+  # Parses a tabular Blast output ( option -m 8 ) reading Query and Hit
+  # accessions, as well as the bit scores into a data frame.
+  #
+  # Args:
+  #  br : The result of calling read.table on the path to a tabular Blast
+  #               result file.
+  #  parse.line : Read out position 'i' and return as list entry, named as
+  #               value of 'i'. I.e. position '1' is read out as 'hit.name'. 
+  #
+  # Returns: Data frame with colnames as the values in argument 'parse.line'
+  # and one row per line in br.
+  #   
+  bt <- br[ , as.integer( names( parse.line ) ) ]
+  colnames( bt ) <- as.character( parse.line )
+  bt
 }
 
 bestHits <- function( seq.search.reslt.mtrx, query.acc, n.best.hits=1000,

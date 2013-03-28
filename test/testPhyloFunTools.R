@@ -21,11 +21,11 @@ src.project.file <- function(...) {
 # problems will be resolved, as soon as this R package is loaded as such.
 src.project.file('src', 'phyloFunTools.R')
 
-# Test parseJackhmmerTable
-print("Testing parseJackhmmerTable(...)")
+# Test parsePhmmerTable
+print("Testing parsePhmmerTable(...)")
 jr <- scan( file=project.file.path( 'test', 'jackhmmer_out_10_prots.tbl' ),
   what=character(), sep="\n" )
-jack.mat <- parseJackhmmerTable( jr )
+jack.mat <- parsePhmmerTable( jr )
 # print( jack.mat[1,] )
 checkTrue( ! is.null( jack.mat ) )
 checkEquals( class(jack.mat) , 'matrix' )
@@ -34,6 +34,33 @@ checkEquals( colnames(jack.mat), c( "hit.name", "query.name", "bit.score" ) )
 checkEquals( jack.mat[ 1, ],
   list( "hit.name"="sp|B5YXA4|DNAA_ECO5E", "query.name"="Protein_1", "bit.score"="697.8" )
 )
+
+# Test parseBlastTable
+print("Testing parseBlastTable(...)")
+res.parseBlastTable <- parseBlastTable( read.table(
+  project.file.path( 'test', 'test_blast_results.tbl' ) )
+)
+exp.parseBlastTable <- read.table( text=
+'"hit.name" "query.name" "bit.score"
+"1" "Query_D3Z7J9" "P63039" 289
+"2" "Query_D3Z7J9" "P63038" 289
+"3" "Query_D3Z7J9" "D3Z2F2" 288
+"4" "Query_D3Z7J9" "P10809" 286
+"5" "Query_D3Z7J9" "E7EXB4" 285
+"6" "Query_D3Z7J9" "E7ESH4" 285
+"7" "Query_D3Z7J9" "B7Z712" 285
+"8" "Query_D3Z7J9" "Q5ZL72" 283
+"9" "Query_D3Z7J9" "Q803B0" 279
+"10" "Query_D3Z7J9" "C9JL25" 265' )
+# print( res.parseBlastTable )
+# print( exp.parseBlastTable )
+checkEquals( colnames( res.parseBlastTable ), colnames( exp.parseBlastTable ) )
+checkEquals( rownames( res.parseBlastTable ), rownames( exp.parseBlastTable ) )
+checkTrue( all( as.logical( 
+  lapply( colnames( exp.parseBlastTable ), function( cn ) {
+    checkEquals( res.parseBlastTable[ , cn ], exp.parseBlastTable[ , cn ] )
+  } )
+) ) )
 
 # Test extractUniprotAccessionFromUniprotName
 print("Testing extractUniprotAccessionFromUniprotName(...)")
