@@ -35,7 +35,9 @@ print( paste(
   "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta ( -p path/2/phmmer_results.tbl OR -b path/2/blast_results.tbl )",
   "[ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]",
   "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified ) ]",
-  "[ -n n.best.hits Maximum number of best scoring results from sequence similarity search to use for each query protein. (default 1000) ]"
+  "[ -n n.best.hits Maximum number of best scoring results from sequence similarity search to use for each query protein. (default 1000) ]",
+  "[ -h true ( Write out a statistics table 'homologs_stats.txt' for each Query Protein's set of homologs: Set-size and bit.score distribution. ) ]",
+  "[ -m true ( Write out a statistics table 'msa_stats.txt' for each Query Protein's multiple sequence alignments: Differences in number of sequences and positions betwen original and filtered MSAs. ) ]"
 ) )
 print( '' )
 print(
@@ -151,9 +153,16 @@ for ( prot.acc in accs ) {
     print( paste( 'MSA has been filtered with Gblocks and PhyloFun. Going to use',
       acc.msa.chosen.file, 'for the phylogenetic reconstruction' ) )
     print( '' )
-    # ToDo: When out of beta state, delete not used MSAs in order to not
-    # confuse the User with up to three MSA files, of which the Gblocks and the
-    # PhyloFilter result might be identical!
+    # Report MSA statistics, if requested:
+    if ( ! is.null( phylo.fun.args[[ 'm' ]] ) ) {
+      write.table( 
+        msaStats( readAAStringSet( acc.msa.file ),
+          readAAStringSet( acc.msa.chosen.file ),
+          prot.acc 
+        ),
+        file=paste( prot.acc, '/msa_stats.txt', sep='' )
+      )
+    }
 
     # Construct the phylogenetic max likelihood tree of the above alignment
     # using FastTree[MP]:

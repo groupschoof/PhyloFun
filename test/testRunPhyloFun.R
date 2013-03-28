@@ -19,7 +19,7 @@ system(
   paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
     '-q', project.file.path( 'test', 'protein_1.fasta' ),
     '-p', project.file.path( 'test', 'protein_1_jackhmmer_out.tbl' ),
-    '-f', fastTreeCall, '-h true'
+    '-f', fastTreeCall, '-h true', '-m true'
   )
 )
 
@@ -29,6 +29,7 @@ checkTrue( file.exists( project.file.path( 'Protein_1', 'ml_tree.newick' ) ) )
 checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta' ) ) )
 checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta-gb' ) ) )
 checkTrue( file.exists( project.file.path( 'Protein_1', 'homologs_stats.txt' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'msa_stats.txt' ) ) )
 
 # clean up:
 unlink( "Protein_1", recursive=T )

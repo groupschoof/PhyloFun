@@ -312,3 +312,39 @@ homologsStats <- function( homologs.table, query.protein.accession ) {
     m 
   )
 }
+
+msaStats <- function( orig.msa, filtered.msa, query.protein.accession ) {
+  # Reports statistics on the multiple sequence alignment generated from the
+  # query protein and its homologs. Differences in number of retained sequences
+  # and positions between the original MSA and the filtered are reported.
+  #
+  # Args:
+  #  orig.msa     : The original MSA as returned by Biostrings' function
+  #                 readAAStringSet(…) 
+  #  filtered.msa : The filtered MSA as returned by Biostrings' function
+  #                 readAAStringSet(…) 
+  #  query.protein.accession : The query protein's accession to be used as row
+  #                 name of the returned report matrix.
+  #
+  # Returns: A single row matrix with query.protein.accession as the row name
+  # and one column each for the number of sequences and positions in the
+  # respective MSAs.
+  #   
+  npos <- function( msa ) {
+    if ( ! is.null( msa ) ) {
+      nchar( gsub( '\\s', '', msa[[ 1 ]] ) )
+    } else {
+      0
+    }
+  } 
+  oln  <- length( orig.msa )
+  fln  <- length( filtered.msa )
+  opos <- npos( orig.msa )
+  fpos <- npos( filtered.msa )
+  matrix( c( oln, fln, opos, fpos ), nrow=1,
+    dimnames=list( query.protein.accession,
+      c( 'Orig.MSA.N.Seqs', 'Filtered.MSA.N.Seqs',
+        'Orig.MSA.N.Pos', 'Filtered.MSA.N.Pos' )
+    )
+  )
+}
