@@ -288,3 +288,27 @@ msaEqual <- function( msa.one, msa.two ) {
     }) ) )
   }
 }
+
+homologsStats <- function( homologs.table, query.protein.accession ) {
+  # Generates some statistics about the distribution of bit scores in the
+  # current query protein's sequence similarity search results. This function
+  # is used to generate PhyloFun's output.
+  #
+  # Args:
+  #  homologs.table : The table of sequence homologs as returned by either
+  #                   calling parsePhmmerTable(…) or parseBlastTable(…)
+  #  query.protein.accession : The query protein's accession to be used as row
+  #                   name of the resulting statistics.
+  #
+  # Returns: A matrix with the query.protein.accession as row name and the
+  # number of sequence homologs in homologs.table and the distribution of bit
+  # scores as returned by function summary.
+  #   
+  m <- t( as.matrix( summary( as.numeric( homologs.table[ , 'bit.score' ] ) ) ) )
+  colnames( m ) <- paste( colnames( m ), 'bit.score', sep='-' )
+  rownames( m ) <- query.protein.accession
+  cbind( matrix( nrow( homologs.table ),
+    dimnames=list( query.protein.accession, 'Homologs' ) ),
+    m 
+  )
+}

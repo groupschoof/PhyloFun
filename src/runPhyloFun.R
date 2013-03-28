@@ -86,10 +86,19 @@ lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 # For each query protein, do:
 for ( prot.acc in accs ) {
   homologs <- bestHits( seq.search.rslts, prot.acc, n.best.hits=phylo.fun.args[[ 'n' ]] )
+
   if ( nrow( homologs ) > 0 ) {
     orig.acc <- names( accs[ accs[] == prot.acc ] )
     if ( ! file.exists( prot.acc ) )
       dir.create( prot.acc )
+
+    # Log statistics of the sequence homologs, if requested:
+    if ( ! is.null( phylo.fun.args[[ 'h' ]] ) ) {
+      write.table( homologsStats( homologs, prot.acc ),
+        file=paste( prot.acc, '/homologs_stats.txt', sep='' )
+      )
+    }
+
     hit.accs <- homologs[ , 'hit.name' ]
     hit.uniprot.docs <- downloadUniprotDocuments( hit.accs )
     hit.seqs <- unlist( 
@@ -209,6 +218,10 @@ for ( prot.acc in accs ) {
     )
 
     print( paste( "Finished computations for", orig.acc ) )
+  } else {
+    print( paste(
+      "Warning: No sequence homologs were found for query protein",
+      prot.acc ) )
   }
 }
 
