@@ -407,7 +407,7 @@ goTermPredictionTable <- function( go.prediction.list, query.protein.accession,
   #   
   go.accs <- predictionsToCharacterVector( go.prediction.list,
     query.protein.accession, unknown.annot=unknown.annot )
-  go.tbl <- if ( length( go.accs ) == 1 && go.accs == unknown.annot ) 
+  go.tbl <- if ( length( go.accs ) == 1 && go.accs == unknown.annot ) 
     matrix(
       c( NA, 'unknown', NA, NA, NA, NA, NA, NA ), byrow=T, ncol=8,
       dimnames=list( c(), c( "id", "name", "term_type", "acc", "is_obsolete",
