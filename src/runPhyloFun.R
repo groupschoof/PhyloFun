@@ -34,7 +34,7 @@ load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 print( paste(
   "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta ( -p path/2/phmmer_results.tbl OR -b path/2/blast_results.tbl )",
   "[ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]",
-  "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified ) ]",
+  "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified. Set to 'ALL', if no filtering for evidence-codes is wanted. ) ]",
   "[ -n n.best.hits Maximum number of best scoring results from sequence similarity search to use for each query protein. (default 1000) ]",
   "[ -h true ( Write out a statistics table 'homologs_stats.txt' for each Query Protein's set of homologs: Set-size and bit.score distribution. ) ]",
   "[ -m true ( Write out a statistics table 'msa_stats.txt' for each Query Protein's multiple sequence alignments: Differences in number of sequences and positions betwen original and filtered MSAs. ) ]"
@@ -54,6 +54,9 @@ phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 
 # Evidence codes of GO annotations to accept:
 go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
     EVIDENCE.CODES
+  } else if ( length( phylo.fun.args[[ 'e' ]] ) &&
+    phylo.fun.args[[ 'e' ]] == 'ALL' ) {
+    'ALL'
   } else {
     c( EVIDENCE.CODES, str_split( phylo.fun.args[[ 'e' ]], ',' )[[ 1 ]] )
   }
@@ -175,8 +178,13 @@ for ( prot.acc in accs ) {
     # 'molecular_function':
     print( "Starting PhyloFun on phylogenetic tree" )
     acc.phyl.tree      <- read.tree( acc.phyl.tree.file )
-    acc.hmlgs.annos    <- retrieveExperimentallyVerifiedGOAnnotations(
-      acc.phyl.tree$tip.label, evidence.codes=go.anno.evdnc.cds )
+    hit.accs <- setdiff( acc.phyl.tree$tip.label, prot.acc )
+    acc.hmlgs.annos <- if ( go.anno.evdnc.cds == 'ALL' ) {
+      retrieveUniprotAnnotations( hit.accs )
+    } else {
+      retrieveExperimentallyVerifiedGOAnnotations(
+        hit.accs, evidence.codes=go.anno.evdnc.cds )
+    }    
     
     go.con <- connectToGeneOntology()
     acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos,
