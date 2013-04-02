@@ -26,7 +26,7 @@ uniprotkb.url <- function( accession, frmt='xml' ) {
   )
 }
 
-extract.annotations <- function(doc, type) {
+extractAnnotations <- function( doc, type, xpath.prefix='//' ) {
   # Parses XLM document and extracts the 'id' attributes of all
   # 'dbReference' tags where the 'type' attribute is set to the provided
   # argument.
@@ -39,28 +39,35 @@ extract.annotations <- function(doc, type) {
   # 'dbReference' tags having their 'type' attribute set to this
   # functions argument 'type'. 
   #   
-  ns <- c( xmlns="http://uniprot.org/uniprot" )
-  ndst <- getNodeSet( doc,
-    paste( "//xmlns:dbReference[@type='", type, "']", sep="" ),
-    namespaces=ns
-  )
-  vapply( ndst, xmlGetAttr, vector( mode='character', length=1 ), 'id' )
+  block <- function() {
+    ns <- c( xmlns="http://uniprot.org/uniprot" )
+    ndst <- getNodeSet( doc,
+      paste( xpath.prefix, "xmlns:dbReference[@type='", type, "']", sep="" ),
+      namespaces=ns
+    )
+    vapply( ndst, xmlGetAttr, vector( mode='character', length=1 ), 'id' )
+  }
+  tryCatch( block(), error=function( err ) {
+    warning( err, " caused by parsed XML Uniprot document ", doc )
+  })
 }
 
-retrieve.annotations <- function(url, annotations=c('GO','InterPro','Pfam')) {
-  # Downloads and parses XMl representation of protein as available using
-  # the argument 'url' to access Uniprot's RESTful web service. The
-  # domain annotations encoded in the downloaded document is then
-  # extracted and returned as a list. The type of domains extracted is
-  # defined by the argument 'annotations'.
+retrieveAnnotations <- function( uniprot.entry,
+    annotation.types=c( 'GO','InterPro','Pfam' ), xpath.prefix=''
+  ) {
+  # Parses the already downloaded XMl representation of a protein identified by
+  # their uniprot.accessions. The specified annotation.types encoded in the
+  # downloaded documents are then extracted and returned.
   #
   # Args:
-  #   url : Unique access to the Uniprot web service for the contained
-  #         accession. As returned by the function 'uniprotkb.url'.
-  #   annotations : Type of annotations to extract from the downloaded
-  #                 document.
+  #   uniprot.entry : A single 'entry' XML node as a member of the result of
+  #                   calling downloadUniprotDocuments(…) 
+  #   annotation.types : Type of annotations to extract from the downloaded
+  #                      document.
+  #   xpath.prefix : The prefix to append the XPath query, passed to method
+  #                  extractAnnotations(…).
   #
-  # Returns: list with keys as in argument annotations and values vectors
+  # Returns: list with keys as in argument annotation.types and values vectors
   # containing the annotated domain IDs of the corresponding types.
   # Exmpl:
   # $GO
@@ -72,73 +79,41 @@ retrieve.annotations <- function(url, annotations=c('GO','InterPro','Pfam')) {
   # $Pfam
   # [1] "PF00270" "PF03368" "PF00271" "PF02170" "PF00636"
   #   
-  doc <- try( xmlInternalTreeParse( getURL(url) ), silent=T );
-  sapply(annotations,
-    function(type) {
-      setNames(list(
-          if(! identical(class(doc),"try-error")) {
-            extract.annotations(doc,type)
-          } else {
-            NA
-          }), type)
-    },
-    USE.NAMES=F)
+  if( ! is.null( uniprot.entry ) ) {
+    setNames(
+      lapply( annotation.types,
+        function( type ) {
+          extractAnnotations( uniprot.entry, type, xpath.prefix=xpath.prefix )
+        }
+      ),
+      annotation.types
+    )
+  }
 }
 
-retrieve.annotations.parallel.t <- function(accessions, ...) {
-  # Method invokes the function retrieve.annotations for each provided
-  # accession in parallel. Resulting lists of annotated domain ids of the
-  # various types are merged into a matrix. The annotated domain types
-  # will be the matrix's row names and column names will be the argument
-  # 'accessions'. 
+retrieveUniprotAnnotations <- function( uniprot.accessions,
+  annotation.types=c( 'GO','InterPro','Pfam' ) ) {
+  # Queries the Uniprot web service to download the XML encoded available
+  # information for the provided uniprot.accessions. These are parsed to
+  # extract functional annotations of the given annotation.types.
   #
   # Args:
-  #  accessions : Uniprot accessions to retrieve anntotated domains for.
-  #  ...        : Additional provided arguments are passed on to the function
-  #               'retrieve.annotations' and can be used to narrow the returned
-  #               matrix's rows to less than the default domain types 'InterPro', 'GO'
-  #               and 'Pfam'. 
+  #  uniprot.accessions : The character vector of valid Uniprot accessions.
+  #                       I.e. c( 'sp|Q5ZL72|CH60_CHICK', 'P63039' ) 
+  #  annotation.types   : The types of function annotation to extract. Default
+  #                       is c( 'GO','InterPro','Pfam' )
   #
-  # Returns: A matric with row names the function annotation types and
-  # column names the accessions they were retrieved for from Uniprot.
+  # Returns: A matrix of mode character. Row names are annotation.types and
+  # column names are the uniprot.accessions. Each cell contains as a character
+  # vector the parsed annotations of the repective type for the respective
+  # Uniprot accession. If no document could be found for a given accession the
+  # respective column is omitted. 
   #   
-  do.call('rbind',
-    mclapply(accessions,
-    function(acc) {
-      acc.annos <- retrieve.annotations(uniprotkb.url(acc),...)
-      matrix(acc.annos, nrow=1, dimnames=list(c(acc),names(acc.annos)))
-    },
-    mc.preschedule=F, mc.cores=50)
-  )
-}
-
-retrieve.annotations.parallel <- function(accessions, ...) {
-  # Method invokes the function retrieve.annotations for each provided
-  # accession in parallel. Resulting lists of annotated domain ids of the
-  # various types are merged into a matrix. The annotated domain types
-  # will be the matrix's column names and row names will be the argument
-  # 'accessions'. 
-  # NOTE: This method returns the transposed matrix as generated by function
-  # 'retrieve.annotations.parallel'.
-  #
-  # Args:
-  #  accessions : Uniprot accessions to retrieve anntotated domains for.
-  #  ...        : Additional provided arguments are passed on to the function
-  #               'retrieve.annotations' and can be used to narrow the returned
-  #               matrix's rows to less than the default domain types 'InterPro', 'GO'
-  #               and 'Pfam'. 
-  #
-  # Returns: A matric with column names the function annotation types and
-  # row names the accessions they were retrieved for from Uniprot.
-  #   
-  do.call('cbind',
-    mclapply(accessions,
-    function(acc) {
-      acc.annos <- retrieve.annotations(uniprotkb.url(acc),...)
-      matrix(acc.annos, nrow=length(acc.annos),
-        dimnames=list(names(acc.annos),c(acc)))
-    },
-    mc.preschedule=F, mc.cores=50)
+  entries <- downloadUniprotDocuments( uniprot.accessions )
+  do.call( 'cbind',
+    lapply( entries, function( ue ) {
+      retrieveAnnotations( ue, annotation.types=annotation.types )
+    })
   )
 }
 

@@ -68,64 +68,47 @@ checkEquals( uniprotkb.url('Q0KFR8', frmt='fasta'),
   'http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/Q0KFR8/fasta'
 )
 
-# Test extract.annotations
-print("Testing extract.annotations(...)")
+# Test extractAnnotations
+print("Testing extractAnnotations(...)")
 d <- xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) )
-annos <- extract.annotations(d, 'InterPro')
+annos <- extractAnnotations(d, 'InterPro')
 # print( d )
 # print( annos )
 checkTrue(length(annos) > 0)
 checkTrue('IPR004860' %in% annos)
-annos <- extract.annotations(d, 'GO')
+annos <- extractAnnotations(d, 'GO')
 # print( annos )
 checkTrue(length(annos) > 0)
 checkTrue('GO:0005739' %in% annos)
-annos <- extract.annotations(d, 'Pfam')
+annos <- extractAnnotations(d, 'Pfam')
 checkTrue(length(annos) > 0)
 checkTrue('PF00115' %in% annos)
 
-# Test retrieve.annotations
-anno.list <- retrieve.annotations(uniprotkb.url('Q0KFR8'))
-checkTrue(length(anno.list) > 0)
-anno.list <- retrieve.annotations(uniprotkb.url('Protein_1'))
-checkTrue(length(anno.list) > 0)
+# Test retrieveAnnotations
+print("Testing retrieveAnnotations(...)")
+res.retrieveAnnotations <- retrieveAnnotations( d, xpath.prefix='//' )
+exp.retrieveAnnotations <- list(
+  'GO'=c( "GO:0016021", "GO:0005739", "GO:6969696", "GO:0004129",
+         "GO:0009055", "GO:0004519", "GO:0020037", "GO:0005506",
+         "GO:0009060", "GO:0006316", "GO:0006397", "GO:0008380" ),
+  'InterPro'=c( "IPR000883", "IPR023615", "IPR023616", "IPR004860" ),
+  'Pfam'=c( "PF00115", "PF03161")
+)
+# print( res.retrieveAnnotations )
+# print( exp.retrieveAnnotations )
+checkEquals( res.retrieveAnnotations, exp.retrieveAnnotations ) 
 
-# Test retrieve.annotations.parallel.t
-print("Testing retrieve.annotations.parallel.t(...)")
-test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
-res <- retrieve.annotations.parallel.t(test.accessions)
-checkTrue(is.matrix(res))
-checkTrue(nrow(res)==4)
-checkTrue(ncol(res)==3)
-checkEquals(colnames(res),c('GO','InterPro','Pfam'))
-res <- retrieve.annotations.parallel.t(test.accessions, annotations=c('GO'))
-checkTrue(is.matrix(res))
-checkTrue(nrow(res)==4)
-checkTrue(ncol(res)==1)
-checkEquals(colnames(res),c('GO'))
-res <- retrieve.annotations.parallel.t(test.accessions, annotations=c('GO','Pfam'))
-checkTrue(is.matrix(res))
-checkTrue(nrow(res)==4)
-checkTrue(ncol(res)==2)
-checkEquals(colnames(res),c('GO','Pfam'))
-
-# Test retrieve.annotations.parallel
-print("Testing retrieve.annotations.parallel(...)")
-res <- retrieve.annotations.parallel(test.accessions)
-checkTrue(is.matrix(res))
-checkTrue(nrow(res)==3)
-checkTrue(ncol(res)==4)
-checkEquals(rownames(res),c('GO','InterPro','Pfam'))
-res <- retrieve.annotations.parallel(test.accessions, annotations=c('GO'))
-checkTrue(is.matrix(res))
-checkTrue(nrow(res)==1)
-checkTrue(ncol(res)==4)
-checkEquals(rownames(res),c('GO'))
-res <- retrieve.annotations.parallel(test.accessions, annotations=c('GO','Pfam'))
-checkTrue(is.matrix(res))
-checkTrue(nrow(res)==2)
-checkTrue(ncol(res)==4)
-checkEquals(rownames(res),c('GO','Pfam'))
+# Test retrieveUniprotAnnotations
+# Uniprot constantly changes the annotation of its proteins, hence we
+# cannot test for correct annotations.
+print("Testing retrieveUniprotAnnotations(...)")
+res.retrieveUniprotAnnotations <- retrieveUniprotAnnotations( c( 'sp|Q5ZL72|CH60_CHICK', 'P63039' ) )
+checkTrue( ! is.null( res.retrieveUniprotAnnotations ) )
+checkEquals( class( res.retrieveUniprotAnnotations ), 'matrix' )
+checkEquals( nrow( res.retrieveUniprotAnnotations ), 3 )
+checkEquals( rownames( res.retrieveUniprotAnnotations ),
+  c( 'GO','InterPro','Pfam') )
+checkTrue( ncol( res.retrieveUniprotAnnotations ) > 0 )
 
 # Test uniq.annotations
 print("Testing uniq.annotations(...)")
