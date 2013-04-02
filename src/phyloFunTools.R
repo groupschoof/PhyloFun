@@ -29,7 +29,7 @@ parsePhmmerTable <- function( jr,
 }
 
 parseBlastTable <- function( br,
-  parse.line=list( '1'='hit.name', '2'='query.name',
+  parse.line=list( '1'='query.name', '2'='hit.name',
     '12'='bit.score' )
   ) {
   # Parses a tabular Blast output ( option -m 8 ) reading Query and Hit

@@ -41,7 +41,7 @@ res.parseBlastTable <- parseBlastTable( read.table(
   project.file.path( 'test', 'test_blast_results.tbl' ) )
 )
 exp.parseBlastTable <- read.table( text=
-'"hit.name" "query.name" "bit.score"
+'"query.name" "hit.name" "bit.score"
 "1" "Query_D3Z7J9" "P63039" 289
 "2" "Query_D3Z7J9" "P63038" 289
 "3" "Query_D3Z7J9" "D3Z2F2" 288
