@@ -375,7 +375,7 @@ predictionsToCharacterVector <- function( go.prediction.list,
     ),
     unknown.annot
   )
-  if ( is.null( annots ) || length( annots ) == 0 ) unknown.annot else annots 
+  if ( is.null( annots ) || length( annots ) == 0 ) unknown.annot else annots 
 }
 
 goTermPredictionTable <- function( go.prediction.list, query.protein.accession,
