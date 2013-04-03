@@ -290,39 +290,32 @@ retrieveSequence <- function( doc, noverbose=T, return.error=T ) {
   seq
 }
 
-retrieveSequences <- function( downloaded.uniprot.docs, accessions=names( downloaded.uniprot.docs ),
-  max.retries=10, noverbose=F ) {
-  # Parses each downloaded argument Uniprot document and extracts the content
-  # of the '<sequence>' tag. If an error occurs doing so, re-tries downloading
-  # and parsing the document, after sleeping a random amount of time out of
-  # 1:90 seconds.
+retrieveSequences <- function( uniprot.accessions,
+  replace.selenocystein=TRUE ) {
+  # Uses the Uniprot web services to download each XML document for the
+  # argument uniprot.accessions. Each document is parsed and the amino
+  # acid sequence is extracted. Note that long Uniprot accessions are
+  # replaced with their concise form in order to aid other external
+  # tools handling them.
   #
   # Args:
-  #  downloaded.uniprot.docs : The documents downloaded from Uniprot's RESTful
-  #                            web service. 
-  #  accessions : The names of the returned list. Default names( downloaded.uniprot.docs )
-  #  max.retries : The maximum number of times another download is attempted.
-  #  noverbose : switch indicating wether to print out errors
+  #  uniprot.accessions : The valid Uniprot accessions to download the
+  #                       amino acid sequences for, i.e. c(
+  #                       'sp|O08601|MTP_MOUSE', 'P55158' ).
+  #  replace.selenocystein : If set to TRUE each amino acid sequence is
+  #                       sanitized passing it to replaceSelenocystein(…)
   #
-  # Returns: A named vector of extracted sequences or error messages.
+  # Returns: A named list of extracted sequences. The names are the pure
+  # Uniprot accessions. This means that the example argument accession
+  # 'sp|O08601|MTP_MOUSE' will be replaced with 'O08601'.
   #   
-  seqs <- sapply( downloaded.uniprot.docs, function( doc ) {
-      try( retrieveSequence( doc ), silent=noverbose )
-    })
-  err.indxs <- grepl("^Error", seqs[], perl=T) 
-  err.uris <- names( seqs[ err.indxs ] )
-  if ( length(err.uris) > 0 && max.retries > 0 ) {
-    Sys.sleep( sample(1:90, 1) )
-    print( paste( "Retry number", as.character( 11 - max.retries) ) )
-    seqs <<- c(
-      seqs[ ! err.indxs ],
-      retrieveSequences( downloadUniprotDocuments( err.uris ),
-        (max.retries - 1) )
-    )
+  aa.seqs <- lapply( downloadUniprotDocuments( uniprot.accessions ),
+    retrieveSequence )
+  if ( replace.selenocystein ) {
+    lapply( aa.seqs, replaceSelenocystein )
+  } else {
+    aa.seqs
   }
-  names( seqs ) <- accessions
-  # Return
-  seqs
 }
 
 sharedFunction <- function( annotation.matrix,

@@ -105,13 +105,7 @@ for ( prot.acc in accs ) {
     }
 
     hit.accs <- homologs[ , 'hit.name' ]
-    hit.uniprot.docs <- downloadUniprotDocuments( hit.accs )
-    hit.seqs <- unlist( 
-      lapply(
-        lapply( hit.uniprot.docs, retrieveSequence, return.error=F ),
-        replaceSelenocystein
-      )
-    )
+    hit.seqs <- unlist( retrieveSequences( hit.accs ) )
     
     # Generate multiple sequence alignment ( MSA ) using MAFFT:
     print( "Generating multiple sequence alignment (MSA)" )
@@ -177,9 +171,9 @@ for ( prot.acc in accs ) {
     # types 'biological_process', 'cellular_component', and
     # 'molecular_function':
     print( "Starting PhyloFun on phylogenetic tree" )
-    acc.phyl.tree      <- read.tree( acc.phyl.tree.file )
-    hit.accs <- setdiff( acc.phyl.tree$tip.label, prot.acc )
-    acc.hmlgs.annos <- if ( go.anno.evdnc.cds == 'ALL' ) {
+    acc.phyl.tree   <- read.tree( acc.phyl.tree.file )
+    acc.hmlgs.annos <- if ( length( go.anno.evdnc.cds ) == 1 &&
+      go.anno.evdnc.cds == 'ALL' ) {
       retrieveUniprotAnnotations( hit.accs )
     } else {
       retrieveExperimentallyVerifiedGOAnnotations(

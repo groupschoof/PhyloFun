@@ -17,6 +17,7 @@ src.project.file <- function(...) {
   source(project.file.path(...))
 }
 src.project.file('src','loadUniprotKBEntries.R')
+src.project.file('src','domainArchitectureSimilarity.R')
 
 # Accessions of Proteins involved in the following tests:
 test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
@@ -137,17 +138,9 @@ checkEquals( retrieveSequence( aa.doc ),
 )
 
 # Test retrieveSequences
-print("Testing retrieveSequences(...)")
-test.uris <- c( 
-  lapply( c('Q0KFR8','B2AFZ7','Q1LSI9'), uniprotkb.url ),
-  "http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprotkb/NonExistingAccession/xml"
-)
-uniprot.docs <- getURL( test.uris )
-seqs <- sapply( uniprot.docs, function( doc ) {
-      try( retrieveSequence( doc ), silent=T )
-    })
-err.uris <- names( seqs[ grepl("^Error", seqs[], perl=T) ] )
-checkEquals( length( err.uris ), 1 )
+res.retrieveSequences <- retrieveSequences( c('Q0KFR8','B2AFZ7','Q1LSI9') )
+checkEquals( class( res.retrieveSequences ), 'list' )
+checkEquals( length( res.retrieveSequences ), 3 )
 
 # Test sharedFunction
 print("Testing sharedFunction(...)")
