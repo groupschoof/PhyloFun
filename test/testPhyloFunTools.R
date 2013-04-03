@@ -204,3 +204,24 @@ res.chooseAlignment <- chooseFilteredAlignment( msa.good )
 exp.chooseAlignment <- TRUE
 # expected to choose FILTERED MSA
 checkTrue( exp.chooseAlignment )
+
+# Test sanitizeUniprotAccessions
+print("Testing sanitizeUniprotAccessions(...)")
+seq.search.rslt.tbl <- read.table( text=
+"  query.name               hit.name bit.score
+Query_Q9VIH3    sp|O08601|MTP_MOUSE       226
+Query_Q9VIH3    sp|P55158|MTP_MESAU       217
+Query_Q9VIH3    sp|P55157|MTP_HUMAN       208
+Query_Q9VIH3      sp|Q865F1|MTP_PIG       204
+Query_Q9VIH3    sp|P55156|MTP_BOVIN       198
+Query_Q9VIH3 tr|Q961S9|Q961S9_DROME      1724
+Query_Q9VIH3 tr|B4Q3W8|B4Q3W8_DROSI      1691
+Query_Q9VIH3 tr|B4IFI6|B4IFI6_DROSE      1670
+Query_Q9VIH3 tr|B3NKW4|B3NKW4_DROER      1617
+Query_Q9VIH3 tr|B4P714|B4P714_DROYA      1606
+", header=T )
+res.sanitizeUniprotAccessions <- sanitizeUniprotAccessions( seq.search.rslt.tbl )
+exp.sanitizeUniprotAccessions <- c( 'O08601', 'P55158', 'P55157', 'Q865F1',
+  'P55156', 'Q961S9', 'B4Q3W8', 'B4IFI6', 'B3NKW4', 'B4P714' )
+checkEquals( as.character( res.sanitizeUniprotAccessions[ , 'hit.name' ] ),
+  exp.sanitizeUniprotAccessions ) 

@@ -90,7 +90,9 @@ lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 
 # For each query protein, do:
 for ( prot.acc in accs ) {
-  homologs <- bestHits( seq.search.rslts, prot.acc, n.best.hits=phylo.fun.args[[ 'n' ]] )
+  homologs <- sanitizeUniprotAccessions(
+    bestHits( seq.search.rslts, prot.acc, n.best.hits=phylo.fun.args[[ 'n' ]] )
+  )
 
   if ( nrow( homologs ) > 0 ) {
     orig.acc <- names( accs[ accs[] == prot.acc ] )
@@ -104,7 +106,7 @@ for ( prot.acc in accs ) {
       )
     }
 
-    hit.accs <- homologs[ , 'hit.name' ]
+    hit.accs <- as.character( homologs[ , 'hit.name' ] )
     hit.seqs <- unlist( retrieveSequences( hit.accs ) )
     
     # Generate multiple sequence alignment ( MSA ) using MAFFT:

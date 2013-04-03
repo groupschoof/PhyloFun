@@ -81,6 +81,31 @@ bestHits <- function( seq.search.reslt.mtrx, query.acc, n.best.hits=1000,
   }
 }
 
+sanitizeUniprotAccessions <- function( seq.search.rslt.tbl,
+  col.2.san='hit.name', sanitize.funk=sanitizeUniprotAccession ) {
+  # Sanitizes each protein accession in column col.2.san of argument
+  # seq.search.rslt.tbl.
+  #
+  # Args:
+  #  seq.search.rslt.tbl : The table of sequence similarity search results as
+  #                        i.e. obtained by functions parsePhmmerTable(…) or
+  #                        parseBlastTable(…)
+  #  col.2.san           : The column name or index of seq.search.rslt.tbl's
+  #                        column holding the protein accessions to be
+  #                        sanitized.
+  #  sanitize.funk       : The sanitizing function applied to each single entry
+  #                        in col.2.san.
+  #
+  # Returns: A copy of seq.search.rslt.tbl in which each entry of col.2.san has
+  # been replaced with the result of calling sanitize.funk with it.
+  #   
+  rslt <- seq.search.rslt.tbl
+  rslt[ , col.2.san ] <- as.character(
+    lapply( as.character( rslt[ , col.2.san ] ), sanitize.funk )
+  )
+  rslt
+}
+
 extractUniprotAccessionFromUniprotName <- function( 
   uniprot.name ) {
   # Extracts the string in between "|" and returns it.
