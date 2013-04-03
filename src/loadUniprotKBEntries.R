@@ -217,14 +217,12 @@ extractName <- function( uniprot.entry, xpath.prefix='./', noverbose=T,
   accession
 }
 
-downloadUniprotDocuments <- function( uniprot.accessions, frmt='xml',
+downloadUniprotDocuments <- function( uniprot.accessions, 
   uniprot.webfetch.max.ids=200 ) {
   # Downloads the documents from the RESTful Uniprot web service.
   #
   # Args:
   #  uniprot.accessions       : A vector or list of uniprot accessions
-  #  frmt                     : The format in which the uniprot documents shall
-  #                             be encoded
   #  uniprot.webfetch.max.ids : The current maximum number of IDs in a batch
   #                             fetch allowed by the Uniprot webfetch service.
   #
@@ -244,8 +242,7 @@ downloadUniprotDocuments <- function( uniprot.accessions, frmt='xml',
   } else {
     # Fetch max uniprot.webfetch.max.ids in a single batch:
     fetch.url <- uniprotkb.url(
-      paste( uniprot.accessions, collapse=",", sep=""),
-      frmt=frmt
+      paste( uniprot.accessions, collapse=",", sep=""), 'xml'
     )
     uniprot.entries <- getEntries( getURL( fetch.url ) )
     if ( ! is.null( uniprot.entries ) )
