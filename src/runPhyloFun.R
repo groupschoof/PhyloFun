@@ -182,53 +182,66 @@ for ( prot.acc in accs ) {
         hit.accs, evidence.codes=go.anno.evdnc.cds )
     }    
     
-    go.con <- connectToGeneOntology()
-    acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos,
-      go.con=go.con
-    )
-    dbDisconnect( go.con )
-    acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
-    quoted.acc <- surroundEachWithQuotes( prot.acc )
-
-    go.types <- c( 'biological_process', 'cellular_component',
-      'molecular_function'
-    )
-    acc.go.predictions <- setNames(
-      lapply( go.types, function( go.type ) {
-
-        print( paste( 'Computing function predictions for GO type', go.type ) )
-
-        acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
-          acc.go.type.annos[[ go.type ]], 
-          all.accessions=setdiff( acc.phyl.tree$tip.label, prot.acc )
-        )
-        if ( ! is.null( acc.bayes.evdnc ) ) {
-          acc.bayes.netw <- grain( compileCPT(
-            bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
-              lapply.funk=lapply.funk
-            )
-          ) )
-          predict.grain( acc.bayes.netw, response=quoted.acc,
-            newdata=acc.bayes.evdnc, type='dist'
+    if ( ! is.null( acc.hmlgs.annos ) && ncol( acc.hmlgs.annos ) > 0 ) {
+      go.con <- connectToGeneOntology()
+      acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos,
+        go.con=go.con
+      )
+      dbDisconnect( go.con )
+      acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
+      quoted.acc <- surroundEachWithQuotes( prot.acc )
+  
+      go.types <- c( 'biological_process', 'cellular_component',
+        'molecular_function'
+      )
+      acc.go.predictions <- setNames(
+        lapply( go.types, function( go.type ) {
+  
+          print( paste( 'Computing function predictions for GO type', go.type ) )
+  
+          acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
+            acc.go.type.annos[[ go.type ]], 
+            all.accessions=setdiff( acc.phyl.tree$tip.label, prot.acc )
           )
-        } else {
-          NULL
-        }
-      }),
-      go.types
-    )
-    # Finished predicting GO term annotations.
-    
-    # Write out complete results:
-    f <- file( paste( prot.acc, "/phyloFun_R_serialized.txt", sep="" ), "w" )
-    serialize( acc.go.predictions, f )
-    close( f )
-
-    # Human readable results:
-    write.table( goTermPredictionTable( acc.go.predictions, quoted.acc ),
-      file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
-      row.names=F
-    )
+          if ( ! is.null( acc.bayes.evdnc ) ) {
+            acc.bayes.netw <- grain( compileCPT(
+              bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
+                lapply.funk=lapply.funk
+              )
+            ) )
+            predict.grain( acc.bayes.netw, response=quoted.acc,
+              newdata=acc.bayes.evdnc, type='dist'
+            )
+          } else {
+            NULL
+          }
+        }),
+        go.types
+      )
+      # Finished predicting GO term annotations.
+      
+      # Write out complete results:
+      f <- file( paste( prot.acc, "/phyloFun_R_serialized.txt", sep="" ), "w" )
+      serialize( acc.go.predictions, f )
+      close( f )
+  
+      # Human readable results:
+      write.table( goTermPredictionTable( acc.go.predictions, quoted.acc ),
+        file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
+        row.names=F
+      )
+    } else {
+      # No PhyloFun annotations can be assigned, because there are no GO term
+      # annotations available for the Query's homologs:
+      msg <- c(
+        "WARNING: There were no GO term annotations available for the found homologous sequences of significant similarity.",
+        paste( prot.acc, "will therefore have NO PhyloFun predictions!" ) 
+      )
+      print( msg )
+      f <- file( paste( prot.acc, '/go_term_predictions.tbl', sep='' ), 'w' )
+      writeLines( msg, con=f )
+      close( f )
+    }
 
     print( paste( "Finished computations for", orig.acc ) )
   } else {
