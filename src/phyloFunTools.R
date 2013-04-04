@@ -373,3 +373,56 @@ msaStats <- function( orig.msa, filtered.msa, query.protein.accession ) {
     )
   )
 }
+
+mergeQueryPredictionsAndHomologAnnotations <- function( query.accession,
+  query.predictions, homolog.go.type.annos,
+  go.types=c( 'biological_process', 'cellular_component', 'molecular_function')
+  ) {
+  # Merges the Gene Ontology (GO) term predictions made by PhyloFun for the
+  # query protein 'query.accession' with the GO term annotations available for
+  # the homologs of the query. 
+  #
+  # Args:
+  #  query.accession       : The accession of the query protein.
+  #  query.predictions     : The PhyloFun GO term predictions for the query as
+  #                          returned by function goTermPredictionTable(…)
+  #  homolog.go.type.annos : The GO term annotations available for the query's
+  #                          homologous proteins, i.e. as returned by calling
+  #                          goTypeAnnotationMatrices(
+  #                            retrieveUniprotAnnotations( homologs.accessions )
+  #                          )
+  #  go.types              : The names used in returned list, the three GO
+  #                          types: BP, CC, and MF.
+  #
+  # Returns: A named list with GO term annotation matrices. One for each type
+  # of GO term. Each matrix has a single row 'GO' and one column for each
+  # protein that has GO term anntotations for the respective GO type.
+  #   
+  if ( is.null( query.accession ) ||
+     is.null( query.predictions ) || is.null( homolog.go.type.annos ) ) {
+    warning( paste( 'At least one argument for function", 
+      "mergeQueryPredictionsAndHomologAnnotations(…) is NULL.", 
+      "Returning NULL.' )
+    )
+    NULL
+  } else {
+    setNames(
+      lapply( go.types, function( go.type ) {
+        if ( go.type %in% query.predictions[ , 'term_type' ] ) {
+          preds <- as.character(
+            query.predictions[
+              which( query.predictions[ , 'term_type' ] == go.type ), , drop=F
+            ][ , 'acc' ]
+          )
+          m <- matrix( list(), ncol=1, nrow=1,
+            dimnames=list( 'GO', query.accession ) )
+          m[[ 1, 1 ]] <- preds
+          cbind( m, homolog.go.type.annos[[ go.type ]] )
+        } else {
+          homolog.go.type.annos[[ go.type ]]
+        }
+      }),
+      go.types
+    )
+  }
+}

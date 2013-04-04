@@ -1,0 +1,9 @@
+h1. PhyloFun
+
+In this document we describe the improvements and possible contributions any developer might provide.
+
+h2. ToDos:
+
+* Refactor PhyloFun so it can be used as a standard R package. See http://cran.r-project.org/doc/manuals/R-exts.pdf for further details on how to create new R packages. Also consider, that the Unit tests might have to be wrapped in functions. As well as the provided executable Rscripts.
+* Clean up 'runPhyloFun.R'. I.e. the part that generates the multiple sequence alignment (MSA) could be extracted into a function. Also the part that computes the actual PhyloFun predictions.
+* Enable predictions of GO terms that have no specific mutation probability distribution (PD) assigned. One could use the PD of the closest parent that has such a PD or use one generated from averaging all available PDs. See function goTypeAnnotationMatrices( … ), especially its argument 'valid.go.terms'!

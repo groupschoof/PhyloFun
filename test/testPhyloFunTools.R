@@ -225,3 +225,33 @@ exp.sanitizeUniprotAccessions <- c( 'O08601', 'P55158', 'P55157', 'Q865F1',
   'P55156', 'Q961S9', 'B4Q3W8', 'B4IFI6', 'B3NKW4', 'B4P714' )
 checkEquals( as.character( res.sanitizeUniprotAccessions[ , 'hit.name' ] ),
   exp.sanitizeUniprotAccessions ) 
+
+# Test mergeQueryPredictionsAndHomologAnnotations
+print("Testing mergeQueryPredictionsAndHomologAnnotations(...)")
+prot.acc <- 'Protein_1'
+pf.preds <- read.table( project.file.path( 'test',
+  'test_phylo_fun_predictions.tbl' ), header=T )
+f <- file( project.file.path( 'test',
+  'test_go_type_annotations_R_serialized.txt' ), 'r' )
+gt.annos <- unserialize( f )
+close( f )
+res.merged <- mergeQueryPredictionsAndHomologAnnotations( prot.acc,
+   pf.preds, gt.annos )
+checkTrue( ! is.null( res.merged ) )
+checkEquals( class(res.merged), 'list' )
+go.types <- c( 'biological_process',
+  'cellular_component', 'molecular_function' )
+checkEquals( names( res.merged ), go.types )
+for ( go.type in go.types ) {
+  res.gt <- res.merged[[ go.type ]]
+  gt.pf.pred <- as.character( res.gt[ 'GO', prot.acc ][[ 1 ]] )
+  exp.gt.pf.pred <- as.character(
+    pf.preds[ which( pf.preds[ , 'term_type' ] == go.type ), 'acc' ]
+  )
+  print( checkEquals( gt.pf.pred, exp.gt.pf.pred ) )
+
+  go.tp.annos <- res.gt[ ,
+    setdiff( colnames( res.gt ), prot.acc ), drop=F
+  ]
+  print( checkEquals( go.tp.annos, gt.annos[[ go.type ]] ) )
+}

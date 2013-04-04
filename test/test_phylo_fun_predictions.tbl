@@ -1,0 +1,11 @@
+"id" "name" "term_type" "acc" "is_obsolete" "is_root" "is_relation" "relation_distance"
+3454 "mitochondrion" "cellular_component" "GO:0005739" 0 0 0 5
+4166 "signal transduction" "biological_process" "GO:0007165" 0 0 0 4
+4800 "integral to peroxisomal membrane" "cellular_component" "GO:0005779" 0 0 0 6
+11039 "peroxisome membrane biogenesis" "biological_process" "GO:0016557" 0 0 0 5
+11041 "peroxisome fission" "biological_process" "GO:0016559" 0 0 0 6
+22800 "cellular lipid metabolic process" "biological_process" "GO:0044255" 0 0 0 4
+22826 "small molecule metabolic process" "biological_process" "GO:0044281" 0 0 0 4
+22918 "regulation of peroxisome size" "biological_process" "GO:0044375" 0 0 0 5
+27800 "brown fat cell differentiation" "biological_process" "GO:0050873" 0 0 0 6
+1033 "cysteine-type endopeptidase activity" "molecular_function" "GO:0004197" 0 0 0 7
