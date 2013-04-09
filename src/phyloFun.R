@@ -9,6 +9,78 @@ get.root.node <- function(phylTree) {
     )
 }
 
+edgeIndex <- function( desc.node, phyl.tree ) {
+  # Returns the index of the tree edge of which the 'desc.node' is the
+  # descendant.
+  #
+  # Args:
+  #  desc.node : The index of the descendant node. 
+  #  phyl.tree : An object of class phylo representing the phylogenetic tree.
+  #
+  # Returns: The edge's index, of which 'desc.node' is the descendant.
+  #   
+  which( phyl.tree$edge[ , 2] == desc.node )
+}
+
+parentNode <- function( desc.node, phyl.tree ) {
+  # Finds the index of the node being the parent of 'desc.node'.
+  #
+  # Args:
+  #  desc.node : The index of the node for which to find its parents. 
+  #  phyl.tree : An object of class phylo representing the phylogenetic tree.
+  #
+  # Returns: The index of 'desc.node's parent node.
+  #   
+  phyl.tree$edge[ which( phyl.tree$edge[ , 2] == desc.node ), 1 ][[ 1 ]]
+}
+
+cumulativeBranchLengthsToRoot <- function( curr.node, phyl.tree,
+  root.node=get.root.node(phyl.tree), curr.dist=0.0 ) {
+  # Computes the cumulative branch lengths from curr.node to the root.node of
+  # the phylogenetic tree 'phyl.tree'.
+  #
+  # Args:
+  #  curr.node : Phylogenetic node to measure its distance to the root node
+  #              for.
+  #  phyl.tree : Object of class phylo representing the phylogenetic tree.
+  #  root.node : The phylogenetic tree's root node.
+  #  curr.dist : As this is recursive function, this is the start value for the
+  #              distance measuring.
+  #
+  # Returns: The sum of branch lengths on the path from curr.node to the tree's
+  # root.
+  #   
+  cum.dist <- curr.dist +
+    phyl.tree$edge.length[[ edgeIndex( curr.node, phyl.tree ) ]]
+  prnt.node <- parentNode( curr.node, phyl.tree )
+  if ( prnt.node != root.node ) {
+    cumulativeBranchLengthsToRoot( prnt.node, phyl.tree, root.node,
+      cum.dist )
+  } else {
+    cum.dist
+  }
+}
+
+maxDistanceToRoot <- function( phyl.tree ) {
+  # Computes the maximum phylogenetic distance of any tip to the tree's
+  # root node.
+  #
+  # Args:
+  #  phyl.tree : Object of class phylo representing the phylogenetic tree. 
+  #
+  # Returns: The numeric maximum phylogenetic distance, as cumulative
+  # branch lengths on the path from any tree's tip to tree's root.
+  #   
+  max(
+    as.numeric(
+      lapply(
+        1:length( phyl.tree$tip.label ),
+        cumulativeBranchLengthsToRoot, phyl.tree=phyl.tree
+      )
+    )
+  )
+}
+
 getDescendantNodes <- function( phylo.tree, node.index ) {
   # Looks up all direct descendants of 'node.index'.
   #

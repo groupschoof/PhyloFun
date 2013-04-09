@@ -33,6 +33,20 @@ fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
 annotation.matrix <- unserialize(fl)
 close(fl)
 
+# Test cumulativeBranchLengthsToRoot
+print("Testing cumulativeBranchLengthsToRoot(...)")
+res.cumulativeBranchLengthsToRoot <- cumulativeBranchLengthsToRoot( 2, phylo.tree )
+exp.cumulativeBranchLengthsToRoot <- 1.17788
+checkEquals( res.cumulativeBranchLengthsToRoot, exp.cumulativeBranchLengthsToRoot ) 
+res.cumulativeBranchLengthsToRoot <- cumulativeBranchLengthsToRoot( 7, phylo.tree )
+checkEquals( res.cumulativeBranchLengthsToRoot, exp.cumulativeBranchLengthsToRoot ) 
+
+# Test maxDistanceToRoot
+print("Testing maxDistanceToRoot(...)")
+res.maxDistanceToRoot <- maxDistanceToRoot( phylo.tree )
+exp.maxDistanceToRoot <- 1.17788
+checkEquals( res.maxDistanceToRoot, exp.maxDistanceToRoot ) 
+
 # Test mostAppropriateAnnotation
 print("Testing mostAppropriateAnnotation(...)")
 preds <- setNames( c( 0.5, 0.5, 0.5 ),

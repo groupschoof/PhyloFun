@@ -409,11 +409,11 @@ mergeQueryPredictionsAndHomologAnnotations <- function( query.accession,
     setNames(
       lapply( go.types, function( go.type ) {
         if ( go.type %in% query.predictions[ , 'term_type' ] ) {
-          preds <- as.character(
+          preds <- sort( as.character(
             query.predictions[
               which( query.predictions[ , 'term_type' ] == go.type ), , drop=F
             ][ , 'acc' ]
-          )
+          ) )
           m <- matrix( list(), ncol=1, nrow=1,
             dimnames=list( 'GO', query.accession ) )
           m[[ 1, 1 ]] <- preds

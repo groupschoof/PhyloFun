@@ -7,6 +7,8 @@ library(gRain)
 library(RMySQL)
 library(XML)
 library(parallel)
+library(brew)
+library(xtable)
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -28,6 +30,7 @@ src.project.file( "src", "phyloFun.R" )
 src.project.file( "src", "loadUniprotKBEntries.R" )
 src.project.file( "src", "geneOntologySQL.R" )
 src.project.file( "src", "domainArchitectureSimilarity.R" )
+src.project.file( "src", "plot.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Hail User:
@@ -37,7 +40,8 @@ print( paste(
   "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified. Set to 'ALL', if no filtering for evidence-codes is wanted. ) ]",
   "[ -n n.best.hits Maximum number of best scoring results from sequence similarity search to use for each query protein. (default 1000) ]",
   "[ -h true ( Write out a statistics table 'homologs_stats.txt' for each Query Protein's set of homologs: Set-size and bit.score distribution. ) ]",
-  "[ -m true ( Write out a statistics table 'msa_stats.txt' for each Query Protein's multiple sequence alignments: Differences in number of sequences and positions betwen original and filtered MSAs. ) ]"
+  "[ -m true ( Write out a statistics table 'msa_stats.txt' for each Query Protein's multiple sequence alignments: Differences in number of sequences and positions betwen original and filtered MSAs. ) ]",
+  "[ -r true ( Generate an HTML report for each Query Protein. Will be stored in an extra folder 'report'. Default: false ) ]"
 ) )
 print( '' )
 print(
@@ -226,10 +230,27 @@ for ( prot.acc in accs ) {
       close( f )
   
       # Human readable results:
-      write.table( goTermPredictionTable( acc.go.predictions, quoted.acc ),
+      acc.pf.predictions <- goTermPredictionTable( acc.go.predictions, quoted.acc )
+      write.table( acc.pf.predictions,
         file=paste( prot.acc, '/go_term_predictions.tbl', sep='' ),
         row.names=F
       )
+
+      # If requested generate an HTML report:
+      if ( ! is.null( phylo.fun.args[[ 'r' ]] ) ) {
+        print( "Generating HTML report" )
+        report.dir <- paste( prot.acc, '/report', sep='' )
+        report.tree.fn <- paste( prot.acc, '_phylo_fun_tree', sep='' ) 
+        report.tree.path <- paste( report.dir, '/', report.tree.fn, sep='' )
+        if ( ! file.exists( report.dir ) )
+          dir.create( report.dir, recursive=T )
+
+        plot.rslt <- plotPhyloFunTree( prot.acc, acc.phyl.tree, acc.pf.predictions, acc.go.type.annos,
+          paste( report.tree.path, '.png', sep='' ) )
+        htmlReport( paste( report.tree.fn, '.png', sep='' ), prot.acc, plot.rslt$caption,
+          paste( report.dir, '/', prot.acc, '_report.html', sep='' ) )
+        write.tree( plot.rslt$tree.with.abbrevs, file=paste( report.tree.path, '.newick', sep='' ) )
+      }
     } else {
       # No PhyloFun annotations can be assigned, because there are no GO term
       # annotations available for the Query's homologs:

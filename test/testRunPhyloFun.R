@@ -53,3 +53,26 @@ checkTrue( file.exists( project.file.path( 'Protein_1', 'msa_stats.txt' ) ) )
 
 # clean up:
 unlink( "Protein_1", recursive=T )
+
+# Test PhyloFun with HTML reporting:
+system( 
+  paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
+    '-q', project.file.path( 'test', 'protein_1.fasta' ),
+    '-b', project.file.path( 'test', 'protein_1_blastout.tbl' ),
+    '-f', fastTreeCall, '-h true', '-m true', '-e ALL', '-r true'
+  )
+)
+
+checkTrue( file.exists( project.file.path( 'Protein_1', 'go_term_predictions.tbl' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'homologs.fasta' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'ml_tree.newick' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'msa.fasta-gb' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'homologs_stats.txt' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'msa_stats.txt' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'report', 'Protein_1_report.html' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'report', 'Protein_1_phylo_fun_tree.newick' ) ) )
+checkTrue( file.exists( project.file.path( 'Protein_1', 'report', 'Protein_1_phylo_fun_tree.png' ) ) )
+
+# clean up:
+unlink( "Protein_1", recursive=T )
