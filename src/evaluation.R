@@ -1,4 +1,4 @@
-precision <- function( predicted.gos, true.gos,
+precision <- function( predicted.gos, true.gos, false.positives.funk=falsePositives,
   go.con=connectToGeneOntology() ) {
   # 'precision' is a statistical quality measure of predicted Gene Ontology
   # (GO) terms:
@@ -21,7 +21,7 @@ precision <- function( predicted.gos, true.gos,
   else {
     tgs <- unique( true.gos )
     tp <- intersect( tgs, pgs )
-    fps <- falsePositives( pgs, tgs, go.con=go.con )
+    fps <- false.positives.funk( pgs, tgs, go.con=go.con )
     denom <- length( tp ) + length( fps )
     if ( denom == 0 )
       1
@@ -50,7 +50,69 @@ falsePositives <- function( predicted.gos, true.gos,
   setdiff( fn.candidates, all.parents$acc )
 }
 
-recall <- function( predicted.gos, true.gos ) {
+truesUpperBound <- function( true.gos, go.con=connectToGeneOntology() ) {
+  # For all Gene Ontology (GO) term accessions in 'true.gos' all parent and
+  # descendent terms are selected and the whole set of those is returned.
+  #
+  # Args:
+  #  true.gos : The GO term accessions to be considered the 'reference' 
+  #  go.con   : A valid and open database connection to the Gene Ontology as
+  #             returned by function 'connectToGeneOntology(…)'
+  #
+  # Returns: A table of all GO terms that are parent or descendents of the
+  # provided 'true.gos', which are also included. The table has the same
+  # columns as the one returned by function 'goTermsForAccessionWithLevel(…)'
+  #   
+  true.gos.tbl     <- goTermsForAccessionWithLevel( true.gos, con=go.con )
+  all.parents      <- do.call( 'rbind', lapply( true.gos.tbl$id, parentGoTerms,
+    con=go.con ) )
+  all.descendents  <- do.call( 'rbind', lapply( true.gos.tbl$id, spawnedGoTerms,
+    con=go.con ) )
+  unique( rbind( all.parents, all.descendents ) )
+}
+
+falsePositivesUpperBound <- function( predicted.gos, true.gos, 
+  go.con=connectToGeneOntology() ) {  
+  # Identifies those GO terms in 'predicted.gos' that are not equal to any term
+  # in 'true.gos' nor are related terms (parent or descendent). Because of all
+  # relations are considered this function returns the "upper bound" of false
+  # positives.
+  #
+  # Args:
+  #  predicted.gos : The GO terms that have been predicted
+  #  true.gos      : The reference GO terms
+  #  go.con        : A database connection to the Gene Ontology as returned by
+  #                  function connectToGeneOntology().
+  #
+  # Returns: Those predicted GO terms that are false positives.
+  #   
+  accepted.gos.tbl <- truesUpperBound( true.gos, go.con=go.con )
+  fn.candidates <- setdiff( predicted.gos, true.gos )
+  setdiff( fn.candidates, accepted.gos.tbl$acc )
+}
+
+truePositivesUpperBound <- function( predicted.gos, true.gos,
+  go.con=connectToGeneOntology() ) {
+  # Identifies all those Gene Ontology (GO) terms of 'predicted.gos' that are
+  # identical to one of either 'true.gos', or one of their parent or descendent
+  # terms, respectively.
+  #
+  # Args:
+  #  predicted.gos : The prdicted GO terms in which to identify TRUE POSITIVES 
+  #  true.gos      : The reference GO terms
+  #  go.con        : Valid and active database connection to the Gene Ontology
+  #                  as i.e. returned by function 'connectToGeneOntology(…)'
+  #
+  # Returns: A vector of mode character holding the subset of predicted.gos GO
+  # term accessions to be considered TRUE POSITIVES. 
+  #   
+  accepted.gos.tbl <- truesUpperBound( true.gos, go.con=go.con )
+  intersect( predicted.gos, accepted.gos.tbl$acc )
+}
+
+recall <- function( predicted.gos, true.gos,
+  true.positives.funk=function( tgs, pgs, ... ) { intersect( tgs, pgs ) },
+  go.con ) {
   # 'recall' is a statistical quality measure of predicted Gene Ontology (GO)
   # terms:
   # recall( predicted.gos ) = | true_positives | / | true.gos |
@@ -58,12 +120,17 @@ recall <- function( predicted.gos, true.gos ) {
   # Args:
   #  predicted.gos : The set of predicted GO terms
   #  true.gos      : The set of experimentally verified GO terms.
+  #  true.positives.funk : The function used to identify the true positives in
+  #                  predicted.gos
+  #  go.con        : A valid and active database connection to the Gene
+  #                  Ontology as i.e. returned by function
+  #                  'connectToGeneOntology(…)'
   #
   # Returns: The recall of the prediction as a numeric between Zero and One. 
   #
   pgs <- unique( predicted.gos )
   tgs <- unique( true.gos )
-  tp <- intersect( tgs, pgs )
+  tp <- true.positives.funk( tgs, pgs, go.con )
   if ( length( tgs ) == 0 ) 1 else length( tp ) / length( tgs )
 }
 
@@ -82,6 +149,8 @@ falsePositiveRate <- function( predicted.gos, true.gos ) {
 }
 
 fScore <- function( predicted.gos, true.gos, beta.param=1,
+  false.positives.funk=falsePositives,
+  true.positives.funk=function( tgs, pgs, ... ) { intersect( tgs, pgs ) },
   go.con=connectToGeneOntology() ) {
   # Computes the weighted harmonic mean of precision and recall as a quality
   # measure of predicted.gos. The higher beta.param the more emphasis is put on
@@ -92,14 +161,20 @@ fScore <- function( predicted.gos, true.gos, beta.param=1,
   #  true.gos      : The set of experimentally verified GO terms.
   #  beta.param    : The factor of how much more emphasis should be put on
   #                  recall than on precision.
+  #  false.positives.funk : The function called to identify the false positives
+  #                  among the predicted.gos.
+  #  true.positives.funk : The function used to identify the true positives in
+  #                  predicted.gos
   #  go.con        : database connection to the Gene Ontology as returned by
   #                  function connectToGeneOntology()
   #
   # Returns: The weighted harmonic mean of precision and recall as a numeric
   # between Zero and One.
   #   
-  prcsn <- precision( predicted.gos, true.gos, go.con=go.con )
-  rcll <- recall( predicted.gos, true.gos )
+  prcsn <- precision( predicted.gos, true.gos, go.con=go.con,
+    false.positives.funk=false.positives.funk )
+  rcll <- recall( predicted.gos, true.gos,
+    true.positives.funk=true.positives.funk )
   bp <- beta.param^2
   if ( 0 == (prcsn + rcll) )
     0
@@ -199,7 +274,9 @@ rates <- function( protein.accessions, predicted.annotations,
 fScores <- function( protein.accessions, predicted.annotations,
   annotation.type='GO', beta.param=1,
   reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
-    protein.accessions ), go.con=connectToGeneOntology(), close.go.con=TRUE ) {
+    protein.accessions ), go.con=connectToGeneOntology(), close.go.con=TRUE,
+  false.positives.funk=falsePositives,
+  true.positives.funk=function( tgs, pgs, ... ) { intersect( tgs, pgs ) } ) {
   # Computes the fScores for all predicted annotations.
   #
   # Args:
@@ -220,13 +297,18 @@ fScores <- function( protein.accessions, predicted.annotations,
   #  close.go.con          : If set to TRUE the database connection 'go.con'
   #                          will be automatically closed after executing this
   #                          function and before returning its results.
+  #  false.positives.funk  : The function called to identify the false
+  #                          positives among the predicted.gos
+  #  true.positives.funk   : The function used to identify the true positives in
+  #                          predicted.gos
   #
   # Returns: A named list with the predictions' fScores of each reference
   # protein. The fScore NA is assigned whenever no reference annotations are
   # found.
   #   
   rate.funk <- function ( pa, oa ) fScore( pa, oa, beta.param=beta.param,
-    go.con=go.con )
+    go.con=go.con, false.positives.funk=false.positives.funk,
+    true.positives.funk=true.positives.funk )
   rts <- rates( protein.accessions, predicted.annotations, rate.funk,
     annotation.type, reference.annotations )
   if ( close.go.con ) dbDisconnect( go.con )

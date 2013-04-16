@@ -186,5 +186,22 @@ exp.falseNegatives <- "GO:0000122"
 # print( res.falseNegatives )
 checkEquals( res.falseNegatives, exp.falseNegatives ) 
 
+# Test falsePositivesUpperBound
+print("Testing falsePositivesUpperBound(...)")
+# Child, Parent and a false positive:
+pred.gos <- c( 'GO:0003824', 'GO:0070011', 'GO:0001906' )
+ref.go <- 'GO:0016787'
+res.falsePositivesUpperBound <- falsePositivesUpperBound( pred.gos, ref.go,
+  go.con=go.con )
+exp.falsePositivesUpperBound <- c( 'GO:0001906' )
+checkEquals( res.falsePositivesUpperBound, exp.falsePositivesUpperBound ) 
+
+# Test truePositivesUpperBound
+print("Testing truePositivesUpperBound(...)")
+res.truePositivesUpperBound <- truePositivesUpperBound( pred.gos, ref.go,
+  go.con=go.con )
+exp.truePositivesUpperBound <- c( 'GO:0003824', 'GO:0070011' ) 
+checkEquals( res.truePositivesUpperBound, exp.truePositivesUpperBound ) 
+
 # Clean up:
 dbDisconnect( go.con )

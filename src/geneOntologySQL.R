@@ -54,6 +54,30 @@ parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   )
 }
 
+spawnedGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
+  # Queries the Gene Ontology ( GO ) database to retrieve all GO terms placed
+  # in the descending sub-graph spawned by GO term with ID 'go.term.id'.
+  #
+  # Args:
+  #  go.term.id : The parent GO term's database ID 
+  #  con        : A valid and alive database connection an instance of the Gene
+  #               Ontology
+  #
+  # Returns: A table with all GO terms being direct and indirect children of
+  # 'go.term.id'
+  #   
+  dbGetQuery( con,
+    paste( "SELECT t.* FROM graph_path p ",
+      "LEFT JOIN term t ON t.id = p.term2_id ",
+      "where p.relationship_type_id = 1 ",
+      "AND p.term1_id = ", go.term.id,
+      " AND t.id != ", go.term.id,
+      " ORDER BY p.distance",
+      sep=''
+    )
+  )
+}
+
 goTermsOfLevelAndType <- function( level, term.type,
   con=connectToGeneOntology() ) {
   dbGetQuery( con,
