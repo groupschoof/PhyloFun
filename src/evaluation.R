@@ -173,7 +173,7 @@ fScore <- function( predicted.gos, true.gos, beta.param=1,
   #   
   prcsn <- precision( predicted.gos, true.gos, go.con=go.con,
     false.positives.funk=false.positives.funk )
-  rcll <- recall( predicted.gos, true.gos,
+  rcll <- recall( predicted.gos, true.gos, go.con=go.con,
     true.positives.funk=true.positives.funk )
   bp <- beta.param^2
   if ( 0 == (prcsn + rcll) )
