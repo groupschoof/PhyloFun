@@ -1,3 +1,5 @@
+join.funk <- function( ... ) { paste( ..., sep=", " ) }
+
 connectToGeneOntology <- function( driver=MySQL(), user="go_select",
   password="amigo", dbname="go_latest", host="mysql.ebi.ac.uk", port=4085 ) {
   # Connects to the latest gene ontology database using DBI and MySQL.
@@ -20,6 +22,15 @@ goTermForAccession <- function( accession, con=connectToGeneOntology() ) {
   dbGetQuery( con,
     paste( "SELECT * FROM term WHERE acc = '",
       accession, "'", sep="" )
+  )
+}
+
+goTermsForAccession <- function( accessions, con=connectToGeneOntology() ) {
+  dbGetQuery( con,
+    paste( "SELECT * FROM term WHERE acc in (",
+      do.call( 'join.funk', as.list( paste( "'", accessions, "'", sep="" ) ) ),
+      ")", sep=""
+    )
   )
 }
 
@@ -94,7 +105,6 @@ goTermsOfLevelAndType <- function( level, term.type,
 }
 
 goTermsForAccessionWithLevel <- function( accessions, con=connectToGeneOntology() ) {
-  join.funk <- function( ... ) { paste( ..., sep=", " ) }
   dbGetQuery( con, paste(
       "SELECT t.*, g.relation_distance FROM term t LEFT JOIN graph_path g ON ",
       "t.id = g.term2_id WHERE g.term1_id = ( SELECT r.id FROM term r WHERE r.is_root = 1 ) ",

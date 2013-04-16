@@ -63,12 +63,12 @@ truesUpperBound <- function( true.gos, go.con=connectToGeneOntology() ) {
   # provided 'true.gos', which are also included. The table has the same
   # columns as the one returned by function 'goTermsForAccessionWithLevel(…)'
   #   
-  true.gos.tbl     <- goTermsForAccessionWithLevel( true.gos, con=go.con )
+  true.gos.tbl     <- goTermsForAccession( true.gos, con=go.con )
   all.parents      <- do.call( 'rbind', lapply( true.gos.tbl$id, parentGoTerms,
     con=go.con ) )
   all.descendents  <- do.call( 'rbind', lapply( true.gos.tbl$id, spawnedGoTerms,
     con=go.con ) )
-  unique( rbind( all.parents, all.descendents ) )
+  unique( rbind( true.gos.tbl, all.parents, all.descendents ) )
 }
 
 falsePositivesUpperBound <- function( predicted.gos, true.gos, 
@@ -111,7 +111,7 @@ truePositivesUpperBound <- function( predicted.gos, true.gos,
 }
 
 recall <- function( predicted.gos, true.gos,
-  true.positives.funk=function( tgs, pgs, ... ) { intersect( tgs, pgs ) },
+  true.positives.funk=function( pgs, tgs, ... ) { intersect( pgs, tgs ) },
   go.con ) {
   # 'recall' is a statistical quality measure of predicted Gene Ontology (GO)
   # terms:
@@ -130,7 +130,7 @@ recall <- function( predicted.gos, true.gos,
   #
   pgs <- unique( predicted.gos )
   tgs <- unique( true.gos )
-  tp <- true.positives.funk( tgs, pgs, go.con )
+  tp <- true.positives.funk( pgs, tgs, go.con )
   if ( length( tgs ) == 0 ) 1 else length( tp ) / length( tgs )
 }
 
@@ -150,7 +150,7 @@ falsePositiveRate <- function( predicted.gos, true.gos ) {
 
 fScore <- function( predicted.gos, true.gos, beta.param=1,
   false.positives.funk=falsePositives,
-  true.positives.funk=function( tgs, pgs, ... ) { intersect( tgs, pgs ) },
+  true.positives.funk=function( pgs, tgs, ... ) { intersect( pgs, tgs ) },
   go.con=connectToGeneOntology() ) {
   # Computes the weighted harmonic mean of precision and recall as a quality
   # measure of predicted.gos. The higher beta.param the more emphasis is put on
@@ -276,7 +276,7 @@ fScores <- function( protein.accessions, predicted.annotations,
   reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
     protein.accessions ), go.con=connectToGeneOntology(), close.go.con=TRUE,
   false.positives.funk=falsePositives,
-  true.positives.funk=function( tgs, pgs, ... ) { intersect( tgs, pgs ) } ) {
+  true.positives.funk=function( pgs, tgs, ... ) { intersect( pgs, tgs ) } ) {
   # Computes the fScores for all predicted annotations.
   #
   # Args:
