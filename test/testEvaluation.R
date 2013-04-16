@@ -113,6 +113,17 @@ res.fScore <- fScore( c( 'A' ), c() )
 exp.fScore <- 0
 checkEquals( res.fScore, exp.fScore ) 
 
+# Identical, Child, Parent:
+pred.gos <- c( 'GO:0016787', 'GO:0003824', 'GO:0070011' )
+ref.go <- 'GO:0016787'
+res.fScore <- fScore( pred.gos, ref.go,
+  false.positives.funk=falsePositivesUpperBound,
+  true.positives.funk=truePositivesUpperBound, go.con=go.con
+)
+# print( res.fScore )
+exp.fScore <- 1.0
+checkEquals( res.fScore, exp.fScore ) 
+
 # Test parseBlast2GOresults
 print("Testing parseBlast2GOresults(...)")
 res.parseBlast2GOresults <- parseBlast2GOresults( readLines( project.file.path( 'test', 'blast2GO.annot' ) ) )

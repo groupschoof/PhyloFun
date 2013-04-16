@@ -178,8 +178,13 @@ fScore <- function( predicted.gos, true.gos, beta.param=1,
   bp <- beta.param^2
   if ( 0 == (prcsn + rcll) )
     0
-  else
-    ( 1 + bp ) * ( prcsn * rcll ) / ( bp * prcsn + rcll )
+  else {
+    fs <- ( 1 + bp ) * ( prcsn * rcll ) / ( bp * prcsn + rcll )
+    # Using the 'upperBound' functions to identify true and false positives,
+    # the computed F-Score might actually become larger than 1.0. In that case,
+    # return 1.0:
+    if ( fs > 1.0 ) 1.0 else fs 
+  }
 }
 
 parseBlast2GOresults <- function( b2g.res ) {
