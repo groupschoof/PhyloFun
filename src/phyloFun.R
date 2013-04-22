@@ -405,6 +405,34 @@ mostAppropriateAnnotation <- function( named.annotation.score.vector,
   )
 }
 
+highScoringAnnotations <- function( phyloFun.annos, query.accession,
+  unknown.annot='unknown', exclude.unknown=TRUE ) {
+  if ( ! is.null( phyloFun.annos ) ) {
+    setNames(
+      lapply( names( phyloFun.annos ), function( gt ) {
+        gt.annos <- phyloFun.annos[[ gt ]]
+        rslt <- if ( ! is.null( gt.annos ) ) {
+          annos <- gt.annos[[ 'pred' ]][[ query.accession ]]
+          co <- 1/length(annos)
+          ba <- colnames(annos[ 1, which( annos[1,] >= co ), drop=F ])
+          if ( ! is.null( ba ) ) 
+            unlist( lapply( ba, annotationToCharacterVector ) )
+          else
+            ba
+        } else {
+          NA
+        }
+        unique(
+          ( if ( exclude.unknown ) setdiff( rslt, unknown.annot ) else rslt )
+        )
+      } ),
+      names( phyloFun.annos )
+    )
+  } else {
+    NA
+  }
+}
+
 predictionsToCharacterVector <- function( go.prediction.list,
   query.protein.accession, unknown.annot='unknown' ) {
   # For each predicted Gene Ontology annotation the most appropriate is

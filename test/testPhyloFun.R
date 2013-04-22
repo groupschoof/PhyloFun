@@ -57,6 +57,36 @@ res.mostAppropriateAnnotation <- mostAppropriateAnnotation( preds )
 exp.mostAppropriateAnnotation <- c( 'GO:0009267', 'GO:0036170', 'GO:0036180', 'GO:0071216' )
 checkEquals( res.mostAppropriateAnnotation, exp.mostAppropriateAnnotation ) 
 
+# Some PhyloFun results to be arguments for tesed methods:
+f <- file( project.file.path( 'test', 'test_phyloFun_serialized_result.bin' ), 'r' )
+phylo.fun.rslt <- unserialize( f )
+close( f )
+
+# Test highScoringAnnotations
+print("Testing highScoringAnnotations(...)")
+
+res.highScoringAnnotations <- highScoringAnnotations( phylo.fun.rslt,
+  '"Query_Q9XWC3"' )
+checkEquals( res.highScoringAnnotations$biological_process,
+  c( "GO:0009267", "GO:0036170", "GO:0036180", "GO:0071216" ) ) 
+checkTrue( is.na( res.highScoringAnnotations$cellular_component ) )
+checkTrue( is.na( res.highScoringAnnotations$molecular_function ) )
+
+f <- file( project.file.path( 'test',
+  'Query_Q9NTK1_phyloFun_annotations_serialized.txt'), "r" )
+q9ntk1.pf.res <- unserialize( f )
+close( f )
+
+res.highScoringAnnotations <- highScoringAnnotations( q9ntk1.pf.res,
+  '"Query_Q9NTK1"' )
+checkEquals( res.highScoringAnnotations$biological_process,
+  c( "GO:0045892", "GO:0046677", "GO:0051260", "GO:0001514", "GO:0007420",
+    "GO:0007426", "GO:0051960" ) ) 
+checkEquals( res.highScoringAnnotations$cellular_component,
+  c( "GO:0005739", "GO:0005634", "GO:0005886", "GO:0019005" ) ) 
+checkEquals( res.highScoringAnnotations$molecular_function,
+  c( "GO:0003730", "GO:0008135" ) ) 
+
 # Test tree whose Baysian network representation has nodes with unreachable
 # states:
 phylo.tree.unreachbl.stts <- read.tree(
@@ -65,9 +95,6 @@ phylo.tree.unreachbl.stts <- read.tree(
 
 # Test predictionsToCharacterVector
 print("Testing predictionsToCharacterVector(...)")
-f <- file( project.file.path( 'test', 'test_phyloFun_serialized_result.bin' ), 'r' )
-phylo.fun.rslt <- unserialize( f )
-close( f )
 res.predictionsToCharacterVector <- predictionsToCharacterVector( phylo.fun.rslt, '"Query_Q9XWC3"' )
 exp.predictionsToCharacterVector <- c( 'GO:0009267', 'GO:0036170',
   'GO:0036180', 'GO:0071216' )
