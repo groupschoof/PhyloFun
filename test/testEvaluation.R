@@ -142,15 +142,6 @@ checkEquals( ncol( res.parseInterProScan2GOresults ), 7 )
 checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
 checkEquals( res.parseInterProScan2GOresults[[ 'GO', 'Protein_4' ]], 'GO:0016787' )
 
-# Test falsePositiveRate
-print("Testing falsePositiveRate(...)")
-res.falsePositiveRate <- falsePositiveRate( c( 'A', 'B', 'B', 'C' ), c( 'A', 'B' ) )
-checkEquals( 1/3, res.falsePositiveRate ) 
-res.falsePositiveRate <- falsePositiveRate( c( 'A', 'B', 'B' ), c( 'A', 'B' ) )
-checkEquals( 0.0, res.falsePositiveRate ) 
-res.falsePositiveRate <- falsePositiveRate( c( 'A' ), c( 'B' ) )
-checkEquals( 1.0, res.falsePositiveRate ) 
-
 ##############
 # Test rates #
 ##############
@@ -177,8 +168,13 @@ checkEquals( c( 2/3, 2/3 ),
 
 # Test falsePositiveRates
 print("Testing falsePositiveRates(...)")
-res.falsePositiveRates <- as.numeric( falsePositiveRates( prot.accs, pred.annos, reference.annotations=ref.annos ) )
-exp.falsePositiveRates <- c( 0, 0 )
+pred.go.mtrx <- matrix( list(), nrow=1, ncol=1, dimnames=list( 'GO', 'Protein_1' ) )
+pred.go.mtrx[[ 1, 1 ]] <- c( "GO:0004175", "GO:0044699", "GO:0000122" )
+ref.go.mtrx <- matrix( list(), nrow=1, ncol=1, dimnames=list( 'GO', 'Protein_1' ) )
+ref.go.mtrx[[ 1, 1 ]] <- c( "GO:0004252", "GO:0005634", "GO:0021551" )
+res.falsePositiveRates <- as.numeric( falsePositiveRates( colnames( ref.go.mtrx ), pred.go.mtrx, reference.annotations=ref.go.mtrx ) )
+exp.falsePositiveRates <- 1/3
+# print( res.falsePositiveRates )
 checkEquals( res.falsePositiveRates, exp.falsePositiveRates ) 
 
 # Test recallRates

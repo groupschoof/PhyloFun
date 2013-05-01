@@ -134,20 +134,6 @@ recall <- function( predicted.gos, true.gos,
   if ( length( tgs ) == 0 ) 1 else length( tp ) / length( tgs )
 }
 
-falsePositiveRate <- function( predicted.gos, true.gos ) {
-  # The false positive rate is defined as:
-  # fpr( predicted.gos ) = | predicted.gos \ true.gos | / | predicted.gos |
-  #
-  # Args:
-  #   : 
-  #
-  # Returns:
-  #   
-  pgs <- unique( predicted.gos )
-  tgs <- unique( true.gos )
-  length( setdiff( pgs, tgs ) ) / length( pgs )
-}
-
 fScore <- function( predicted.gos, true.gos, beta.param=1,
   false.positives.funk=falsePositives,
   true.positives.funk=function( pgs, tgs, ... ) { intersect( pgs, tgs ) },
@@ -325,7 +311,7 @@ falsePositiveRates <- function( protein.accessions, predicted.annotations,
     annotation.type='GO',
     reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
       protein.accessions
-    )
+    ), go.con=connectToGeneOntology(), close.go.con=TRUE
   ) {
   # Computes for each predicted annotation the false positive rate (FPR).
   #
@@ -336,12 +322,22 @@ falsePositiveRates <- function( protein.accessions, predicted.annotations,
   #  annotation.type       : The row name of argument annotation.type to
   #                          evaluate the FPRs for.
   #  reference.annotations : The TRUE annotations to be used as reference.
+  #  go.con                : Database connection to the Gene Ontology as
+  #                          returned by function connectToGeneOntology()
+  #  close.go.con          : If set to TRUE the database connection 'go.con'
+  #                          will be automatically closed after executing this
+  #                          function and before returning its results.
   #
   # Returns: A named list of false positive rates for each predicted
   # annotation. Names are the query protein accessions.
   #   
-  rates( protein.accessions, predicted.annotations, falsePositiveRate,
+  fpr.funk <- function( pred.gos, ref.gos ) {
+    length( falsePositives( pred.gos, ref.gos, go.con=go.con ) ) / length( pred.gos )
+  }
+  rslt <- rates( protein.accessions, predicted.annotations, fpr.funk,
     annotation.type, reference.annotations )
+  if ( close.go.con ) dbDisconnect( go.con )
+  rslt
 }
 
 recallRates <- function( protein.accessions, predicted.annotations,
