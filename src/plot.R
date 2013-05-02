@@ -70,8 +70,10 @@ goAnnotationSpaceAbbreviations <- function( go.anno.space,
   #
   # Returns: A list of abbreviation tables, one for each GO term type.
   #   
+  gas <- go.anno.space[ as.logical( lapply( names( go.anno.space ),
+    function(x) { ! is.null( go.anno.space[[x]] ) } ) ) ]
   rslt <- setNames(
-    lapply( names( go.anno.space ), function( go.type ) {
+    lapply( names( gas ), function( go.type ) {
       gt.anno.space <- go.anno.space[[ go.type ]]
       max.ind <- length( gt.anno.space )
       abbrevs <- paste( go.type.abbrevs[[ go.type ]],
@@ -94,7 +96,7 @@ goAnnotationSpaceAbbreviations <- function( go.anno.space,
         nrow=max.ind, dimnames=list( c(), abbrev.colnames )
       )
     }),
-    names( go.anno.space )
+    names( gas )
   )
   if ( close.db.connection )
     dbDisconnect( go.con )
