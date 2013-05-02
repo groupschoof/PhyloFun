@@ -169,7 +169,7 @@ checkEquals( res.annotationToString, exp.annotationToString )
 
 # Test goTypeAnnotationMatrices
 print("Testing goTypeAnnotationMatrices(...)")
-go.type.annos.no.restriction <- goTypeAnnotationMatrices( annotation.matrix, NULL, go.con )
+go.type.annos.no.restriction <- goTypeAnnotationMatrices( annotation.matrix, NULL, go.con=go.con )
 # print( go.type.annos.no.restriction )
 checkEquals( names( go.type.annos.no.restriction ), c( 'biological_process', 'cellular_component', 'molecular_function' ) )
 checkEquals( go.type.annos.no.restriction$biological_process[[ 'GO', 'A0K2M8' ]],

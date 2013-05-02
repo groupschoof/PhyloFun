@@ -166,7 +166,7 @@ goTypeAnnotationMatrices <- function( annotation.matrix,
   # type.
   #   
   all.distinct.annos <- uniq.annotations( annotation.matrix, 'GO', exclude.NAs=T )
-  annos <- goTermsForAccessionWithLevel( all.distinct.annos )
+  annos <- goTermsForAccessionWithLevel( all.distinct.annos, con=go.con )
   go.types <- c( 'biological_process', 'cellular_component', 'molecular_function' ) 
   setNames(
     lapply( go.types, function( go.tp ) {

@@ -132,12 +132,13 @@ annoColors <- function( go.anno.spaces ) {
   )
 }
 
-goTermsTable <- function( go.anno.spaces ) {
+goTermsTable <- function( go.anno.spaces, go.con=connectToGeneOntology() ) {
   goTermsForAccessionWithLevel(
     setdiff(
       unique( as.character( unlist( go.anno.spaces ) ) ),
       'unknown'
-    )
+    ),
+    go.con=go.con
   )
 }
 
