@@ -110,14 +110,21 @@ for ( prot.acc in accs ) {
       )
     }
 
-    hit.accs <- as.character( homologs[ , 'hit.name' ] )
-    hit.seqs <- unlist( retrieveSequences( hit.accs ) )
-    
     # Generate multiple sequence alignment ( MSA ) using MAFFT:
     print( "Generating multiple sequence alignment (MSA)" )
-    acc.hmlgs <- setNames( c( hit.seqs, aa.seqs[ orig.acc ] ), c( names(hit.seqs), prot.acc ) )
     acc.hmlgs.file <- paste( prot.acc, '/homologs.fasta', sep='' )
-    writeXStringSet( AAStringSet( acc.hmlgs ), file=acc.hmlgs.file )
+    hit.accs <- as.character( homologs[ , 'hit.name' ] )
+    # Obtain AA sequences from Uniprot's Web Service:
+    downloadSequences( hit.accs, acc.hmlgs.file )   
+    # Replace all possible occurrences of u or U with x and X respectively:
+    replaceSelenocysteinInFasta( acc.hmlgs.file )   
+    # Read in the resulting filtered homologous AA Sequences:
+    hit.seqs <- readAAStringSet( acc.hmlgs.file )   
+    # Append Query's AA-Sequence and use sanitized original name:
+    acc.hmlgs <- setNames( c( hit.seqs, AAStringSet( aa.seqs[ orig.acc ] ) ),
+      c( hit.accs, prot.acc ) )
+    writeXStringSet( acc.hmlgs, file=acc.hmlgs.file )
+    # Generate Multiple Sequence Alignment:
     acc.msa.file <- paste( prot.acc, "/msa.fasta", sep="" )
     system( paste( "mafft --auto", acc.hmlgs.file, ">", acc.msa.file ) )
 

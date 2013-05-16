@@ -1,4 +1,4 @@
-moin.funk <- function( ... ) { paste( ..., sep=", " ) }
+join.funk <- function( ... ) { paste( ..., sep=", " ) }
 
 connectToGeneOntology <- function( driver=MySQL(), user="go_select",
   password="amigo", dbname="go_latest", host="mysql.ebi.ac.uk", port=4085 ) {

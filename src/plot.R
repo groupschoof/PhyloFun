@@ -153,6 +153,7 @@ plotPhyloFunTree <- function( query.accession, phyl.tree, query.predictions,
   device.funk( file=plot.path, width=width, 
     height= ( if ( hgt < min.height ) min.height else hgt ) )
   plot( phyl.tree, show.node.label=T )
+  axisPhylo()
   dev.off()
 
   # Generate the plot's caption, that is map the abbreviations to the complete
