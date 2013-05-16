@@ -1,4 +1,4 @@
-join.funk <- function( ... ) { paste( ..., sep=", " ) }
+moin.funk <- function( ... ) { paste( ..., sep=", " ) }
 
 connectToGeneOntology <- function( driver=MySQL(), user="go_select",
   password="amigo", dbname="go_latest", host="mysql.ebi.ac.uk", port=4085 ) {
@@ -136,4 +136,29 @@ reConnectIfExpired <- function( go.con ) {
   } else {
     connectToGeneOntology()
   }
+}
+
+goTermsForProteinAccession <- function( prot.acc, con=connectToGeneOntology() ) {
+  dbGetQuery( con,
+    paste( "select t.* from term t left join association a on a.term_id = t.id ",
+           "left join gene_product gp on gp.id = a.gene_product_id ",
+           "left join dbxref d on d.id = gp.dbxref_id ",
+           "where d.xref_key ='", prot.acc, "'", sep=""
+    )
+  )
+}
+
+goTermsForProteinAccessionAndEvidenceCodes <- function( prot.acc,
+  ec=EVIDENCE.CODES, con=connectToGeneOntology() ) {
+  dbGetQuery( con,
+    paste( "select t.*, ev.code from term t left join association a on a.term_id = t.id ",
+           "left join gene_product gp on gp.id = a.gene_product_id ",
+           "left join dbxref d on d.id = gp.dbxref_id ",
+           "left join evidence ev on ev.association_id = a.id ",
+           "where d.xref_key ='", prot.acc, "' ",
+           "and ev.code in ('",
+           paste( ec, collapse="','" ),
+           "')", sep=""
+    )
+  )
 }

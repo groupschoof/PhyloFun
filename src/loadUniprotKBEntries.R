@@ -5,7 +5,7 @@ library(parallel)
 library(biomaRt)
 library(stringr)
 
-EVIDENCE.CODES <- c( 'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP' )
+EVIDENCE.CODES <- c( 'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC' )
 
 uniprotkb.url <- function( accession, frmt='xml' ) {
   # Returns valid URL to access Uniprot's RESTful Web-Service to download
@@ -287,31 +287,45 @@ retrieveSequence <- function( doc, noverbose=T, return.error=T ) {
   seq
 }
 
-retrieveSequences <- function( uniprot.accessions,
-  replace.selenocystein=TRUE ) {
-  # Uses the Uniprot web services to download each XML document for the
-  # argument uniprot.accessions. Each document is parsed and the amino
-  # acid sequence is extracted. Note that long Uniprot accessions are
-  # replaced with their concise form in order to aid other external
-  # tools handling them.
-  #
+downloadSequences <- function( uniprot.accessions, fasta.file,
+  uniprot.webfetch.max.ids=200 ) {
+  # Uses the Uniprot web services to download each FASTA document for the
+  # argument uniprot.accessions. 
+  # 
   # Args:
   #  uniprot.accessions : The valid Uniprot accessions to download the
-  #                       amino acid sequences for, i.e. c(
-  #                       'sp|O08601|MTP_MOUSE', 'P55158' ).
-  #  replace.selenocystein : If set to TRUE each amino acid sequence is
-  #                       sanitized passing it to replaceSelenocystein(…)
+  #               amino acid sequences for, i.e. c(
+  #               'sp|O08601|MTP_MOUSE', 'P55158' ).
+  #  fasta.file : The path to the FASTA file the downloaded sequences will be
+  #               stored in.
   #
-  # Returns: A named list of extracted sequences. The names are the pure
-  # Uniprot accessions. This means that the example argument accession
-  # 'sp|O08601|MTP_MOUSE' will be replaced with 'O08601'.
+  # Returns: TRUE if and only if no error has occurred.
   #   
-  aa.seqs <- lapply( downloadUniprotDocuments( uniprot.accessions ),
-    retrieveSequence )
-  if ( replace.selenocystein ) {
-    lapply( aa.seqs, replaceSelenocystein )
+  if ( length( uniprot.accessions ) > uniprot.webfetch.max.ids ) {
+    # Recursive fetch of uniprot.webfetch.max.ids sized batches:
+    all(
+      c(
+        downloadSequences( 
+          uniprot.accessions[ 1:uniprot.webfetch.max.ids ], fasta.file,
+          uniprot.webfetch.max.ids
+        ),
+        downloadSequences(
+          uniprot.accessions[
+            ( uniprot.webfetch.max.ids + 1 ):length(uniprot.accessions)
+          ], fasta.file, uniprot.webfetch.max.ids
+        )
+      )
+    )
   } else {
-    aa.seqs
+    # Fetch max uniprot.webfetch.max.ids in a single batch:
+    fetch.url <- uniprotkb.url(
+      paste( uniprot.accessions, collapse=",", sep=""), 'fasta'
+    )
+    fastas <- getURL( fetch.url ) 
+    if ( ! is.null( fastas ) && ! is.na( fastas ) && length( fastas ) > 0 ) {
+      write( sub( '\\n$', '', fastas ), file=fasta.file, append=T )
+      TRUE
+    }
   }
 }
 
