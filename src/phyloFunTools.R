@@ -426,3 +426,25 @@ mergeQueryPredictionsAndHomologAnnotations <- function( query.accession,
     )
   }
 }
+
+replaceSelenocysteinInFasta <- function( source.fasta.file,
+  filtered.fasta.file=source.fasta.file ) {
+  # Reads in a FASTA file of amino acid sequences and filters each sequence
+  # with the function replaceSelenocystein( … ). The filtered AA-Sequence
+  # set is then stored in 'filtered.fasta.file'.
+  #
+  # Args:
+  #  source.fasta.file : Valid path to the FASTA file.
+  #  filtered.fasta.file : Valid path to the FASTA file the filtered
+  #                        AA-Sequences shall be saved in.
+  #
+  # Returns: TRUE if and only if no error occurred.
+  #   
+  aa.seqs <- readAAStringSet( source.fasta.file )
+  aa.seqs.fltrd <- setNames(
+    AAStringSet( as.character( lapply( aa.seqs, replaceSelenocystein ) ) ),
+    names( aa.seqs )
+  )
+  writeXStringSet( aa.seqs.fltrd, filtered.fasta.file )
+  TRUE
+}

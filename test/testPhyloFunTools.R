@@ -20,6 +20,7 @@ src.project.file <- function(...) {
 # We set-up required libraries in the test case, not in the R file, as path
 # problems will be resolved, as soon as this R package is loaded as such.
 src.project.file('src', 'phyloFunTools.R')
+src.project.file('src', 'domainArchitectureSimilarity.R')
 
 # Test parsePhmmerTable
 print("Testing parsePhmmerTable(...)")
@@ -255,3 +256,13 @@ for ( go.type in go.types ) {
   ]
   print( checkEquals( go.tp.annos, gt.annos[[ go.type ]] ) )
 }
+
+# Test replaceSelenocysteinInFasta
+print("Testing replaceSelenocysteinInFasta(...)")
+res.replaceSelenocysteinInFasta <- replaceSelenocysteinInFasta( project.file.path( 'test', 'aa_seqs_with_u.fasta'), 'tmp_rslt.fasta' )
+aa.seqs.fltrd <- readAAStringSet( 'tmp_rslt.fasta' )
+checkEquals( names( aa.seqs.fltrd ), c( 'protein_1', 'protein_2' ) )
+checkEquals( toString( aa.seqs.fltrd[[ 1 ]] ), 'xxxxxxxxxxxxxXXXXXXXXXXXXXXXXX' )
+checkEquals( toString( aa.seqs.fltrd[[ 2 ]] ), 'MSTVAAYAAMSATExXxXxXPLTKTTITRS' )
+unlink( 'tmp_rslt.fasta' )
+

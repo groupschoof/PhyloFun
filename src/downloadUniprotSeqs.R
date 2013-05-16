@@ -23,27 +23,7 @@ input.args <- commandArgs( trailingOnly = TRUE )
 print("Usage: Rscript downloadUniprotSeqs.R path/2/accession_per_line.txt path/2/output.fasta")
 
 # Read input
-accs <- scan( input.args[[1]], what=character(), sep="\n" )
+accs <- scan( input.args[[ 1 ]], what=character(), sep="\n" )
 
-# Generate Uniprot-URLs
-uris <- lapply( accs, uniprotkb.url )
-
-# Download docs
-docs <- downloadUniprotDocuments( uris )
-
-# Extract sequences
-seqs <- retrieveSequences( docs )
-
-# Generate output
-o <- sapply( 1:length(accs), function(i) {
-    paste(
-      paste( ">", accs[[i]], sep="" ),
-      seqs[[i]], sep="\n"
-    )
-  },
-  USE.NAMES=F 
-)
-
-# Write output
-fasta <- file( input.args[[2]], "w" )
-writeLines( o, fasta )
+# Download:
+downloadSequences( accs, input.args[[ 2 ]] )
