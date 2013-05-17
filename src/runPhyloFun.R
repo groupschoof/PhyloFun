@@ -120,9 +120,13 @@ for ( prot.acc in accs ) {
     replaceSelenocysteinInFasta( acc.hmlgs.file )   
     # Read in the resulting filtered homologous AA Sequences:
     hit.seqs <- readAAStringSet( acc.hmlgs.file )   
+    # Sanitize Uniprot Protein names: 
+    # 'sp|P55158|MTP_MESAU Microsomal triglyceride transfer protein large subunit OS=Mesocricetus auratus GN=MTTP PE=2 SV=1'
+    # becomes 'P55158'
+    upr.accs <- as.character( lapply( names( hit.seqs ), sanitizeUniprotAccession ) )
     # Append Query's AA-Sequence and use sanitized original name:
     acc.hmlgs <- setNames( c( hit.seqs, AAStringSet( aa.seqs[ orig.acc ] ) ),
-      c( hit.accs, prot.acc ) )
+      c( upr.accs, prot.acc ) )
     writeXStringSet( acc.hmlgs, file=acc.hmlgs.file )
     # Generate Multiple Sequence Alignment:
     acc.msa.file <- paste( prot.acc, "/msa.fasta", sep="" )
