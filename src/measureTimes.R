@@ -34,46 +34,42 @@ src.project.file( "src", "plot.R" )
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Measure times of the following functions:
-time.measurements <- list( 'conditionalProbsTables'=list() )
+# time.measurements <- list(
+#   'conditionalProbsTables'=list(),
+#   'mutationProbability'=list(),
+#   'findMatchingColumn'=list(),
+#   'bayesNodes'=list()
+# )
 
 cpt.funk <- conditionalProbsTables
 conditionalProbsTables <- function( ... ) {
-  time.measurements[[ 'conditionalProbsTables' ]] <<- cbind(
-    time.measurements[[ 'conditionalProbsTables' ]], 
-    system.time( rslt <- cpt.funk( ... ) )
-  )
+  write( system.time( rslt <- cpt.funk( ... ) ), file='conditionalProbsTables.log',
+  append=T )
   rslt
 }
 
 mp.funk <- mutationProbability
 mutationProbability <- function( ... ) {
-  time.measurements[[ 'mutationProbability' ]] <<- cbind(
-    time.measurements[[ 'mutationProbability' ]], 
-    system.time( rslt <- mp.funk( ... ) )
-  )
+  write( system.time( rslt <- mp.funk( ... ) ), file='mutationProbability.log',
+    append=T )
   rslt
 }
 
 fmc.funk <- findMatchingColumn
 findMatchingColumn <- function( ... ) {
-  time.measurements[[ 'findMatchingColumn' ]] <<- cbind(
-    time.measurements[[ 'findMatchingColumn' ]], 
-    system.time( rslt <- fmc.funk( ... ) )
-  )
+  write( system.time( rslt <- fmc.funk( ... ) ), file='findMatchingColumn.log',
+  append=T )
   rslt
 }
 
 bn.funk <- bayesNodes
 bayesNodes <- function( ... ) {
-  time.measurements[[ 'bayesNodes' ]] <<- cbind(
-    time.measurements[[ 'bayesNodes' ]], 
-    system.time( rslt <- bn.funk( ... ) )
-  )
+  write( system.time( rslt <- bn.funk( ... ) ), file='bayesNodes.log', append=T )
   rslt
 }
 
 # Hail User:
-print( paste(
+  print( paste(
   "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta ( -p path/2/phmmer_results.tbl OR -b path/2/blast_results.tbl )",
   "[ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]",
   "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified. Set to 'ALL', if no filtering for evidence-codes is wanted. ) ]",
@@ -321,9 +317,5 @@ for ( prot.acc in accs ) {
       prot.acc ) )
   }
 }
-
-print( "#################" )
-print( time.measurements )
-print( "#################" )
 
 print( "DONE" )
