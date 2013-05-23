@@ -219,18 +219,19 @@ for ( prot.acc in accs ) {
             all.accessions=setdiff( acc.phyl.tree$tip.label, prot.acc )
           )
           if ( ! is.null( acc.bayes.evdnc ) ) {
-            print( "Generating bayesian network's nodes" )
-            print( date() )
-            bn <- bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
-              lapply.funk=lapply.funk)
-            print( "Compiling Bayesian Network from nodes" )
-            print( date() )
-            acc.bayes.netw <- grain( compileCPT( bn ) )
-            print( "Querying Bayesian Network" )
-            print( date() )
-            predict.grain( acc.bayes.netw, response=quoted.acc,
+            bn.st <- system.time( bn <- bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
+              lapply.funk=lapply.funk ) )
+            print( "Constructed Bayesian Nodes in" )
+            print( bn.st )
+            g.st <- system.time( acc.bayes.netw <- grain( compileCPT( bn ) ) )
+            print( "Compiled gRain in" )
+            print( g.st )
+            gp.st <- system.time( grain.preds <- predict.grain( acc.bayes.netw, response=quoted.acc,
               newdata=acc.bayes.evdnc, type='dist'
-            )
+            ) )
+            print( "Predicted gRain in" )
+            print( gp.st )
+            grain.preds
           } else {
             NULL
           }
