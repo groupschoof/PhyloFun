@@ -256,7 +256,7 @@ conditionalProbsTbl <- function( edge.length, annos,
   #   the m[i, j] := P(j | i), i = child function, j = parent function
   #   
   do.call( 'cbind',  
-    lapply.funk( annos, function( anno ) {
+    lapply( annos, function( anno ) {
       a <- annotationToString( anno )
       rownms <- lapply( annos, annotationToString )
       if ( identical( a, unknown.annot ) ) {
@@ -316,7 +316,7 @@ conditionalProbsTables <- function( phylo.tree, annos,
   #   
   uniq.edge.lengths <- unique( phylo.tree$edge.length )
   setNames(
-    lapply( uniq.edge.lengths, function( edge.length ) {
+    lapply.funk( uniq.edge.lengths, function( edge.length ) {
       conditionalProbsTbl( edge.length, annos, annots.mut.prob.table.list,
         mut.tbl.length.col.indx, p.mut.col.indx, unknown.annot, lapply.funk
       )
