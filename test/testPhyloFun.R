@@ -33,6 +33,16 @@ fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
 annotation.matrix <- unserialize(fl)
 close(fl)
 
+# Test roundBranchLengths
+print("Testing roundBranchLengths(...)")
+res.roundBranchLengths <- roundBranchLengths( phylo.tree )
+exp.roundBranchLengths <- c( 0.01, 0.90, 1.17, 0.13, 0.13, 0.11, 0.62, 0.75,
+                            0.16, 0.27, 0.31, 0.16, 0.10, 0.20, 0.59, 0.23,
+                            0.07, 0.14, 0.67, 0.57 )
+# print( phylo.tree$edge.length )
+# print( res.roundBranchLengths$edge.length )
+checkEquals( res.roundBranchLengths$edge.length, exp.roundBranchLengths )
+
 # Test cumulativeBranchLengthsToRoot
 print("Testing cumulativeBranchLengthsToRoot(...)")
 res.cumulativeBranchLengthsToRoot <- cumulativeBranchLengthsToRoot( 2, phylo.tree )

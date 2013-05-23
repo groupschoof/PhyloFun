@@ -1,5 +1,10 @@
 library(gRain)
 
+roundBranchLengths <- function( phyl.tree, digits=2 ) {
+  phyl.tree$edge.length <- round( phyl.tree$edge.length, digits=digits )
+  phyl.tree
+}
+
 # Returns unique node, that has no edge leading to it. Thus, it must be a node
 # in the first column whereas mustn't appear in the second column of the
 # phylTree's edge matrix.

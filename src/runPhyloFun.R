@@ -188,7 +188,8 @@ for ( prot.acc in accs ) {
     # types 'biological_process', 'cellular_component', and
     # 'molecular_function':
     print( "Starting PhyloFun on phylogenetic tree" )
-    acc.phyl.tree   <- read.tree( acc.phyl.tree.file )
+    print( "Note: Branch Lengths of phylogenetic tree will be rounded to two decimal digits!" )
+    acc.phyl.tree <- roundBranchLengths( read.tree( acc.phyl.tree.file ) )
     acc.hmlgs.annos <- if ( length( go.anno.evdnc.cds ) == 1 &&
       go.anno.evdnc.cds == 'ALL' ) {
       retrieveUniprotAnnotations( hit.accs )
