@@ -412,6 +412,21 @@ mostAppropriateAnnotation <- function( named.annotation.score.vector,
 
 highScoringAnnotations <- function( phyloFun.annos, query.accession,
   unknown.annot='unknown', exclude.unknown=TRUE ) {
+  # Finds those PhyloFun Gene Ontology Annotations whose probability is higher
+  # or equal than equal distribution.
+  #
+  # Args:
+  #  phyloFun.annos  : The result of PhyloFun as list of gRain predictions,
+  #                    where the list names are the three GO types.
+  #  query.accession : The Query Protein's Accession surrounded with double
+  #                    quotes.
+  #  unknown.annot   : The string used to describe the UNKNOWN annotation.
+  #  exclude.unknown : If set to TRUE the unknown annotation will not be
+  #                    included in the results.
+  #
+  # Returns: A named list of character vectors of "high scoring" Gene Ontology
+  # Term accessions, in which the names are the three Gene Ontology type.
+  #   
   if ( ! is.null( phyloFun.annos ) ) {
     setNames(
       lapply( names( phyloFun.annos ), function( gt ) {
