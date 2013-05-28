@@ -50,6 +50,32 @@ falsePositives <- function( predicted.gos, true.gos,
   setdiff( fn.candidates, all.parents$acc )
 }
 
+specificity <- function( predicted.gos, true.gos,
+  universe.gos=names( GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE ),
+  false.positives.funk=falsePositives, go.con=connectToGeneOntology() ) {
+  # Computes the statistical quality measure specificity as
+  # specificity :=
+  #   | true.negatives | / ( | false.positives | + | true.negatives | )
+  #
+  # Args:
+  #  predicted.gos        : The Gene Ontology (GO) terms that have been
+  #                         predicted for the current Query.
+  #  true.gos             : The Query's reference GO terms.
+  #  universe.gos         : All GO terms that exist in the univers of GO terms
+  #                         that can possibly be annotated to the Query.
+  #  false.positives.funk : The function used to infer which of the
+  #                         predicted.gos are false positives.
+  #  go.con               : A valid and active database connection to the Gene
+  #                         Ontology.
+  #
+  # Returns: The inferred specificity of the predicted.gos as a numeric value
+  # between 0 and 1.
+  #   
+  true.negatives <- unique( setdiff( universe.gos, true.gos ) )
+  fls.pos <- false.positives.funk( predicted.gos, true.gos, go.con )
+  length( true.negatives ) / ( length( fls.pos ) + length( true.negatives ) )
+}
+
 truesUpperBound <- function( true.gos, go.con=connectToGeneOntology() ) {
   # For all Gene Ontology (GO) term accessions in 'true.gos' all parent and
   # descendent terms are selected and the whole set of those is returned.
@@ -363,3 +389,17 @@ recallRates <- function( protein.accessions, predicted.annotations,
     annotation.type, reference.annotations )
 }
 
+specificityRates <- function( protein.accessions, predicted.annotations,
+    annotation.type='GO',
+    reference.annotations=retrieveExperimentallyVerifiedGOAnnotations(
+      protein.accessions
+    ), go.con=connectToGeneOntology(), close.go.con=TRUE
+  ) {
+  specificity.funk <- function( pred.gos, ref.gos ) {
+    specificity( pred.gos, ref.gos, go.con=go.con )
+  }
+  rslt <- rates( protein.accessions, predicted.annotations, specificity.funk,
+    annotation.type, reference.annotations )
+  if ( close.go.con ) dbDisconnect( go.con )
+  rslt
+}

@@ -23,6 +23,7 @@ src.project.file( 'src', 'geneOntologySQL.R' )
 
 # Setup:
 go.con <- connectToGeneOntology()
+load( project.file.path( 'data', 'p_mutation_tables_R_image.bin' ) )
 
 # Test precision
 print("Testing precision(...)")
@@ -209,6 +210,31 @@ res.truePositivesUpperBound <- truePositivesUpperBound( pred.gos, ref.go,
   go.con=go.con )
 exp.truePositivesUpperBound <- c( 'GO:0016787', 'GO:0003824', 'GO:0070011' ) 
 checkEquals( res.truePositivesUpperBound, exp.truePositivesUpperBound ) 
+
+# Test specificity
+print("Testing specificity(...)")
+res.specificity <- specificity( pred.gos, ref.go, go.con=go.con )
+n.all.gos <- length( unique( names(
+  GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE ) ) )
+# Two false postives: The child and the unrelated predicted GO terms.
+exp.specificity <- ( n.all.gos - 1 ) / ( ( n.all.gos - 1 ) + 2 )
+# print( exp.specificity )
+# print( res.specificity )
+checkEquals( res.specificity, exp.specificity ) 
+
+# Test specificityRates
+print("Testing specificityRates(...)")
+predictions <- matrix( list(), nrow=1, ncol=1, dimnames=list( 'GO',
+  'Query_Protein' ) )
+predictions[[ 'GO', 1 ]] <- pred.gos
+reference <- matrix( list(), nrow=1, ncol=1, dimnames=list( 'GO',
+  'Query_Protein' ) )
+reference[[ 'GO', 1 ]] <- ref.go
+res.specificityRates <- specificityRates( colnames( reference ), predictions,
+  reference.annotations=reference )
+# print( res.specificityRates )
+exp.specificityRates <- list( 'Query_Protein'=exp.specificity )
+checkEquals( res.specificityRates, exp.specificityRates ) 
 
 # Clean up:
 dbDisconnect( go.con )
