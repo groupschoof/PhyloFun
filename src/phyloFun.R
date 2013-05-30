@@ -199,7 +199,8 @@ mutationProbability <- function( annotation, branch.length,
   annots.mut.prob.table.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
   distance.column.index, select.funk=max ) {
   # Returns the maximum mutation probability found for any annotation in the
-  # argument list 'annotation'.
+  # argument 'annotation'. Note that annotation is possibly a composite
+  # annotation consiting of any number of terms.
   #
   # Args:
   #  annotation                 : A character vector of function annotations,
