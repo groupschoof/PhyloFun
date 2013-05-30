@@ -116,7 +116,7 @@ edge.to.formula <- function(phyloTree, edge.index) {
   eval(bquote(~ .(child) | .(prnt) ))
 }
 
-findMatchingColumn <- function( mutation.probability.table, value, column.index ) {
+findMatchingCell <- function( mutation.probability.table, value, column.index ) {
   # Looks up the _last_ row of argument 'mutation.probability.table' who's
   # entry in column 'column.index' is smaller or equal to argument 'value'. If
   # none can be found returns the last row of mutation.probability.table. 
@@ -221,7 +221,7 @@ mutationProbability <- function( annotation, branch.length,
   select.funk(
     as.numeric(
       lapply( annotation, function( singl.anno ) {
-        findMatchingColumn( annots.mut.prob.table.list[[ singl.anno ]],
+        findMatchingCell( annots.mut.prob.table.list[[ singl.anno ]],
           branch.length, distance.column.index )[[ 1, 1 ]]
       })
     )
