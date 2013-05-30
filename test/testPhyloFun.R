@@ -207,8 +207,8 @@ exp.annotationSpace <- list(
 # print( res.annotationSpace )
 checkEquals( res.annotationSpace, exp.annotationSpace ) 
 
-# Test findMatchingCell
-print("Testing findMatchingCell(...)")
+# Test findMatchingRow
+print("Testing findMatchingRow(...)")
 p.mut.tbl <- as.matrix( read.table( header=T, text=
 "   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
 1                          0.00                  0.00                            0.00                             0.00                  0.00                                0                             0.00
@@ -224,7 +224,7 @@ p.mut.tbl <- as.matrix( read.table( header=T, text=
 11                         0.91                  1.61                            0.00                             1.62                  1.66                                1                             2.29
 12                         0.92                  1.67                            0.06                             1.71                  1.92                                1                             2.14" )
 )
-mtch.col.1 <- findMatchingCell( p.mut.tbl, 0.8, 5 )
+mtch.col.1 <- findMatchingRow( p.mut.tbl, 0.8, 5 )
 # print( mtch.col.1 )
 exp.mtch.col.1 <- as.matrix( read.table( header=T, text="
    p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
@@ -232,7 +232,7 @@ exp.mtch.col.1 <- as.matrix( read.table( header=T, text="
 )
 checkEquals( exp.mtch.col.1, mtch.col.1 )
 
-mtch.col.2 <- findMatchingCell( p.mut.tbl, 1.54, 5 )
+mtch.col.2 <- findMatchingRow( p.mut.tbl, 1.54, 5 )
 # print( mtch.col.2 )
 exp.mtch.col.2 <- as.matrix( read.table( header=T, text="
    p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
@@ -240,7 +240,7 @@ exp.mtch.col.2 <- as.matrix( read.table( header=T, text="
 )
 checkEquals( exp.mtch.col.2, mtch.col.2 )
 
-mtch.col.3 <- findMatchingCell( p.mut.tbl, 7272, 5 )
+mtch.col.3 <- findMatchingRow( p.mut.tbl, 7272, 5 )
 # print( mtch.col.3 )
 exp.mtch.col.3 <- as.matrix( read.table( header=T, text="
    p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
@@ -248,7 +248,7 @@ exp.mtch.col.3 <- as.matrix( read.table( header=T, text="
 )
 checkEquals( exp.mtch.col.3, mtch.col.3 )
 
-mtch.col.4 <- findMatchingCell(
+mtch.col.4 <- findMatchingRow(
   matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 ), 0.9, 2
 )
 checkEquals( matrix( c(0.66, 1.0), ncol=2 ), mtch.col.4 )
