@@ -231,16 +231,16 @@ uniqueHomologs <- function( path.2.homlgs.fasta,
     writeXStringSet( uniq.hmlgs, path.2.unique.hmlgs.fasta )
     if ( print.warning ) {
       warning( "Removed duplicated Accessions:",
-        names( hmlgs )[ which( dplcts ) ]
+        paste( names( hmlgs[ dplcts ] ), collapse=", " )
       )
     }
   }
-  T
+  TRUE
 }
 
-filterMultipleSequenceAlignment <- function( msa.xstring.set, min.chars=30 ) {
-  # Discards all Amino Acid sequences shorter than 30 Amino Acids, that is NOT
-  # counting gaps.
+filterMultipleSequenceAlignment <- function( msa.xstring.set, min.chars=5 ) {
+  # Discards all Amino Acid sequences shorter than 'min.chars' Amino Acids,
+  # that is NOT counting gaps.
   #
   # Args:
   #  msa.xstring.set : An object of class XStringSet holding all AA seqs of the
@@ -254,12 +254,12 @@ filterMultipleSequenceAlignment <- function( msa.xstring.set, min.chars=30 ) {
   # than min.chars.
   #   
 
-  # In a MSA all sequences have the same length:
-  if ( nchar( msa.xstring.set[ 1 ] ) < min.chars ) {
+  # In a MSA all sequences ( class "AAString" ) have the same length:
+  if ( length( msa.xstring.set[[ 1 ]] ) < min.chars ) {
     NULL # return
   } else {
-    msa.aa.lens <- lapply( msa.xstring.set, function( aa.seq ) {
-      nchar( gsub( '-|\\s', '', toString( aa.seq ) ) )
+    msa.aa.lens <- lapply( names( msa.xstring.set ), function( accsn ) {
+      nchar( gsub( '-|\\s', '', toString( msa.xstring.set[[ accsn ]] ) ) )
     })
     msa.xstring.set[ which( msa.aa.lens[] > min.chars ) ]
   }
@@ -442,7 +442,11 @@ replaceSelenocysteinInFasta <- function( source.fasta.file,
   #   
   aa.seqs <- readAAStringSet( source.fasta.file )
   aa.seqs.fltrd <- setNames(
-    AAStringSet( as.character( lapply( aa.seqs, replaceSelenocystein ) ) ),
+    AAStringSet( as.character(
+      lapply( names( aa.seqs ), function( accsn ) {
+        replaceSelenocystein( aa.seqs[[ accsn ]] )
+      })
+    ) ),
     names( aa.seqs )
   )
   writeXStringSet( aa.seqs.fltrd, filtered.fasta.file )

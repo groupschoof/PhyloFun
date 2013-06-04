@@ -299,7 +299,7 @@ print("Testing conditionalProbabilityTables(...)")
 phylo.tree.4.brnch.lngths <- read.tree( project.file.path( 'test',
   'test_tree_4_branch_lengths.newick' ) )
 res.conditionalProbabilityTables <- conditionalProbabilityTables( phylo.tree.4.brnch.lngths,
-  c( ua, 'unknown' ), p.mut.tbl.lst, mut.tbl.length.col.indx=2, lapply.funk=lapply )
+  c( ua, 'unknown' ), p.mut.tbl.lst, mutTblLengthColIndx=1 )
 # print( res.conditionalProbabilityTables )
 checkEquals( names( res.conditionalProbabilityTables ),
   as.character( unique( phylo.tree.4.brnch.lngths$edge.length ) ) )
@@ -341,7 +341,7 @@ checkTrue(! grepl('[a-zA-Z]+', as.character(frml)[[2]], perl=T))
 # Tree in which the state 'unknown' is unreachable
 print("Testing bayesNodes(...)")
 res.bayesNodes <- bayesNodes( 
-  phylo.tree.unreachbl.stts, c( 'GO:0043047', 'unknown' ), lapply.funk=lapply
+  phylo.tree.unreachbl.stts, c( 'GO:0043047', 'unknown' )
 )
 exp.anno.space <- c( 'GO:0043047', 'unknown' )
 # print( res.bayesNodes )
@@ -368,8 +368,7 @@ for( i in 2:length(res.bayesNodes) ) {
 # Test tree without unreachable 'unkown' state:
 go.type.annos <- goTypeAnnotationMatrices( annotation.matrix, go.con=go.con )
 anno.space.lst <- goAnnotationSpaceList( go.type.annos )
-bys.nds <- bayesNodes( phylo.tree, anno.space.lst$molecular_function,
-  lapply.funk=lapply )
+bys.nds <- bayesNodes( phylo.tree, anno.space.lst$molecular_function )
 checkTrue( length( bys.nds ) == 21 )
 root.bys.nd <- bys.nds[[ 1 ]]
 # print( root.bys.nd )

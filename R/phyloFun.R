@@ -484,7 +484,7 @@ bayesNode <- function( phylo.tree, annotation.space, node.index, cond.prob.tbls,
 
 bayesNodes <- function( phylo.tree, annotation.space,
   mutation.probability.tables.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
-  unknown.annot='unknown', lapply.funk=mclapply ) {
+  unknown.annot='unknown' ) {
   # Computes the conditional probability tables (CPT) for each node in the
   # argument 'phylo.tree' using function 'bayesNode'.
   #
@@ -497,23 +497,20 @@ bayesNodes <- function( phylo.tree, annotation.space,
   #                                     measured branch lengths.
   #  unknown.annot                    : The label of the unknown annotation.
   #                                     Default is 'unknown'.
-  #  lapply.funk                      : Set to 'mclapply' if parallel
-  #                                     computation of CPTs is wanted, set to
-  #                                     lapply, if serial computation is
-  #                                     preferred. 'mclapply' is *strongly*
-  #                                     recommended when used on trees with more
-  #                                     than 250 nodes. Default is 'mclapply'.
   #
   # Returns: A list of CPTs, one for each phylogenetic node in argument
   # 'phylo.tree'.
   #   
-  cpts <- conditionalProbabilityTables( phylo.tree, annotation.space,
-    mutation.probability.tables.list, unknown.annot=unknown.annot,
-    lapply.funk=lapply.funk
+  uniq.branch.lengths <- unique( phylo.tree$edge.length )
+  annos.as.strs <- as.character( lapply( annotation.space,
+    annotationToString ) )
+  cpts <- conditionalProbabilityTables( uniq.branch.lengths,
+    annotation.space, annos.as.strs,
+    mutation.probability.tables.list, mutTblLengthColIndx=4
   )
   phylo.nodes <- c( get.root.node( phylo.tree ), phylo.tree$edge[ , 2 ] )
   unlist(
-    lapply.funk( phylo.nodes, function( phylo.node ) {
+    lapply( phylo.nodes, function( phylo.node ) {
       bayesNode( phylo.tree, annotation.space, phylo.node, cpts,
         mutation.probability.tables.list, unknown.annot
       )

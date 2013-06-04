@@ -92,7 +92,7 @@ conditionalProbabilityTable <- function( branchLength, annos,
 }
 
 conditionalProbabilityTables <- function( uniqueEdgeLengths, annos,
-  stringifiedAnnotations, annotsMutationProbTableList, mutTblLengthColIndx ) {
+  stringifiedAnnotations, annotsMutationProbTables, mutTblLengthColIndx ) {
   # Generates the conditional probability tables for each unique branch length
   # in 'uniqueEdgeLengths'. Uses Rcpp function conditionalProbabilityTables.
   # Returned probability matrices hold mutation probabilities from each
@@ -155,7 +155,7 @@ filterAnnotationMutationProbabilityTableList <- function( annotations,
   #   
   uniq.annos <- intersect(
     unique( unlist( annotations ) ), 
-    names( annotsMutationProbTableList )
+    names( annotsMutationProbTables )
   )
-  lapply( annotsMutationProbTableList[ uniq.annos ], as.matrix )
+  lapply( annotsMutationProbTables[ uniq.annos ], as.matrix )
 }

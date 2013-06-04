@@ -1,37 +1,6 @@
-library(tools)
-library(Biostrings)
-library(RCurl)
-library(stringr)
-library(ape)
-library(gRain)
-library(RMySQL)
-library(XML)
-library(parallel)
-library(brew)
-library(xtable)
+require( PhyloFun )
 
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir),'',script.dir)
-  normalizePath(file.path(project.dir,...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-# Helper functions:
-src.project.file( "src", "phyloFunTools.R" )
-src.project.file( "src", "phyloFun.R" )
-src.project.file( "src", "loadUniprotKBEntries.R" )
-src.project.file( "src", "geneOntologySQL.R" )
-src.project.file( "src", "domainArchitectureSimilarity.R" )
-src.project.file( "src", "plot.R" )
-load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
+data( "p_mutation_tables_R_image", package="PhyloFun" )
 
 # Hail User:
 print( paste(
@@ -87,10 +56,6 @@ print(
   "accessions in the sequence similarity search results, nor will Gblocks accept such sequence names!",
   "See function sanitizeUniprotAccession(…) for details." )
 )
-
-# Set cores to use:
-options( 'mc.cores'=phylo.fun.args[[ 'c' ]] )
-lapply.funk <- if ( options('mc.cores') > 1 ) mclapply else lapply
 
 # For each query protein, do:
 for ( prot.acc in accs ) {
@@ -221,9 +186,7 @@ for ( prot.acc in accs ) {
           )
           if ( ! is.null( acc.bayes.evdnc ) ) {
             acc.bayes.netw <- grain( compileCPT(
-              bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]],
-                lapply.funk=lapply.funk
-              )
+              bayesNodes( acc.phyl.tree, acc.go.anno.spaces[[ go.type ]] )
             ) )
             predict.grain( acc.bayes.netw, response=quoted.acc,
               newdata=acc.bayes.evdnc, type='dist'
