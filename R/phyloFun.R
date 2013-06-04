@@ -116,33 +116,6 @@ edge.to.formula <- function(phyloTree, edge.index) {
   eval(bquote(~ .(child) | .(prnt) ))
 }
 
-findMatchingRow <- function( mutation.probability.table, value, column.index ) {
-  # Looks up the _last_ row of argument 'mutation.probability.table' who's
-  # entry in column 'column.index' is smaller or equal to argument 'value'. If
-  # none can be found returns the last row of mutation.probability.table. 
-  #
-  # Args:
-  #  mutation.probability.table : The matrix holding mutation probabilities as
-  #                               returned i.e. by function
-  #                               'mutationProbabilityDistribution'.
-  #  value                      : The current distance value, i.e. the branch
-  #                               length to find the correct mutation
-  #                               probability for.
-  #  column.index               : The index of the column holding the distance
-  #                               measure to compare argument value with.
-  #
-  # Returns: The argument mutation.probability.table's matching row as matrix.
-  #   
-  hits <- mutation.probability.table[
-    which( mutation.probability.table[ , column.index ] >= value ), , drop=F
-  ]
-  if ( nrow( hits ) > 0 ) {
-    hits[ 1, , drop=F ]
-  } else {
-    mutation.probability.table[ nrow(mutation.probability.table), , drop=F ]
-  }
-}
-
 goTypeAnnotationMatrices <- function( annotation.matrix,
   valid.go.terms=names( GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE ),
   go.con=connectToGeneOntology(), exclude.empty.cols=T ) {
@@ -195,137 +168,6 @@ goTypeAnnotationMatrices <- function( annotation.matrix,
   )
 }
 
-mutationProbability <- function( annotation, branch.length,
-  annots.mut.prob.table.list=GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
-  distance.column.index, select.funk=max ) {
-  # Returns the maximum mutation probability found for any annotation in the
-  # argument 'annotation'. Note that annotation is possibly a composite
-  # annotation consiting of any number of terms.
-  #
-  # Args:
-  #  annotation                 : A character vector of function annotations,
-  #                               i.e. c( 'GO_A', 'GO_B', 'GO_C' )
-  #  branch.length              : The length of the current phylogenetic
-  #                               branch.
-  #  annots.mut.prob.table.list : The list to lookup each single annotations's
-  #                               mutation probability table.
-  #  distance.column.index      : The index of the column in which above
-  #                               probability tables hold the maximum distance
-  #                               measures mapped to their corresponding
-  #                               mutation probabilities.
-  #  select.funk                : Set to min, mean or max to define which
-  #                               mutation probability should be returned.
-  #                               Default is max.
-  #
-  # Returns: The numeric maximum of all matching mutation probabilities.
-  #   
-  select.funk(
-    as.numeric(
-      lapply( annotation, function( singl.anno ) {
-        findMatchingRow( annots.mut.prob.table.list[[ singl.anno ]],
-          branch.length, distance.column.index )[[ 1, 1 ]]
-      })
-    )
-  )
-}
-
-conditionalProbsTbl <- function( edge.length, annos,
-  annots.mut.prob.table.list, mut.tbl.length.col.indx=5, p.mut.col.indx=1,
-  unknown.annot='unknown', lapply.funk=mclapply ) {
-  # Looks up the mutation probability tables for each annotation and constructs
-  # the transition probabilities based on the current branch's length.
-  # Introduces a new annotation 'UNKNOWN' which can mutate to every other
-  # annotation in argument 'uniq.annotations' and does have a zero probability
-  # of self retainment.
-  #
-  # Args:
-  #  edge.length : sequence distance as the current branch's length.
-  #  annos : The unique anntotations as they appear in the current phylogenetic
-  #          tree. Should NOT contain NULL or NA values. 
-  #  annots.mut.prob.table.list : The list of empirical mutation probabilities
-  #                               for each annotation.
-  #  mut.tbl.length.col.indx : The index of the mutation probability table's
-  #                            column in which to find the corresponding
-  #                            sequence distance.
-  #  p.mut.col.indx : The mutation probability column's index.
-  #  unknown.annot : The UNKNOWN annotation, set to any convenient name.
-  #  lapply.funk : If set to mclapply the CPT's columns will be computed in
-  #                parallel. Set to lapply if serial computation is wanted.
-  #
-  # Returns: 
-  #   A length(annos)*length(annos) probability matrix with
-  #   the m[i, j] := P(j | i), i = child function, j = parent function
-  #   
-  do.call( 'cbind',  
-    lapply( annos, function( anno ) {
-      a <- annotationToString( anno )
-      rownms <- lapply( annos, annotationToString )
-      if ( identical( a, unknown.annot ) ) {
-        trans.probs <- matrix( 1 / ( length( annos ) - 1 ),
-          ncol=1, nrow=length( annos ),
-          dimnames=list( rownms, a )
-        )
-        # unknown retainment probability:
-        trans.probs[[ a, a ]] <- 0
-        trans.probs
-      } else {
-        p.mut <- mutationProbability( anno, edge.length,
-          annots.mut.prob.table.list, mut.tbl.length.col.indx
-        )
-        trans.probs <- matrix( ( p.mut / ( length( annos ) - 1 ) ),
-          ncol=1, nrow=length( annos ),
-          dimnames=list( rownms, a )
-        )
-        # annotation retainment probability:
-        trans.probs[[ a, a ]] <- 1 - p.mut
-        trans.probs
-      }
-    })
-  )
-}
-
-conditionalProbsTables <- function( phylo.tree, annos,
-  annots.mut.prob.table.list, mut.tbl.length.col.indx=5, p.mut.col.indx=1,
-  unknown.annot='unknown', lapply.funk=mclapply ) {
-  # For each UNIQUE branch length in the argument 'phylo.tree' a conditional
-  # mutation probability table (CPT) of argument protein annotations 'annos' is
-  # created using function 'conditionalProbsTbl'.
-  #
-  # Args:
-  #  phylo.tree                 : An object of class phylo as returned by
-  #                               read.tree
-  #  annos                      : A vector of unique and possibly compound
-  #                               function annotations. See function
-  #                               'goAnnotationSpaceList' for details.
-  #  annots.mut.prob.table.list : The list of function mutation probabilities
-  #                               dependent on branch lengths.
-  #  mut.tbl.length.col.indx    : The column index in which to lookup the
-  #                               branch length in each table of argument
-  #                               'annots.mut.prob.table.list'.
-  #  p.mut.col.indx             : The column index of matrices in
-  #                               'annots.mut.prob.table.list' in which to
-  #                               lookup the mutation probability dependent on
-  #                               the current branch length.
-  #  unknown.annot              : The string representing the UNKNOWN
-  #                               annotation.
-  #  lapply.funk                : The default mclapply forces parallel
-  #                               computation of the CPTs, set to lapply if
-  #                               serial computation is wanted.
-  #
-  # Returns: A named list of CPTs for each unique branch length in argument
-  # 'phylo.tree'.
-  #   
-  uniq.edge.lengths <- unique( phylo.tree$edge.length )
-  setNames(
-    lapply.funk( uniq.edge.lengths, function( edge.length ) {
-      conditionalProbsTbl( edge.length, annos, annots.mut.prob.table.list,
-        mut.tbl.length.col.indx, p.mut.col.indx, unknown.annot, lapply.funk
-      )
-    }),
-    uniq.edge.lengths
-  )
-}
-
 eliminateUnreachableStates <- function( conditional.probs.tbl ) {
   # gRain throws errors if conditional probability tables have unreachable
   # stated. This function identifies them by looking up indices of those
@@ -334,7 +176,7 @@ eliminateUnreachableStates <- function( conditional.probs.tbl ) {
   #
   # Args:
   #  conditional.probs.tbl : A probability matrix as generated by
-  #                          conditionalProbsTbl.
+  #                          conditionalProbabilityTable.
   #
   # Returns: The conditional.probs.tbl without rows and columns of unreachable
   # states.
@@ -605,7 +447,7 @@ bayesNode <- function( phylo.tree, annotation.space, node.index, cond.prob.tbls,
   #  cond.prob.tbls                   : The named list of annotation mutation
   #                                     conditional probability tables as
   #                                     returned by function
-  #                                     conditionalProbsTables. 
+  #                                     conditionalProbabilityTables. 
   #  mutation.probability.tables.list : The list of mutation probabilities for
   #                                     measured branch lengths.
   #  unknown.annot                    : The label of the unknown annotation.
@@ -665,7 +507,7 @@ bayesNodes <- function( phylo.tree, annotation.space,
   # Returns: A list of CPTs, one for each phylogenetic node in argument
   # 'phylo.tree'.
   #   
-  cpts <- conditionalProbsTables( phylo.tree, annotation.space,
+  cpts <- conditionalProbabilityTables( phylo.tree, annotation.space,
     mutation.probability.tables.list, unknown.annot=unknown.annot,
     lapply.funk=lapply.funk
   )

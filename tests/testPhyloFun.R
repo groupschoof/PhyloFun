@@ -274,15 +274,15 @@ cpt <- matrix( c( 0.5, 0.3, 0.2, 1, 0, 0, 0.5, 0.5, 0 ),
 res.eliminateUnreachableStates <- eliminateUnreachableStates( cpt )
 checkEquals( res.eliminateUnreachableStates, cpt ) 
 
-# Test conditionalProbsTbl
-print("Testing conditionalProbsTbl(...)")
+# Test conditionalProbabilityTable
+print("Testing conditionalProbabilityTable(...)")
 ua <- list( c( "GO_1", "GO_2", "GO_3" ), c( "GO_1", "GO_2" ), "GO_3" )
 p.mut.tbl.lst <- list()
 p.mut.tbl.lst[[ "GO_1" ]] <- matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_2" ]] <- matrix( c(0.25, 0.5, 0.75, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_3" ]] <- matrix( c(0.45, 0.75, 0.98, 0.5, 1.0, 1.5), ncol=2 )
 # print( p.mut.tbl.lst )
-con.prbs.tbl <- conditionalProbsTbl( 0.9, c( ua, 'unknown' ), p.mut.tbl.lst, 2 )
+con.prbs.tbl <- conditionalProbabilityTable( 0.9, c( ua, 'unknown' ), p.mut.tbl.lst, 2 )
 # print( con.prbs.tbl )
 checkEquals( 1.0, sum( con.prbs.tbl[ , 1 ] ) )
 # print( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]] )
@@ -294,19 +294,19 @@ checkEquals( 1 - p.mut.tbl.lst[[ 3 ]][[ 2, 1 ]], con.prbs.tbl[[ 3, 3 ]] )
 checkEquals( 0, con.prbs.tbl[[ 'unknown', 'unknown' ]] )
 checkEquals( 1.0, sum( con.prbs.tbl[ , 'unknown' ] ) )
 
-# Test conditionalProbsTables
-print("Testing conditionalProbsTables(...)")
+# Test conditionalProbabilityTables
+print("Testing conditionalProbabilityTables(...)")
 phylo.tree.4.brnch.lngths <- read.tree( project.file.path( 'test',
   'test_tree_4_branch_lengths.newick' ) )
-res.conditionalProbsTables <- conditionalProbsTables( phylo.tree.4.brnch.lngths,
+res.conditionalProbabilityTables <- conditionalProbabilityTables( phylo.tree.4.brnch.lngths,
   c( ua, 'unknown' ), p.mut.tbl.lst, mut.tbl.length.col.indx=2, lapply.funk=lapply )
-# print( res.conditionalProbsTables )
-checkEquals( names( res.conditionalProbsTables ),
+# print( res.conditionalProbabilityTables )
+checkEquals( names( res.conditionalProbabilityTables ),
   as.character( unique( phylo.tree.4.brnch.lngths$edge.length ) ) )
-# print(  res.conditionalProbsTables[[ '0.59211' ]][ , 1 ])
+# print(  res.conditionalProbabilityTables[[ '0.59211' ]][ , 1 ])
 checkEquals( setNames( c( 0.25, 0.25, 0.25, 0.25 ),
     c( 'GO_1 & GO_2 & GO_3', 'GO_1 & GO_2', 'GO_3', 'unknown' ) ),
-  res.conditionalProbsTables[[ '0.59211' ]][ , 1 ]
+  res.conditionalProbabilityTables[[ '0.59211' ]][ , 1 ]
 )
 
 # Test mutationProbability
