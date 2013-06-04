@@ -1,11 +1,19 @@
 Package: PhyloFun
 Type: Package
-Title: What the package does (short line)
+Title: Annotates Proteins with Gene Ontology (GO) Terms
 Version: 1.0
 Date: 2013-05-23
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What Licence is it under ?
-Depends: Rcpp (>= 0.10.3)
+Author: Asis Hallab, Heiko Schoof
+Maintainer: schoof@uni-bonn.de, hallab@mpipz.mpg.de
+Description: PhyloFun is a pipeline which generates a maximum likelihood
+phylogenetic tree for each query protein and treats this tree as a Bayesian
+Network. Gene Ontology (GO) term annotations are passed from homologous
+proteins to the query using Judea Pearl's message passing algorithm provided by
+the package gRain. The result is an annotated high quality phylogenetic tree
+with confidence values and the inferred GO terms for the query protein.
+PhyloFun is fast and relyable. It can be applied to whole genomes.
+License: GNU General Public License version 3 or greater
+Suggests: RcppArmadillo, vimcom
+Depends: R (>= 2.15.2), Rcpp (>= 0.10.3), Biostrings, RCurl, RMySQL, XML, ape,
+biomaRt, brew, gRain, phangorn, rredis, stringr, tools, utils, xtable
 LinkingTo: Rcpp
