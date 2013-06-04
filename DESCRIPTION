@@ -13,7 +13,5 @@ the package gRain. The result is an annotated high quality phylogenetic tree
 with confidence values and the inferred GO terms for the query protein.
 PhyloFun is fast and relyable. It can be applied to whole genomes.
 License: GNU General Public License version 3 or greater
-Suggests: RcppArmadillo, vimcom
-Depends: R (>= 2.15.2), Rcpp (>= 0.10.3), Biostrings, RCurl, RMySQL, XML, ape,
-biomaRt, brew, gRain, phangorn, rredis, stringr, tools, utils, xtable
+Depends: R (>= 2.15.2), Rcpp (>= 0.10.3), RCurl (>=1.95.4.1), RMySQL (>=0.9.3), XML (>=3.96.0.2), ape (>=3.0.7), biomaRt (>=2.14.0), brew (>=1.0.6), gRain (>=1.1.0), phangorn (>=1.7.1), rredis (>=1.6.7), stringr (>=0.6.2), tools (>=2.15.2), utils (>=2.15.2), xtable (>=1.7.1)
 LinkingTo: Rcpp
