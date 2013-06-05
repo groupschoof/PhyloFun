@@ -40,7 +40,7 @@ The arguments are printed whenever the Rscript is executed.
 
 *A short test run can be done as follows:*
 
-bc. Rscript <path_to_your_PhyloFun_installation>/exec/runPhyloFun.R -q <path_to_your_PhyloFun_installation>/-q <path_to_your_PhyloFun_installation>/inst/protein_1.fasta -b <path_to_your_PhyloFun_installation>/inst/protein_1_blastout.tbl -f FastTree -h true -e ALL -r true
+bc. Rscript <path_to_your_PhyloFun_installation>/exec/runPhyloFun.R -q <path_to_your_PhyloFun_installation>/-q <path_to_your_PhyloFun_installation>/inst/protein_1.fasta -b <path_to_your_PhyloFun_installation>/inst/protein_1_blastout.tbl -f FastTree -h true -r true -m true
 
 _Note_ that depending on you installation of FastTree you'll have to provide either @-f FastTree@ or the faster multi processor version of if @-f FastTreeMP@.
 
