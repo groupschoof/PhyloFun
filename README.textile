@@ -46,6 +46,12 @@ _Note_ that depending on you installation of FastTree you'll have to provide eit
 
 Results of this test run will be written into the folder @Protein_1/@ in your current directory.
 
+h3. Set number of parallel threads used by FastTreeMP (OpenMP)
+
+Export the environment variable @OMP_NUM_THREADS@ and set it to your choice, for example:
+
+bc. export OMP_NUM_THREADS=10; Rscript <path_to_your_PhyloFun_installation>/exec/runPhyloFun.R [...]
+
 h2. Coding style guide
 
 PhyloFun's code mostly follows the google style guide for R:
