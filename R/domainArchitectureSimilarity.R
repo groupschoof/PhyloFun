@@ -456,7 +456,7 @@ pairsForAccessionsAssumingSymmetry <- function( all.pairs, accessions,
   #
   # Returns: The subset of argument 'all.pairs' where each pair contains at
   # least a single accession of argument set 'accessions'. Returned pairs are
-  # unqique and do not contain identity pairs.
+  # unique and do not contain identity pairs.
   #   
   uniquePairs(
     all.pairs[ all.pairs[,1] %in% accessions, , drop=F ],
