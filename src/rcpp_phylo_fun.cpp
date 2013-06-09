@@ -93,3 +93,67 @@ SEXP conditionalProbabilityTables( SEXP uniqueEdgeLengths, SEXP annos, SEXP
 
   END_RCPP
 }
+
+SEXP extractProteinPairs( SEXP proteinAccessionMatrix, SEXP accession, SEXP
+    pairFirstMemberColIndex, SEXP pairSecondMemberColIndex ) {
+  StringMatrix tbl( proteinAccessionMatrix );
+  StringVector rAcc( accession );
+  std::string acc( rAcc( 0 ) );
+  NumericVector rColA( pairFirstMemberColIndex );
+  int colA( rColA( 0 ) );
+  NumericVector rColB( pairSecondMemberColIndex );
+  int colB( rColB( 0 ) );
+
+  List prs( 0 );
+  for ( int i=0; i<tbl.nrow(); ++i ) {
+    if ( acc == std::string( tbl( i, 0 ) ) &&
+      acc != std::string( tbl( i, 1 ) ) )
+    {
+      prs.push_back( tbl( i, _ ) );
+    }
+  }
+  return( wrap( prs ) );
+}
+
+SEXP countProteinPairs( SEXP proteinAccessionMatrix, SEXP accession, SEXP
+    pairFirstMemberColIndex, SEXP pairSecondMemberColIndex ) {
+  StringMatrix tbl( proteinAccessionMatrix );
+  StringVector rAcc( accession );
+  std::string acc( rAcc( 0 ) );
+  NumericVector rColA( pairFirstMemberColIndex );
+  int colA( rColA( 0 ) );
+  NumericVector rColB( pairSecondMemberColIndex );
+  int colB( rColB( 0 ) );
+
+  int cnt = 0;
+  for ( int i=0; i<tbl.nrow(); ++i ) {
+    if ( acc == std::string( tbl( i, 0 ) ) &&
+      acc != std::string( tbl( i, 1 ) ) )
+    {
+      ++cnt;
+    }
+  }
+  return( wrap( cnt ) );
+}
+
+SEXP countOrExtractProteinPairs( SEXP proteinAccessionMatrix, SEXP accessions,
+    SEXP pairFirstMemberColIndex, SEXP pairSecondMemberColIndex, SEXP
+    funcAbbrev ) {
+  CharacterVector rFuncAbbrev( funcAbbrev );
+  bool countPairs = std::string( rFuncAbbrev( 0 ) ) == "count";
+  CharacterVector protAccs( accessions );
+
+  List rslts( 0 );
+  for ( int i = 0; i < protAccs.size(); ++i ) {
+    std::string protAcc( protAccs( i ) );
+    if ( countPairs ) {
+      rslts.push_back( countProteinPairs( proteinAccessionMatrix, protAccs( i ),
+            pairFirstMemberColIndex, pairSecondMemberColIndex ), protAcc );
+    } else {
+      rslts.push_back( extractProteinPairs( proteinAccessionMatrix, protAccs( i ),
+            pairFirstMemberColIndex, pairSecondMemberColIndex ), protAcc );
+    }
+  }
+
+  return( wrap( rslts ) );
+}

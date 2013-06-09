@@ -40,4 +40,34 @@ RcppExport SEXP conditionalProbabilityTables( SEXP uniqueEdgeLengths, SEXP
     annos, SEXP stringifiedAnnotations, SEXP annotsMutationProbTableList, SEXP
     mutTblLengthColIndx );
 
+/*
+ * Iterates through the argument proteinAccessionMatrix looking up rows in
+ * which the accession stored in column 'pairFirstMemberColIndex' equals
+ * argument 'accession'. If the row is a self match, that is the identity pair,
+ * it is excluded from the returned list of pairs ( StringVectors of length 2
+ * ).
+ */
+RcppExport SEXP extractProteinPairs( SEXP proteinAccessionMatrix, SEXP
+    accession, SEXP pairFirstMemberColIndex, SEXP pairSecondMemberColIndex );
+
+/*
+ * Iterates through the argument proteinAccessionMatrix looking up rows in
+ * which the accession stored in column 'pairFirstMemberColIndex' equals
+ * argument 'accession'. If the row is a self match, that is the identity pair,
+ * it is not counted. Instead of returning a list of protein pairs this
+ * function just counts the number of matching pairs.
+ */
+RcppExport SEXP countProteinPairs( SEXP proteinAccessionMatrix, SEXP
+    accession, SEXP pairFirstMemberColIndex, SEXP pairSecondMemberColIndex );
+
+/*
+ * Iterates over the vector 'accessions' and invokes countProteinPairs(…) or
+ * extractProteinPairs(…), respectively. Counts are measured if and only if
+ * argument 'funcAbbrev' equals "count". Returns a named list of results from
+ * the respective function calls.
+ */
+RcppExport SEXP countOrExtractProteinPairs( SEXP proteinAccessionMatrix, SEXP
+    accessions, SEXP pairFirstMemberColIndex, SEXP pairSecondMemberColIndex,
+    SEXP funcAbbrev );
+
 #endif
