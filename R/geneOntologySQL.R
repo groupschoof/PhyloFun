@@ -65,6 +65,39 @@ parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   )
 }
 
+
+parentGoTermsOfLevel <- function( go.term.id, go.level=3,
+  con=connectToGeneOntology() ) {
+  # Finds the parent GO term for argument term 'accession', where the parent
+  # has distance 'go.level' to the GO directed acyclic graph (GO-DAG) root.
+  #
+  # Args:
+  #  go.term.id : The database identifier of the argument GO term  
+  #  go.level  : The distance of the requested parent GO term to the GO-DAG's
+  #              root node
+  #  con       : A valid and active database connection to the Gene Ontology
+  #              realtional database.
+  #
+  # Returns: A data.frame holding the requested row, if found. Column names are
+  # those of the returned SQL set. 
+  #   
+  dbGetQuery( con,
+    paste( "SELECT t.*, res.relation_distance FROM graph_path res ",
+      "LEFT JOIN term t ON t.id = res.term1_id ",
+      "WHERE res.relationship_type_id = 1 ",
+      "AND res.relation_distance = ",
+      go.level,
+      "AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND res.term2_id = ",
+      go.term.id,
+      " AND t.id != ",
+      go.term.id,
+      " ORDER BY res.distance DESC", 
+      sep=""
+    )
+  )
+}
+
 spawnedGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   # Queries the Gene Ontology ( GO ) database to retrieve all GO terms placed
   # in the descending sub-graph spawned by GO term with ID 'go.term.id'.
