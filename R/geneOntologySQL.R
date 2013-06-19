@@ -76,10 +76,12 @@ parentGoTermsOfLevel <- function( go.term.id, go.level=3,
   #  go.level  : The distance of the requested parent GO term to the GO-DAG's
   #              root node
   #  con       : A valid and active database connection to the Gene Ontology
-  #              realtional database.
+  #              relational database.
   #
   # Returns: A data.frame holding the requested row, if found. Column names are
-  # those of the returned SQL set. 
+  # those of the returned SQL set. An empty data.frame is returned for all
+  # argument 'go.term.id' that are not found in the database or that themselves
+  # have a GO level <= argument 'go.level'.
   #   
   dbGetQuery( con,
     paste( "SELECT t.*, res.relation_distance FROM graph_path res ",
@@ -87,7 +89,7 @@ parentGoTermsOfLevel <- function( go.term.id, go.level=3,
       "WHERE res.relationship_type_id = 1 ",
       "AND res.relation_distance = ",
       go.level,
-      "AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      " AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
       "AND res.term2_id = ",
       go.term.id,
       " AND t.id != ",
