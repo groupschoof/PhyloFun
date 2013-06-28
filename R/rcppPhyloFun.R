@@ -24,10 +24,10 @@ mutationProbability <- function( compositeAnnotation, branchLength,
   # Calls Rcpp function of same name to infer the maximum mutation probability
   # for any annotation present in 'compositeAnnotation'. Note that the column
   # in which to lookup the distance measure 'branchLength' in the respective
-  # mutation probability tables, held in 'annotsMutProbTables', is specified by
-  # 'distanceColumnIndx'. This has to be in C++ format, that is starting with 0
-  # not with 1 as in R. For example column 5 should be passed as 4 to be
-  # working in C++.
+  # mutation probability tables, held in 'annotsMutationProbTables', is
+  # specified by 'distanceColumnIndx'. This has to be in C++ format, that is
+  # starting with 0 not with 1 as in R. For example column 5 should be passed
+  # as 4 to be working in C++.
   #
   # Args:
   #  compositeAnnotation      : Character vector of annotations, for example c(
@@ -53,7 +53,7 @@ mutationProbability <- function( compositeAnnotation, branchLength,
   annotsMutProbTbls <- filterAnnotationMutationProbabilityTableList( compositeAnnotation,
     annotsMutationProbTables )
   ret <- .Call( "mutationProbability", compositeAnnotation, branchLength,
-               annotsMutProbTables, distanceColumnIndx, PACKAGE="PhyloFun" )
+               annotsMutProbTbls, distanceColumnIndx, PACKAGE="PhyloFun" )
   return( ret )
 }
 
