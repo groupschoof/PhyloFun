@@ -65,39 +65,77 @@ parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   )
 }
 
-
-parentGoTermsOfLevel <- function( go.term.id, go.level=3,
+parentGoTermOfLevel <- function( go.term.id, go.level=3,
   con=connectToGeneOntology() ) {
-  # Finds the parent GO term for argument term 'accession', where the parent
-  # has distance 'go.level' to the GO directed acyclic graph (GO-DAG) root.
+  # Finds the Gene Ontology (GO) term that is parent to the argument
+  # 'go.term.id' and has argument 'go.level' distance to the root of the GO
+  # directed acyclic graph. 
   #
   # Args:
-  #  go.term.id : The database identifier of the argument GO term  
-  #  go.level  : The distance of the requested parent GO term to the GO-DAG's
-  #              root node
-  #  con       : A valid and active database connection to the Gene Ontology
-  #              relational database.
+  #  go.term.id : The database identifier of the GO term to find the parent
+  #               for.
+  #  go.level   : The distance of the looked for parent term to the GO DAG's
+  #               root node.
+  #  con        : A valid and active database connection to an instance of the
+  #               Gene Ontology relation database.
   #
-  # Returns: A data.frame holding the requested row, if found. Column names are
-  # those of the returned SQL set. An empty data.frame is returned for all
-  # argument 'go.term.id' that are not found in the database or that themselves
-  # have a GO level <= argument 'go.level'.
-  #   
+  # Returns: A data frame.
+  #
   dbGetQuery( con,
-    paste( "SELECT t.*, res.relation_distance FROM graph_path res ",
+    paste( "SELECT t.*, to_root.relation_distance FROM graph_path res ",
       "LEFT JOIN term t ON t.id = res.term1_id ",
+      "LEFT JOIN graph_path to_root ON t.id = to_root.term2_id ",
       "WHERE res.relationship_type_id = 1 ",
-      "AND res.relation_distance = ",
-      go.level,
-      " AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
       "AND res.term2_id = ",
-      go.term.id,
-      " AND t.id != ",
-      go.term.id,
-      " ORDER BY res.distance DESC", 
+      go.term.id, " ",
+      "AND t.id != ",
+      go.term.id, " ",
+      "AND to_root.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND to_root.relation_distance = ", go.level, " ",
+      "ORDER BY to_root.relation_distance ASC",
       sep=""
     )
   )
+}
+
+goProfile <- function( accessions, go.level=3, con=connectToGeneOntology() ) {
+  go.terms <- goTermsForAccessionWithLevel( accessions, con=go.con )
+  go.prnts <- setNames(
+    lapply( as.integer( go.terms$id ), function( go.id ) {
+      parentGoTermOfLevel( go.id, go.level=go.level, con=con )
+    }), 
+    as.character( go.terms$id )
+  )
+  setFrequeny <- function( go.profile, prnt.go.trm ) {
+    if (
+        is.null( go.profile ) ||
+        length( intersect( go.profile$id, prnt.go.trm$id ) ) == 0
+    ) {
+      go.profile <- rbind( go.profile,
+        cbind( prnt.go.trm, list( 'frequency'=1 ) )
+      )
+    } else {
+      go.profile[ which( go.profile$id == prnt.go.trm$id ), ]$frequency <-
+        go.profile[ which( go.profile$id == prnt.go.trm$id ), ]$frequency + 1
+    }
+    go.profile
+  }
+  go.profile <- NULL
+  lapply( accessions, function( go.acc ) {
+    go.id <- go.terms[ which( go.terms$acc == go.acc ), ]$id
+    prnt.go.trm <- go.prnts[[ as.character( go.id ) ]]
+    # browser()
+    if ( nrow( prnt.go.trm ) > 0 ) {
+      go.profile <<- setFrequeny( go.profile, prnt.go.trm )
+    } else if (
+      go.terms[ which( go.terms$id == go.id ), ]$relation_distance == go.level
+    ) { 
+      go.profile <<- setFrequeny( go.profile,
+        go.terms[ which( go.terms$id == go.id ), ] )
+    }
+  })
+  go.profile
 }
 
 spawnedGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
