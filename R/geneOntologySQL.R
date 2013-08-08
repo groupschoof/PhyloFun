@@ -65,10 +65,10 @@ parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   )
 }
 
-parentGoTermOfLevel <- function( go.term.id, go.level=3,
+parentGoTermsOfLevel <- function( go.term.id, go.level=3,
   con=connectToGeneOntology() ) {
-  # Finds the Gene Ontology (GO) term that is parent to the argument
-  # 'go.term.id' and has argument 'go.level' distance to the root of the GO
+  # Finds the Gene Ontology (GO) terms that are parent to the argument
+  # 'go.term.id' and have argument 'go.level' distance to the root of the GO
   # directed acyclic graph. 
   #
   # Args:
@@ -100,10 +100,21 @@ parentGoTermOfLevel <- function( go.term.id, go.level=3,
 }
 
 goProfile <- function( accessions, go.level=3, con=connectToGeneOntology() ) {
+  # Measures the annotation frequencies of parent Gene Ontology (GO) terms that
+  # are parents of the argument 'accessions' terms and have argument 'go.level'
+  # distance to the root of the GO directed acyclic graph (GO DAG). 
+  #
+  # Args:
+  #  accessions : The annotated GO term accessions
+  #  go.level   : The distance of parent GO terms to the GO DAG's root node
+  #  con        : A valid and active database connection
+  #
+  # Returns: A data frame of parent GO terms with their annotation frequencies.
+  #   
   go.terms <- goTermsForAccessionWithLevel( accessions, con=go.con )
   go.prnts <- setNames(
     lapply( as.integer( go.terms$id ), function( go.id ) {
-      parentGoTermOfLevel( go.id, go.level=go.level, con=con )
+      parentGoTermsOfLevel( go.id, go.level=go.level, con=con )
     }), 
     as.character( go.terms$id )
   )
@@ -124,10 +135,12 @@ goProfile <- function( accessions, go.level=3, con=connectToGeneOntology() ) {
   go.profile <- NULL
   lapply( accessions, function( go.acc ) {
     go.id <- go.terms[ which( go.terms$acc == go.acc ), ]$id
-    prnt.go.trm <- go.prnts[[ as.character( go.id ) ]]
-    # browser()
-    if ( nrow( prnt.go.trm ) > 0 ) {
-      go.profile <<- setFrequeny( go.profile, prnt.go.trm )
+    prnt.go.trms <- go.prnts[[ as.character( go.id ) ]]
+    if ( nrow( prnt.go.trms ) > 0 ) {
+      for ( i in 1:nrow( prnt.go.trms ) ) {
+        prnt.go.trm <- prnt.go.trms[ i, , drop=FALSE ]
+        go.profile <<- setFrequeny( go.profile, prnt.go.trm )
+      }
     } else if (
       go.terms[ which( go.terms$id == go.id ), ]$relation_distance == go.level
     ) { 
@@ -177,38 +190,28 @@ goTermsOfLevelAndType <- function( level, term.type,
   )
 }
 
-goTermsForAccessionWithLevel <- function( accessions, con=connectToGeneOntology() ) {
+goTermsForAccessionWithLevel <- function( accessions,
+  con=connectToGeneOntology() ) {
+  # For argument Gene Ontology (GO) term accession all data in the SQL term
+  # table and additionaly their respective distance to the GO directed acyclic
+  # graph's root node is looked up.
+  #
+  # Args:
+  #  accessions         : The GO terms' accessions ( column 'acc' in table
+  #                       'term' )
+  #  con                : A valid and active database connection
+  #
+  # Returns: A data frame.
+  #   
   dbGetQuery( con, paste(
       "SELECT t.*, g.relation_distance FROM term t LEFT JOIN graph_path g ON ",
       "t.id = g.term2_id WHERE g.term1_id = ( SELECT r.id FROM term r WHERE r.is_root = 1 ) ",
       "AND t.acc in (",
-      do.call( 'join.funk', as.list( paste( "'", accessions, "'", sep="" ) ) ),
+      do.call( 'join.funk',
+        as.list( paste( "'", unique( accessions ), "'", sep="" ) ) ),
       ") GROUP BY t.id"
     ) 
   )
-}
-
-isConnectionAlive <- function( go.con ) {
-  if ( class( try( dbGetInfo( go.con ), silent=T ) ) == 'try-error' )
-    FALSE
-  else
-    TRUE
-}
-
-reConnectIfExpired <- function( go.con ) {
-  # If database connection go.con has expired returns a new connection to Gene
-  # Ontology, retruns argument go.con otherwise.
-  #
-  # Args:
-  #  go.con : A database connection as obtainable by connectToGeneOntology()
-  #
-  # Returns: An active database connection to the Gene Ontology database.
-  #   
-  if ( isConnectionAlive( go.con ) ) {
-    go.con
-  } else {
-    connectToGeneOntology()
-  }
 }
 
 goTermsForProteinAccession <- function( prot.acc, con=connectToGeneOntology() ) {
