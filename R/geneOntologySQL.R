@@ -49,6 +49,32 @@ goTermForAccessionOrSynonym <- function( acc.or.synonym,
   go.term
 }
 
+goTermsForAccessionOrSynonymWithLevel <- function( accessions,
+  con=connectToGeneOntology() ) {
+  # Looks up Gene Ontology (GO) terms in the term and term_synonym table, thus
+  # finding also outdated GO terms.
+  #
+  # Args:
+  #  accessions : A character vector of GO term accessions
+  #  con        : A valid and active database connection
+  #
+  # Returns: A data frame
+  #   
+  accs <- unique( accessions )
+  dbGetQuery( con, paste(
+      "SElECT t.*, g.relation_distance FROM term_synonym s LEFT JOIN term t ON ",
+      "s.term_id = t.id LEFT JOIN graph_path g ON t.id = g.term2_id WHERE ",
+      "g.term1_id = ( SELECT r.id FROM term r WHERE r.is_root = 1 ) AND ",
+      "t.acc in (",
+      paste( paste( "'", accs, "'", sep='' ), collapse=',' ),
+      ") OR ",
+      "s.term_synonym in (",
+      paste( paste( "'", accs, "'", sep='' ), collapse=',' ),
+      ") GROUP BY t.id", sep=""
+    )
+  )
+}
+
 parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   dbGetQuery( con,
     paste( "SELECT t.* FROM graph_path res ",
@@ -111,7 +137,7 @@ goProfile <- function( accessions, go.level=3, con=connectToGeneOntology() ) {
   #
   # Returns: A data frame of parent GO terms with their annotation frequencies.
   #   
-  go.terms <- goTermsForAccessionWithLevel( accessions, con=go.con )
+  go.terms <- goTermsForAccessionOrSynonymWithLevel( accessions, con=go.con )
   go.prnts <- setNames(
     lapply( as.integer( go.terms$id ), function( go.id ) {
       parentGoTermsOfLevel( go.id, go.level=go.level, con=con )
