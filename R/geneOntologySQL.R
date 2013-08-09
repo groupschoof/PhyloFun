@@ -161,17 +161,23 @@ goProfile <- function( accessions, go.level=3, con=connectToGeneOntology() ) {
   go.profile <- NULL
   lapply( accessions, function( go.acc ) {
     go.id <- go.terms[ which( go.terms$acc == go.acc ), ]$id
-    prnt.go.trms <- go.prnts[[ as.character( go.id ) ]]
-    if ( nrow( prnt.go.trms ) > 0 ) {
-      for ( i in 1:nrow( prnt.go.trms ) ) {
-        prnt.go.trm <- prnt.go.trms[ i, , drop=FALSE ]
-        go.profile <<- setFrequeny( go.profile, prnt.go.trm )
+    if ( is.null( go.id ) || is.na( go.id ) || length( go.id ) == 0 ) {
+      warning( "Could not find Gene Ontology (GO) term for ID ", go.id, " nor
+        accession ", go.acc )
+    } else {
+      prnt.go.trms <- go.prnts[[ as.character( go.id ) ]]
+      if ( nrow( prnt.go.trms ) > 0 ) {
+        for ( i in 1:nrow( prnt.go.trms ) ) {
+          prnt.go.trm <- prnt.go.trms[ i, , drop=FALSE ]
+          go.profile <<- setFrequeny( go.profile, prnt.go.trm )
+        }
+      } else if (
+        go.terms[ which( go.terms$id == go.id ), ]$relation_distance ==
+          go.level
+      ) { 
+        go.profile <<- setFrequeny( go.profile,
+          go.terms[ which( go.terms$id == go.id ), ] )
       }
-    } else if (
-      go.terms[ which( go.terms$id == go.id ), ]$relation_distance == go.level
-    ) { 
-      go.profile <<- setFrequeny( go.profile,
-        go.terms[ which( go.terms$id == go.id ), ] )
     }
   })
   go.profile
