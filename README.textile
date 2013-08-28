@@ -10,6 +10,8 @@ We call this new phylogenomic workflow for protein function prediction *PhyloFun
 
 h2. Install PhyloFun
 
+PhyloFun requires @R@ version @2.15.2@ _or greater_.
+
 h3. PhyloFun requires two external tools:
 
 * MAFFT http://mafft.cbrc.jp/alignment/software/
