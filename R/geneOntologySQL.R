@@ -125,15 +125,18 @@ parentGoTermsOfLevel <- function( go.term.id, go.level=3,
   )
 }
 
-goProfile <- function( accessions, go.level=3, con=connectToGeneOntology() ) {
+goProfile <- function( accessions, go.level=3, con=connectToGeneOntology(),
+  close.db.con=TRUE ) {
   # Measures the annotation frequencies of parent Gene Ontology (GO) terms that
   # are parents of the argument 'accessions' terms and have argument 'go.level'
   # distance to the root of the GO directed acyclic graph (GO DAG). 
   #
   # Args:
-  #  accessions : The annotated GO term accessions
-  #  go.level   : The distance of parent GO terms to the GO DAG's root node
-  #  con        : A valid and active database connection
+  #  accessions   : The annotated GO term accessions
+  #  go.level     : The distance of parent GO terms to the GO DAG's root node
+  #  con          : A valid and active database connection
+  #  close.db.con : If TRUE the data connection 'con' is automatically closed
+  #                 at the of this function's execution.
   #
   # Returns: A data frame of parent GO terms with their annotation frequencies.
   #   
@@ -175,6 +178,9 @@ goProfile <- function( accessions, go.level=3, con=connectToGeneOntology() ) {
         go.terms[ which( go.terms$id == go.id ), ] )
     }
   })
+  if ( close.db.con ) {
+    dbDisconnect( con )
+  }
   go.profile
 }
 
