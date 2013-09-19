@@ -140,7 +140,7 @@ goProfile <- function( accessions, go.level=3, con=connectToGeneOntology(),
   #
   # Returns: A data frame of parent GO terms with their annotation frequencies.
   #   
-  go.terms <- goTermsForAccessionOrSynonymWithLevel( accessions, con=go.con )
+  go.terms <- goTermsForAccessionOrSynonymWithLevel( accessions, con=con )
   go.prnts <- setNames(
     lapply( as.integer( go.terms$id ), function( go.id ) {
       parentGoTermsOfLevel( go.id, go.level=go.level, con=con )
