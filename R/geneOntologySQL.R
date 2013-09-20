@@ -39,8 +39,8 @@ goTermForAccessionOrSynonym <- function( acc.or.synonym,
   go.term <- goTermForAccession( acc.or.synonym )
   if ( nrow( go.term ) == 0 && ncol( go.term ) == 0 ) {
     go.term <- dbGetQuery( con, paste(
-        "SElECT t.* FROM term_synonym s LEFT JOIN term t ON ",
-        "s.term_id = t.id WHERE s.term_synonym = '",
+        "SElECT t.* FROM term t LEFT JOIN term_synonym s ON ",
+        "t.id = s.term_id WHERE s.term_synonym = '",
         acc.or.synonym,
         "'", sep=""
       )
@@ -62,8 +62,8 @@ goTermsForAccessionOrSynonymWithLevel <- function( accessions,
   #   
   accs <- unique( accessions )
   dbGetQuery( con, paste(
-      "SElECT t.*, g.relation_distance FROM term_synonym s LEFT JOIN term t ON ",
-      "s.term_id = t.id LEFT JOIN graph_path g ON t.id = g.term2_id WHERE ",
+      "SElECT t.*, g.relation_distance FROM term t LEFT JOIN term_synonym s ON ",
+      "t.id = s.term_id LEFT JOIN graph_path g ON t.id = g.term2_id WHERE ",
       "g.term1_id = ( SELECT r.id FROM term r WHERE r.is_root = 1 ) AND ",
       "t.acc in (",
       paste( paste( "'", accs, "'", sep='' ), collapse=',' ),
