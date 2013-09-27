@@ -91,6 +91,58 @@ parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   )
 }
 
+parentGoTermsForAccession <- function( go.term.accs,
+  con=connectToGeneOntology() ) {
+  # Finds the Gene Ontology (GO) terms that are parent to the argument
+  # 'go.term.accs'.
+  #
+  # Args:
+  #  go.term.accs : The GO term accessions of the GO terms to find the parents
+  #                 for.
+  #  con          : A valid and active database connection to an instance of
+  #                 the Gene Ontology relation database.
+  #
+  # Returns: A data frame.
+  #
+  gta <- paste( paste( "'", go.term.accs, "'", sep='' ), collapse=',' )
+  sql <- paste( "SELECT t.*, to_root.relation_distance FROM graph_path res ",
+      "LEFT JOIN term t ON t.id = res.term1_id ",
+      "LEFT JOIN graph_path to_root ON t.id = to_root.term2_id ",
+      "LEFT JOIN term child ON child.id = res.term2_id ",
+      "WHERE res.relationship_type_id = 1 ",
+      "AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND child.acc in (", gta, ") ",
+      "AND t.acc not in (", gta, ") ",
+      "AND to_root.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "GROUP BY t.id ORDER BY to_root.relation_distance ASC",
+      sep=""
+    )
+  dbGetQuery( con, sql )
+}
+
+ancestorGoTermsForAccession <- function( go.term.accs,
+  con=connectToGeneOntology() ) {
+  # Selects those Gene Ontology (GO) terms that are ancestors ( parents ) of
+  # the GO terms whose accessions are given in argument 'go.term.accs'. In
+  # contrast to the other 'parent' functions, this function includes the "all"
+  # root node and does not return the distance to the root.
+  #
+  # Args:
+  #
+  #  go.term.accs : The GO term accessions of the GO terms to find the parents
+  #                 for.
+  #  con          : A valid and active database connection to an instance of
+  #                 the Gene Ontology relation database.
+  #
+  # Returns: A data frame with results from the GO term table.
+  #   
+  gta <- paste( paste( "'", go.term.accs, "'", sep='' ), collapse=',' )
+  sql <- paste( "SELECT t.* FROM term_ancestor a ",
+    "LEFT JOIN term t ON a.ancestor_id = t.id WHERE ",
+    "a.acc IN (", gta, ") AND a.distance > 0 GROUP BY t.id" )
+  dbGetQuery( con, sql )
+}
+
 parentGoTermsOfLevel <- function( go.term.id, go.level=3,
   con=connectToGeneOntology() ) {
   # Finds the Gene Ontology (GO) terms that are parent to the argument
@@ -124,6 +176,62 @@ parentGoTermsOfLevel <- function( go.term.id, go.level=3,
     )
   )
 }
+
+
+parentGoTermsOfLevelForAccessions <- function( go.term.accs, go.level=3,
+  con=connectToGeneOntology() ) {
+  # Finds the Gene Ontology (GO) terms that are parent to the argument
+  # 'go.term.accs' and have argument 'go.level' distance to the root of the GO
+  # directed acyclic graph. 
+  #
+  # Args:
+  #  go.term.accs : The GO term accessions of the GO terms to find the parents
+  #                 for.
+  #  go.level     : The distance of the looked for parent term to the GO DAG's
+  #                 root node.
+  #  con          : A valid and active database connection to an instance of
+  #                 the Gene Ontology relation database.
+  #
+  # Returns: A data frame.
+  #
+  gta <- paste( paste( "'", go.term.accs, "'", sep='' ), collapse=',' )
+  sql <- paste( "SELECT t.*, to_root.relation_distance FROM graph_path res ",
+      "LEFT JOIN term t ON t.id = res.term1_id ",
+      "LEFT JOIN graph_path to_root ON t.id = to_root.term2_id ",
+      "LEFT JOIN term child ON child.id = res.term2_id ",
+      "WHERE res.relationship_type_id = 1 ",
+      "AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND child.acc in (", gta, ") ",
+      "AND t.acc not in (", gta, ") ",
+      "AND to_root.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND to_root.relation_distance = ", go.level, " ",
+      "GROUP BY t.id ORDER BY to_root.relation_distance ASC",
+      sep=""
+    )
+  dbGetQuery( con, sql )
+}
+
+parentChildRelation <- function( go.1, go.2, con=connectToGeneOntology() ) {
+  # Returns TRUE if either of the argument Gene Ontology (GO) term accessions
+  # is an ancestor of the other one or if the accessions are identical; FALSE
+  # is returned otherwise.
+  #
+  # Args:
+  #  go.1 : The first GO term accesion
+  #  go.2 : The second GO term accession
+  #  con  : A valid and active database connection to an instance of
+  #         the Gene Ontology relation database.
+  #
+  # Returns: A boolean value explained above.
+  #   
+  go.1.prnts <- ancestorGoTermsForAccession( go.1, con=con )
+  go.2.prnts <- ancestorGoTermsForAccession( go.2, con=con )
+  (
+    is.element( go.1, go.2.prnts$acc ) || is.element( go.2, go.1.prnts$acc ) ||
+    identical( go.1, go.2 )
+  )
+}
+
 
 goProfile <- function( accessions, go.level=3, con=connectToGeneOntology(),
   close.db.con=TRUE ) {
