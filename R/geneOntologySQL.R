@@ -34,6 +34,55 @@ goTermsForAccession <- function( accessions, con=connectToGeneOntology() ) {
   )
 }
 
+goTermsForAccessionWithDefinition <- function( accessions,
+  con=connectToGeneOntology() ) {
+  # Selects all Gene Ontology (GO) terms whose accession equals argument
+  # 'accessions'. Also looks up the terms definitions, longer texts explaining
+  # the GO terms in more detail.
+  #
+  # Args:
+  #  accessions : GO term accessions as to be found in table 'term.acc'
+  #  con        : A valid and active database connection to an instance of the
+  #               GO, default is obtained from calling function
+  #               connectToGeneOntology(…)
+  #
+  # Returns: A data frame with the query results.
+  #   
+  dbGetQuery( con,
+    paste( "SELECT t.*, d.term_definition FROM term t ",
+      "LEFT JOIN term_definition d ON t.id = d.term_id WHERE t.acc in (",
+      paste( paste( '"', accessions, '"', sep='' ), collapse=',' ),
+      ")", sep=""
+    )
+  )
+}
+
+goTermsForAccessionWithDefinitionAndLevel <- function( accessions,
+  con=connectToGeneOntology() ) {
+  # Selects all Gene Ontology (GO) terms whose accession equals argument
+  # 'accessions'. Also looks up the terms distance to the GO directed acyclic
+  # graph's (DAG) root, as well as the terms' definitions, longer texts
+  # explaining the GO terms in more detail.
+  #
+  # Args:
+  #  accessions : GO term accessions as to be found in table 'term.acc'
+  #  con        : A valid and active database connection to an instance of the
+  #               GO, default is obtained from calling function
+  #               connectToGeneOntology(…)
+  #
+  # Returns: A data frame with the query results.
+  #   
+  dbGetQuery( con,
+    paste( "SELECT t.*, d.term_definition, p.relation_distance FROM term t ",
+      "LEFT JOIN graph_path p ON t.id = p.term2_id AND ",
+      "p.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "LEFT JOIN term_definition d ON t.id = d.term_id WHERE t.acc in (",
+      paste( paste( '"', accessions, '"', sep='' ), collapse=',' ),
+      ") GROUP BY t.id ORDER BY p.relation_distance", sep=""
+    )
+  )
+}
+
 goTermForAccessionOrSynonym <- function( acc.or.synonym,
   con=connectToGeneOntology() ) {
   go.term <- goTermForAccession( acc.or.synonym )
@@ -91,28 +140,46 @@ parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   )
 }
 
-parentGoTermsForAccession <- function( go.term.accs,
-  con=connectToGeneOntology() ) {
+parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
+  relationship.type.id=1, con=connectToGeneOntology() ) {
   # Finds the Gene Ontology (GO) terms that are parent to the argument
   # 'go.term.accs'.
   #
   # Args:
-  #  go.term.accs : The GO term accessions of the GO terms to find the parents
-  #                 for.
-  #  con          : A valid and active database connection to an instance of
-  #                 the Gene Ontology relation database.
+  #  go.term.accs         : The GO term accessions of the GO terms to find the
+  #                         parents for.
+  #  include.selves       : If set to TRUE the result includes the GO terms
+  #                         given by argument 'go.term.accs'. The default is
+  #                         FALSE.
+  #  relationship.type.id : The type of parent child relationship to restrict
+  #                         the query to. The default '1' refers to 'is_a'. To
+  #                         select all available relationships provide this
+  #                         argument as NULL.
+  #  con                  : A valid and active database connection to an
+  #                         instance of the Gene Ontology relation database.
   #
   # Returns: A data frame.
   #
   gta <- paste( paste( "'", go.term.accs, "'", sep='' ), collapse=',' )
+  incl.selves.sql <- if ( include.selves ) {
+    ''
+  } else {
+    paste( "AND t.acc not in (", gta, ") ", sep='' )
+  }
+  rel.sql <- if ( ! is.null( relationship.type.id ) ) {
+    paste( 'res.relationship_type_id = ', relationship.type.id,
+      ' AND ', sep='' )
+  } else {
+    ''
+  }
   sql <- paste( "SELECT t.*, to_root.relation_distance FROM graph_path res ",
       "LEFT JOIN term t ON t.id = res.term1_id ",
       "LEFT JOIN graph_path to_root ON t.id = to_root.term2_id ",
       "LEFT JOIN term child ON child.id = res.term2_id ",
-      "WHERE res.relationship_type_id = 1 ",
-      "AND res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "WHERE ", rel.sql,
+      "res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
       "AND child.acc in (", gta, ") ",
-      "AND t.acc not in (", gta, ") ",
+      incl.selves.sql,
       "AND to_root.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
       "GROUP BY t.id ORDER BY to_root.relation_distance ASC",
       sep=""
@@ -292,25 +359,36 @@ goProfile <- function( accessions, go.level=3, con=connectToGeneOntology(),
   go.profile
 }
 
-spawnedGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
+spawnedGoTerms <- function( go.term.id, relationship.type.id=1,
+  con=connectToGeneOntology() ) {
   # Queries the Gene Ontology ( GO ) database to retrieve all GO terms placed
   # in the descending sub-graph spawned by GO term with ID 'go.term.id'.
   #
   # Args:
-  #  go.term.id : The parent GO term's database ID 
-  #  con        : A valid and alive database connection an instance of the Gene
-  #               Ontology
+  #  go.term.id           : The parent GO term's database ID
+  #  relationship.type.id : The type of parent child relationship to restrict
+  #                         the query to. The default '1' refers to 'is_a'. To
+  #                         select all available relationships provide this
+  #                         argument as NULL.
+  #  con                  : A valid and alive database connection an instance
+  #                         of the Gene Ontology
   #
   # Returns: A table with all GO terms being direct and indirect children of
   # 'go.term.id'
   #   
+  rel.sql <- if ( ! is.null( relationship.type.id ) ) {
+    paste( 'p.relationship_type_id = ', relationship.type.id,
+      ' AND ', sep='' )
+  } else {
+    ''
+  }
   dbGetQuery( con,
     paste( "SELECT t.* FROM graph_path p ",
-      "LEFT JOIN term t ON t.id = p.term2_id ",
-      "where p.relationship_type_id = 1 ",
-      "AND p.term1_id = ", go.term.id,
+      "LEFT JOIN term t ON t.id = p.term2_id where ",
+      rel.sql,
+      "p.term1_id = ", go.term.id,
       " AND t.id != ", go.term.id,
-      " ORDER BY p.distance",
+      " GROUP BY t.id ORDER BY p.distance",
       sep=''
     )
   )
