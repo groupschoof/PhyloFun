@@ -72,13 +72,16 @@ goTermsForAccessionWithDefinitionAndLevel <- function( accessions,
   #
   # Returns: A data frame with the query results.
   #   
+  go.accs <- paste( paste( '"', accessions, '"', sep='' ), collapse=',' )
   dbGetQuery( con,
     paste( "SELECT t.*, d.term_definition, p.relation_distance FROM term t ",
       "LEFT JOIN graph_path p ON t.id = p.term2_id AND ",
       "p.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
-      "LEFT JOIN term_definition d ON t.id = d.term_id WHERE t.acc in (",
-      paste( paste( '"', accessions, '"', sep='' ), collapse=',' ),
-      ") GROUP BY t.id ORDER BY p.relation_distance", sep=""
+      "LEFT JOIN term_definition d ON t.id = d.term_id ",
+      "LEFT JOIN term_synonym s ON t.id = s.term_id ",
+      "WHERE t.acc in (", go.accs, ") OR ",
+      "s.term_synonym in (", go.accs, ") ",
+      "GROUP BY t.id ORDER BY p.relation_distance", sep=""
     )
   )
 }
