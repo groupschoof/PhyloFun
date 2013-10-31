@@ -74,8 +74,8 @@ goTermsForAccessionWithDefinitionAndLevel <- function( accessions,
   #   
   go.accs <- paste( paste( '"', accessions, '"', sep='' ), collapse=',' )
   dbGetQuery( con,
-    paste( "SELECT t.*, d.term_definition, p.relation_distance FROM term t ",
-      "LEFT JOIN graph_path p ON t.id = p.term2_id AND ",
+    paste( "SELECT t.*, d.term_definition, p.relation_distance, s.term_synonym ",
+      "FROM term t LEFT JOIN graph_path p ON t.id = p.term2_id AND ",
       "p.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
       "LEFT JOIN term_definition d ON t.id = d.term_id ",
       "LEFT JOIN term_synonym s ON t.id = s.term_id ",
@@ -363,7 +363,7 @@ goProfile <- function( accessions, go.level=3, con=connectToGeneOntology(),
 }
 
 spawnedGoTerms <- function( go.term.id, relationship.type.id=1,
-  con=connectToGeneOntology() ) {
+  include.selve=TRUE, con=connectToGeneOntology() ) {
   # Queries the Gene Ontology ( GO ) database to retrieve all GO terms placed
   # in the descending sub-graph spawned by GO term with ID 'go.term.id'.
   #
@@ -373,6 +373,9 @@ spawnedGoTerms <- function( go.term.id, relationship.type.id=1,
   #                         the query to. The default '1' refers to 'is_a'. To
   #                         select all available relationships provide this
   #                         argument as NULL.
+  #  include.selve        : If TRUE, the default, the term specified by
+  #                         argument 'go.term.id' will be included in the
+  #                         result.
   #  con                  : A valid and alive database connection an instance
   #                         of the Gene Ontology
   #
@@ -385,12 +388,16 @@ spawnedGoTerms <- function( go.term.id, relationship.type.id=1,
   } else {
     ''
   }
+  incl.slv.sql <- if ( include.selve ) {
+    ''
+  } else {
+    paste( " t.id !=", go.term.id, 'AND ' )
+  }
   dbGetQuery( con,
     paste( "SELECT t.* FROM graph_path p ",
-      "LEFT JOIN term t ON t.id = p.term2_id where ",
-      rel.sql,
+      "LEFT JOIN term t ON t.id = p.term2_id WHERE ",
+      rel.sql, incl.slv.sql, 
       "p.term1_id = ", go.term.id,
-      " AND t.id != ", go.term.id,
       " GROUP BY t.id ORDER BY p.distance",
       sep=''
     )
