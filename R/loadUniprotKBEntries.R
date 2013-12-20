@@ -254,7 +254,7 @@ downloadUniprotDocuments <- function( uniprot.accessions,
 }
 
 downloadSequences <- function( uniprot.accessions, fasta.file,
-  uniprot.webfetch.max.ids=200 ) {
+  uniprot.webfetch.max.ids=200, sanitize.uniprot.accessions=TRUE ) {
   # Uses the Uniprot web services to download each FASTA document for the
   # argument uniprot.accessions. 
   # 
@@ -264,6 +264,9 @@ downloadSequences <- function( uniprot.accessions, fasta.file,
   #               'sp|O08601|MTP_MOUSE', 'P55158' ).
   #  fasta.file : The path to the FASTA file the downloaded sequences will be
   #               stored in.
+  #  sanitize.uniprot.accessions : If set to TRUE, the default, the accessions
+  #               of the downloaded sequences will be sanitized using the
+  #               'sanitizeUniprotAccession(…)' function.
   #
   # Returns: TRUE if and only if no error has occurred.
   #   
@@ -289,6 +292,21 @@ downloadSequences <- function( uniprot.accessions, fasta.file,
     )
     fastas <- getURL( fetch.url ) 
     if ( ! is.null( fastas ) && ! is.na( fastas ) && length( fastas ) > 0 ) {
+      # Sanitize Uniprot Accessions, if requested:
+      if ( sanitize.uniprot.accessions ) {
+        fastas <- paste( as.character(
+          lapply( strsplit( fastas, '\n', fixed=TRUE )[[1]],
+            function(x) {
+              if( grepl( '^>', x )[[1]] ) {
+                paste( '>', sanitizeUniprotAccession( x ), sep='' )
+              } else {
+                x
+              }
+            }
+          )
+        ), collapse="\n" )
+      }
+      # Append downloaded sequences to file:
       write( sub( '\\n$', '', fastas ), file=fasta.file, append=T )
       TRUE
     }

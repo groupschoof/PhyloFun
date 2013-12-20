@@ -143,6 +143,31 @@ parentGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   )
 }
 
+ancestralGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
+  # Selects all Gene Ontology (GO) terms that have any ancestral
+  # 'gene_ontology' relationship to the argument descendant term 'go.term.id'.
+  # All available 'gene_ontology' relationships are selected from the term
+  # table itself.
+  #
+  # Args:
+  #  go.term.id : The descendant GO term to find ancestral GO terms for with
+  #               any 'gene_ontology' type relationship. 
+  #  con        : A valid and active database connection to an instance of the
+  #               Gene Ontology mysql database.
+  #
+  # Returns: A data frame, excluding the 'all' GO DAG root node.
+  #   
+  dbGetQuery( con,
+    paste( "SELECT t.*, r.acc AS relationship FROM term t ",
+      "LEFT JOIN graph_path p ",
+      "ON t.id = p.term1_id LEFT JOIN term r ON p.relationship_type_id = r.id ",
+      "WHERE r.term_type = 'gene_ontology' AND ",
+      "p.term2_id = ", go.term.id,
+      " AND NOT t.is_root GROUP BY t.id",
+      sep="" )
+  )
+}
+
 parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
   relationship.type.id=1, con=connectToGeneOntology() ) {
   # Finds the Gene Ontology (GO) terms that are parent to the argument
