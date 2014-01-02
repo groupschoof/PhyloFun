@@ -94,66 +94,66 @@ SEXP conditionalProbabilityTables( SEXP uniqueEdgeLengths, SEXP annos, SEXP
   END_RCPP
 }
 
-SEXP extractProteinPairs( SEXP proteinAccessionMatrix, SEXP accession, SEXP
-    pairFirstMemberColIndex, SEXP pairSecondMemberColIndex ) {
-  StringMatrix tbl( proteinAccessionMatrix );
-  StringVector rAcc( accession );
-  std::string acc( rAcc( 0 ) );
-  NumericVector rColA( pairFirstMemberColIndex );
-  int colA( rColA( 0 ) );
-  NumericVector rColB( pairSecondMemberColIndex );
-  int colB( rColB( 0 ) );
+SEXP proteinsWithGOtermAnnotation( SEXP goTermAccession, SEXP
+    proteinGOannotationMatrix, SEXP proteinAccessionColIndx, SEXP goTermColInd
+    ) {
+  BEGIN_RCPP
 
-  List prs( 0 );
-  for ( int i=0; i<tbl.nrow(); ++i ) {
-    if ( acc == std::string( tbl( i, 0 ) ) &&
-      acc != std::string( tbl( i, 1 ) ) )
-    {
-      prs.push_back( tbl( i, _ ) );
+    // Initializations:
+    std::string goAcc( CharacterVector( goTermAccession )( 0 ) );
+    
+    int colProt( NumericVector( proteinAccessionColIndx )( 0 ) );
+    int colGO( NumericVector( goTermColInd )( 0 ) );
+    CharacterMatrix protGOannos( proteinGOannotationMatrix );
+    CharacterVector annotatedGOs( protGOannos( _, colGO ) );
+    CharacterVector annotatedProts( protGOannos( _, colProt ) );
+    CharacterVector matchingProts;
+
+    // Find accessions of proteins annotated with the GO term
+    // 'goTermAccession':
+    for (int i = 0; i < annotatedGOs.size(); ++i) {
+      if ( std::string( annotatedGOs( i ) ) == goAcc ) {
+        matchingProts.push_back( annotatedProts( i ) );
+      }
     }
-  }
-  return( wrap( prs ) );
+
+    return( wrap( matchingProts ) );
+
+  END_RCPP
 }
 
-SEXP countProteinPairs( SEXP proteinAccessionMatrix, SEXP accession, SEXP
+// Functor used for the creation of a set of _unordered_ vectors of
+// std::strings and length 2. Used in function extractProteinPairs(…)
+struct Comparator {
+  bool operator()(const std::vector<std::string> & a, const std::vector<std::string> & b) {
+    const bool swapA = a[0] < a[1];
+    const std::string & al = swapA ? a[0] : a[1];
+    const std::string & ar = swapA ? a[1] : a[0];
+    const bool swapB = b[0] < b[1];
+    const std::string & bl = swapB ? b[0] : b[1];
+    const std::string & br = swapB ? b[1] : b[0];
+    return al < bl || (al == bl && ar < br);
+  }
+};
+
+SEXP extractProteinPairs( SEXP proteinAccessionMatrix, SEXP
     pairFirstMemberColIndex, SEXP pairSecondMemberColIndex ) {
-  StringMatrix tbl( proteinAccessionMatrix );
-  StringVector rAcc( accession );
-  std::string acc( rAcc( 0 ) );
-  NumericVector rColA( pairFirstMemberColIndex );
-  int colA( rColA( 0 ) );
-  NumericVector rColB( pairSecondMemberColIndex );
-  int colB( rColB( 0 ) );
+  BEGIN_RCPP
 
-  int cnt = 0;
-  for ( int i=0; i<tbl.nrow(); ++i ) {
-    if ( acc == std::string( tbl( i, 0 ) ) &&
-      acc != std::string( tbl( i, 1 ) ) )
-    {
-      ++cnt;
+    StringMatrix tbl( proteinAccessionMatrix );
+    int colA( NumericVector( pairFirstMemberColIndex )( 0 ) );
+    int colB( NumericVector( pairSecondMemberColIndex )( 0 ) );
+    std::set<std::vector<std::string>, Comparator> prs;
+
+    for ( int i=0; i<tbl.nrow(); ++i ) {
+      CharacterVector r( tbl( i, _ ) );
+      std::vector< std::string > p;
+      p.push_back( std::string( r( colA ) ) );
+      p.push_back( std::string( r( colB ) ) );
+      prs.insert( p );
     }
-  }
-  return( wrap( cnt ) );
-}
 
-SEXP countOrExtractProteinPairs( SEXP proteinAccessionMatrix, SEXP accessions,
-    SEXP pairFirstMemberColIndex, SEXP pairSecondMemberColIndex, SEXP
-    funcAbbrev ) {
-  CharacterVector rFuncAbbrev( funcAbbrev );
-  bool countPairs = std::string( rFuncAbbrev( 0 ) ) == "count";
-  CharacterVector protAccs( accessions );
+    return( wrap( prs ) );
 
-  List rslts( 0 );
-  for ( int i = 0; i < protAccs.size(); ++i ) {
-    std::string protAcc( protAccs( i ) );
-    if ( countPairs ) {
-      rslts.push_back( countProteinPairs( proteinAccessionMatrix, protAccs( i ),
-            pairFirstMemberColIndex, pairSecondMemberColIndex ), protAcc );
-    } else {
-      rslts.push_back( extractProteinPairs( proteinAccessionMatrix, protAccs( i ),
-            pairFirstMemberColIndex, pairSecondMemberColIndex ), protAcc );
-    }
-  }
-
-  return( wrap( rslts ) );
+  END_RCPP
 }

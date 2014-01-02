@@ -201,84 +201,33 @@ extractProteinPairs <- function( proteinAccessionMatrix, accession,
     pairFirstMemberColIndex, pairSecondMemberColIndex )
 }
 
-countProteinPairs <- function( proteinAccessionMatrix, accession,
-  pairFirstMemberColIndex=1, pairSecondMemberColIndex=2 ) {
-  # Filters the argument matrix of protein pairs proteinAccessionMatrix for all
-  # those where pair member in column one is contained in argument set
-  # 'accessions'. This method assumes that the table proteinAccessionMatrix is
-  # i.e. the result of a symmetrical 'all vs all' sequence similarity search,
-  # whose result would have each pair twice once with member A in the first
-  # column and the second time in the second column. Pairs are filtered to
-  # exclude identity pairs like ( a, a ).
+extractProteinPairs <- function( proteinAccessionMatrix,
+  pairFirstMemberColIndex=0, pairSecondMemberColIndex=1 ) {
+  # Identifies unique pairs in the set of un-ordered protein pairs in
+  # 'proteinAccessionMatrix'. As these pairs are symmetric, pairs
+  # (A,B) and (B,A) are identical and only one will be retained in the
+  # resulting set. 
   #
   # Args:
-  #  proteinAccessionMatrix   : The data.frame or matrix of protein pairs as
-  #                             rows, one accession per column. It is required
-  #                             that this argument has been passed through
-  #                             function unique to ensure each row exists only
-  #                             once. It is strongly recommended to pass this
-  #                             argument as type matrix instead of data.frame
-  #  accession                : The protein accession to find pairs for. It
-  #                             will be looked up in column
-  #                             'pairFirstMemberColIndex'.
-  #  pairFirstMemberColIndex  : The index of the column in which to find the
-  #                             accession of a protein pair's first member.
-  #  pairSecondMemberColIndex : The index of the column in which to find the
-  #                             accession of a protein pair's second member.
+  #  proteinAccessionMatrix : A two column matrix in which each row
+  #                           represents a pair of parotein pair
+  #                           accessions.
+  #  pairFirstMemberColIndex : The index of the column in which to
+  #                           lookup the first member of protein
+  #                           pairs.
+  #  pairSecondMemberColIndex : The index of the column in which to
+  #                           lookup the second member of protein
+  #                           pairs.
   #
-  # Returns: The number of protein pairs in which member
-  # 'pairFirstMemberColIndex' equals 'accession'.
+  # Returns: A subset of argument proteinAccessionMatrix holding
+  # unique, pairwise distinct, protein pairs.
   #   
-
-  # Force pairs.table to be of type matrix
-  pairs.table <- if ( class( proteinAccessionMatrix ) == "data.frame" ) {
+  prot.tbl <- if ( class( proteinAccessionMatrix ) == "data.frame" ) {
     as.matrix( proteinAccessionMatrix )
-  } else { 
+  } else {
     proteinAccessionMatrix
   }
 
-  .Call( "countProteinPairs", pairs.table, accession,
-    pairFirstMemberColIndex, pairSecondMemberColIndex )
-}
-
-countOrExtractProteinPairs <- function( proteinAccessionMatrix, accessions,
-  pairFirstMemberColIndex=1, pairSecondMemberColIndex=2, funcAbbrev='count' ) {
-  # Iterates over the vector 'accessions' and invokes countProteinPairs(…) or
-  # extractProteinPairs(…), respectively. Counts are measured if and only if
-  # argument 'funcAbbrev' equals "count"
-  #
-  # Args:
-  #  proteinAccessionMatrix   : The data.frame or matrix of protein pairs as
-  #                             rows, one accession per column. It is required
-  #                             that this argument has been passed through
-  #                             function unique to ensure each row exists only
-  #                             once. It is strongly recommended to pass this
-  #                             argument as type matrix instead of data.frame
-  #  accessions               : The protein accessions to find pairs for. Each
-  #                             accession in this character vector will be
-  #                             looked up in column 'pairFirstMemberColIndex'.
-  #  pairFirstMemberColIndex  : The index of the column in which to find the
-  #                             accession of a protein pair's first member.
-  #  pairSecondMemberColIndex : The index of the column in which to find the
-  #                             accession of a protein pair's second member.
-  #  funcAbbrev               : The function to invoke for each single protein
-  #                             accession in 'accessions'. If and only if set
-  #                             to "count" function countProteinPairs(…) is
-  #                             invoked, otherwise function
-  #                             extractProteinPairs(…) will be called. Default
-  #                             is 'count'.
-  #
-  # Returns: A named list of results of calling the function selected by
-  # argument 'funcAbbrev' on each protein accession in 'accessions'.
-  #   
-
-  # Force pairs.table to be of type matrix
-  pairs.table <- if ( class( proteinAccessionMatrix ) == "data.frame" ) {
-    as.matrix( proteinAccessionMatrix )
-  } else { 
-    proteinAccessionMatrix
-  }
-
-  .Call( "countOrExtractProteinPairs",  pairs.table, accessions,
-        pairFirstMemberColIndex, pairSecondMemberColIndex, funcAbbrev )
+  .Call( "extractProteinPairs", prot.tbl, pairFirstMemberColIndex,
+  pairSecondMemberColIndex )
 }
