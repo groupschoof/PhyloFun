@@ -123,7 +123,7 @@ SEXP proteinsWithGOtermAnnotation( SEXP goTermAccession, SEXP
 }
 
 // Functor used for the creation of a set of _unordered_ vectors of
-// std::strings and length 2. Used in function extractProteinPairs(…)
+// std::strings and length 2. Used in function uniqueProteinPairs(…)
 struct Comparator {
   bool operator()(const std::vector<std::string> & a, const std::vector<std::string> & b) {
     const bool swapA = a[0] < a[1];
@@ -136,11 +136,14 @@ struct Comparator {
   }
 };
 
-SEXP extractProteinPairs( SEXP proteinAccessionMatrix, SEXP
-    pairFirstMemberColIndex, SEXP pairSecondMemberColIndex ) {
+// Extracts the subset of unique protein pairs from argument 'proteinPairsTbl'.
+// Here each row is considered a symmetric pair of strings. Uses above functor
+// to construct an un-ordered set.
+SEXP uniqueProteinPairs( SEXP proteinPairsTbl, SEXP pairFirstMemberColIndex,
+    SEXP pairSecondMemberColIndex ) {
   BEGIN_RCPP
 
-    StringMatrix tbl( proteinAccessionMatrix );
+    StringMatrix tbl( proteinPairsTbl );
     int colA( NumericVector( pairFirstMemberColIndex )( 0 ) );
     int colB( NumericVector( pairSecondMemberColIndex )( 0 ) );
     std::set<std::vector<std::string>, Comparator> prs;

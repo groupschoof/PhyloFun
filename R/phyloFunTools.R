@@ -1,3 +1,41 @@
+proteinPairsSharingAnnotation <- function( annotation, protein.pairs.tbl,
+  annotation.tbl, pairs.first.col=1, pairs.secnd.col=2, annot.prot.col=3,
+  annot.col=1 ) {
+  # Returns unique pairs where at least one member has the annotation
+  # 'annotation'.
+  #
+  # Args:
+  #  annotation        : The annotation term to lookup protein pairs for, i.e.
+  #                      "GO:0001234"
+  #  protein.pairs.tbl : The table of protein pairs sharing a significant
+  #                      sequence similaritytbl
+  #  annotation.tbl    : The table of protein annotations. Format should be
+  #                      like the one used by GOstats, a three column matrix,
+  #                      in which the first column holds GO terms, the second
+  #                      evidence codes, and the third column protein
+  #                      accessions.
+  #  pairs.first.col   : The column of 'protein.pairs.tbl' in which to lookup
+  #                      the first member of protein pairs.
+  #  pairs.secnd.col   : The column of 'protein.pairs.tbl' in which to lookup
+  #                      the second member of protein pairs.
+  #  annot.prot.col    : The column of 'annotation.tbl' in which to lookup
+  #                      protein accessions.
+  #  annot.col         : The column of 'annotation.tbl' in which to lookup GO
+  #                      term accessions.
+  #
+  # Returns: A subset of protein.pairs.tbl in which each pair has at least one
+  # member (protein) annotated with argument 'annotation'. Can be an empty
+  # subset (matrix with same number of columns as argument 'protein.pairs.tbl'
+  # and 0 rows).
+  #   
+  annot.ps <- annotation.tbl[ which( annotation.tbl[ , annot.col ] == annotation ),
+    annot.prot.col ]
+  protein.pairs.tbl[ which(
+      protein.pairs.tbl[ , pairs.first.col ] %in% annot.ps |
+      protein.pairs.tbl[ , pairs.secnd.col ] %in% annot.ps
+    ), , drop=FALSE ]
+}
+
 parsePhmmerTable <- function( jr,
   skip.lines=3, parse.line=list( '1'='hit.name', '3'='query.name',
     '6'='bit.score' )

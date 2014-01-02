@@ -160,74 +160,33 @@ filterAnnotationMutationProbabilityTableList <- function( annotations,
   lapply( annotsMutationProbTables[ uniq.annos ], as.matrix )
 }
 
-extractProteinPairs <- function( proteinAccessionMatrix, accession,
-  pairFirstMemberColIndex=1, pairSecondMemberColIndex=2 ) {
-  # Filters the argument matrix of protein pairs proteinAccessionMatrix for all
-  # those where pair member in column one is contained in argument set
-  # 'accessions'. This method assumes that the table proteinAccessionMatrix is
-  # i.e. the result of a symmetrical 'all vs all' sequence similarity search,
-  # whose result would have each pair twice once with member A in the first
-  # column and the second time in the second column. Pairs are filtered to
-  # exclude identity pairs like ( a, a ).
-  #
-  # Args:
-  #  proteinAccessionMatrix   : The data.frame or matrix of protein pairs as
-  #                             rows, one accession per column. It is required
-  #                             that this argument has been passed through
-  #                             function unique to ensure each row exists only
-  #                             once. It is strongly recommended to pass this
-  #                             argument as type matrix instead of data.frame
-  #  accession                : The protein accession to find pairs for. It
-  #                             will be looked up in column
-  #                             'pairFirstMemberColIndex'.
-  #  pairFirstMemberColIndex  : The index of the column in which to find the
-  #                             accession of a protein pair's first member.
-  #  pairSecondMemberColIndex : The index of the column in which to find the
-  #                             accession of a protein pair's second member.
-  #
-  # Returns: A list of protein pairs, whose member 'pairFirstMemberColIndex'
-  # equals 'accession'. Protein pairs are returned as character vectors of
-  # length two.
-  #   
-
-  # Force pairs.table to be of type matrix
-  pairs.table <- if ( class( proteinAccessionMatrix ) == "data.frame" ) {
-    as.matrix( proteinAccessionMatrix )
-  } else { 
-    proteinAccessionMatrix
-  }
-
-  .Call( "extractProteinPairs", pairs.table, accession,
-    pairFirstMemberColIndex, pairSecondMemberColIndex )
-}
-
-extractProteinPairs <- function( proteinAccessionMatrix,
+uniqueProteinPairs <- function( proteinPairsTbl,
   pairFirstMemberColIndex=0, pairSecondMemberColIndex=1 ) {
   # Identifies unique pairs in the set of un-ordered protein pairs in
-  # 'proteinAccessionMatrix'. As these pairs are symmetric, pairs
+  # 'proteinPairsTbl'. As these pairs are symmetric, pairs
   # (A,B) and (B,A) are identical and only one will be retained in the
   # resulting set. 
   #
   # Args:
-  #  proteinAccessionMatrix : A two column matrix in which each row
-  #                           represents a pair of parotein pair
-  #                           accessions.
-  #  pairFirstMemberColIndex : The index of the column in which to
-  #                           lookup the first member of protein
-  #                           pairs.
-  #  pairSecondMemberColIndex : The index of the column in which to
-  #                           lookup the second member of protein
-  #                           pairs.
+  #  proteinPairsTbl          : A two column matrix in which each row
+  #                             represents a pair of parotein pair accessions.
+  #  pairFirstMemberColIndex  : The index of the column in which to lookup the
+  #                             first member of protein pairs.
+  #  pairSecondMemberColIndex : The index of the column in which to lookup the
+  #                             second member of protein pairs.
   #
-  # Returns: A subset of argument proteinAccessionMatrix holding
-  # unique, pairwise distinct, protein pairs.
+  # Returns: A subset of argument proteinPairsTbl holding unique, pairwise
+  # distinct, protein pairs.
   #   
-  prot.tbl <- if ( class( proteinAccessionMatrix ) == "data.frame" ) {
-    as.matrix( proteinAccessionMatrix )
+  prot.tbl <- if ( class( proteinPairsTbl ) == "data.frame" ) {
+    as.matrix( proteinPairsTbl )
   } else {
-    proteinAccessionMatrix
+    proteinPairsTbl
   }
 
-  .Call( "extractProteinPairs", prot.tbl, pairFirstMemberColIndex,
-  pairSecondMemberColIndex )
+  prs.list <- .Call( "uniqueProteinPairs", prot.tbl, pairFirstMemberColIndex,
+    pairSecondMemberColIndex )
+
+  # Convert to a 'character'-matrix:
+  matrix( unlist( prs.list ), ncol=2, nrow=length( prs.list ), byrow=TRUE )
 }
