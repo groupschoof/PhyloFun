@@ -3,6 +3,7 @@ require( PhyloFun )
 # Usage:
 print( "Usage: Rscript measureDistances.R path/2/proteins.fasta path/2/blast_out.tbl output_file.RData [round_sequence_distances_to_x_digits=2]")
 print( "WARNING: Make sure the _complete_ sequence names in the FASTA file are _exactly the same_ as in the Blast output file!" )
+print( "WARNING: ALSO make sure the input path/2/blast_out.tbl has been pre-processed using PhyloFun's uniqueProteinPairs(…) function (see manual for details)!" )
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
@@ -12,11 +13,10 @@ aa.seqs <- readAAStringSet( trailing.args[[ 1 ]] )
 print( paste("Read", length(aa.seqs), "sequences from", trailing.args[[ 1 ]]) )
 
 # Read (preprocessed) Blast 'all vs all' result table:
-prot.pairs <- uniqueProteinPairs( read.table( trailing.args[[ 2 ]],
+prot.pairs <- read.table( trailing.args[[ 2 ]],
   stringsAsFactors=FALSE, comment.char='', quote='',
   colClasses=c( 'character' ) )
-)
-print( paste( "Extracted", nrow( prot.pairs ), "UNIQUE protein pairs from",
+print( paste( "Read", nrow( prot.pairs ), "UNIQUE protein pairs from",
   trailing.args[[ 2 ]] ) )
 
 # Path to output:
@@ -45,7 +45,8 @@ for ( i in 1:nrow( prot.pairs ) ) {
   )
 }
 
-# Save results as binary RData:
-save( prot.pairs, file=path.2.output )
+# Save results:
+write.table( prot.pairs, file=path.2.output, row.names=FALSE, quote=FALSE,
+  col.names=FALSE )
 
 print( "DONE" )
