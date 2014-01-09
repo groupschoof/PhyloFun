@@ -1,76 +1,45 @@
-library(tools)
-library(Biostrings)
-library(phangorn)
-library(parallel)
-
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir),'',script.dir)
-  normalizePath(file.path(project.dir,...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-src.project.file('src','domainArchitectureSimilarity.R')
-src.project.file('src','domainArchitectureSimilarityRedis.R')
-src.project.file('src','loadUniprotKBEntries.R')
-src.project.file('src','measureDistanceFunctions.R')
+require( PhyloFun )
 
 # Usage:
-print( "Usage: Rscript measureDistancesFix.R path/2/distances.tbl go_term_id path/2/output_dir")
+print( "Usage: Rscript measureDistancesFix.R path/2/protein_pairs_with_distances.tbl path/2/gene_ontology_annotations.tbl path/2/output_dir [path/2/go_term_sublist.tbl]")
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
 
-# Read Distances Tbl:
-go.dists <- read.table( trailing.args[[ 1 ]] )
+# Read protein pairs with their respective distances:
+prot.pairs <- read.table( trailing.args[[ 1 ]], stringsAsFactors=FALSE,
+  comment.char='', quote='',
+  colClasses=c( 'character', 'character', 'numeric' )
+)
 
-# GO term:
-go.term <- as.character( trailing.args[[ 2 ]] )
+# Read Gene Ontology (GO) annotations:
+go.annos <- read.table( trailing.args[[ 2 ]], stringsAsFactors=FALSE,
+  comment.char='', quote='', colClasses=c( 'character' ) )
 
-# Path to output directory:
-path.2.output.dir <- as.character( trailing.args[[ 3 ]] )
-print( paste( "Will write output to files in directory", path.2.output.dir ) )
+# Write Mutation Probability Distributions measured for each argument GO term
+# into output dir:
+output.dir <- trailing.args[[ 3 ]]
 
-go.term.out.path <- paste( path.2.output.dir, "/", go.term, "_", sep="" )
+# For which GO terms shall mutation probability distributions be calculated? -
+# Default is ALL!
+go.terms <- if ( length( trailing.args ) > 3 ) {
+  read.table( trailing.args[[ 4 ]], stringsAsFactors=FALSE, comment.char='',
+    quote='', colClasses=c( 'character' )
+  )[ , 1 ]
+} else {
+  unique( go.annos[ , 1 ] )
+}
 
 # Begin
 print( "Starting computation" )
 
-write.table( 
-  pMutationMinMaxParentValues(
-    mutationProbabilityDistribution( go.dists, "Sequence.Distance" )
-    , "p.mutation|Sequence.Distance"
-  ),
-  file=paste( go.term.out.path, "p_mut_seq_dist.tbl", sep="" )
-)
+no.res <- lapply( go.terms, function( go.term ) {
+  write.table( 
+    # pMutationMinMaxParentValues(
+    mutationProbabilityDistribution( prot.pairs, go.annos, go.term ),
+    file=paste( go.term.out.path, "/", go.term, "_p_mut_distrib.tbl", sep="" )
+  )
+} )
 
-# mutation probability depending on domain architecture distance
-write.table(
-  pMutationMinMaxParentValues(
-    mutationProbabilityDistribution( go.dists,
-      "Domain.Architecture.Distance"
-    ),
-    "p.mutation|Domain.Architecture.Distance"
-  ), 
-  file=paste( go.term.out.path, "p_mut_das_dist.tbl", sep="" )
-)
-
-# mutation probability depending on euclidean distance to origin
-write.table(
-  pMutationMinMaxParentValues(
-    mutationProbabilityDistribution( go.dists,
-      "Euclidean.Distance.To.Origin"
-    ),
-    "p.mutation|Euclidean.Distance.To.Origin"
-  ),
-  file=paste( go.term.out.path, "p_mut_seq_das_dist.tbl", sep="" )
-)
 
 print( "DONE" )
