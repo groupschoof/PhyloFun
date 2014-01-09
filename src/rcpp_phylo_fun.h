@@ -41,11 +41,10 @@ RcppExport SEXP conditionalProbabilityTables( SEXP uniqueEdgeLengths, SEXP
     mutTblLengthColIndx );
 
 /*
- * Iterates through the argument proteinPairsTbl looking up rows in
- * which the accession stored in column 'pairFirstMemberColIndex' equals
- * argument 'accession'. If the row is a self match, that is the identity pair,
- * it is excluded from the returned list of pairs ( StringVectors of length 2
- * ).
+ * Extracts the subset of unique protein pairs from argument 'proteinPairsTbl',
+ * of which each row is interpeted as an unordered pair. In each row the
+ * members of the respective protein pair are identified using argument column
+ * indices 'pairFirstMemberColIndex' and 'pairSecondMemberColIndex'.
  */
 RcppExport SEXP uniqueProteinPairs( SEXP proteinPairsTbl, SEXP
     pairFirstMemberColIndex, SEXP pairSecondMemberColIndex );

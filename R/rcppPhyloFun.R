@@ -163,9 +163,9 @@ filterAnnotationMutationProbabilityTableList <- function( annotations,
 uniqueProteinPairs <- function( proteinPairsTbl,
   pairFirstMemberColIndex=0, pairSecondMemberColIndex=1 ) {
   # Identifies unique pairs in the set of un-ordered protein pairs in
-  # 'proteinPairsTbl'. As these pairs are symmetric, pairs
-  # (A,B) and (B,A) are identical and only one will be retained in the
-  # resulting set. 
+  # 'proteinPairsTbl'. As these pairs are symmetric, pairs (A,B) and (B,A) are
+  # identical and only one will be retained in the resulting set. Also self
+  # matched, that is identity pairs like (A,A) will be excluded.
   #
   # Args:
   #  proteinPairsTbl          : A two column matrix in which each row
@@ -187,6 +187,9 @@ uniqueProteinPairs <- function( proteinPairsTbl,
   prs.list <- .Call( "uniqueProteinPairs", prot.tbl, pairFirstMemberColIndex,
     pairSecondMemberColIndex )
 
-  # Convert to a 'character'-matrix:
-  matrix( unlist( prs.list ), ncol=2, nrow=length( prs.list ), byrow=TRUE )
+  # Convert to a 'character'-data.frame:
+  as.data.frame(
+    matrix( unlist( prs.list ), ncol=2, nrow=length( prs.list ), byrow=TRUE ),
+    stringsAsFactors=FALSE
+  )
 }

@@ -2,13 +2,15 @@ proteinPairsSharingAnnotation <- function( annotation, protein.pairs.tbl,
   annotation.tbl, pairs.first.col=1, pairs.secnd.col=2, annot.prot.col=3,
   annot.col=1 ) {
   # Returns unique pairs where at least one member has the annotation
-  # 'annotation'.
+  # 'annotation' an additional boolean column indicates wether both proteins
+  # share the annotation or only a single member of the pair is annotated with
+  # it.
   #
   # Args:
   #  annotation        : The annotation term to lookup protein pairs for, i.e.
   #                      "GO:0001234"
   #  protein.pairs.tbl : The table of protein pairs sharing a significant
-  #                      sequence similaritytbl
+  #                      sequence similarity
   #  annotation.tbl    : The table of protein annotations. Format should be
   #                      like the one used by GOstats, a three column matrix,
   #                      in which the first column holds GO terms, the second
@@ -26,14 +28,21 @@ proteinPairsSharingAnnotation <- function( annotation, protein.pairs.tbl,
   # Returns: A subset of protein.pairs.tbl in which each pair has at least one
   # member (protein) annotated with argument 'annotation'. Can be an empty
   # subset (matrix with same number of columns as argument 'protein.pairs.tbl'
-  # and 0 rows).
+  # and 0 rows). The returned table holds an additional boolean column
+  # indicating wether both protein pair members are annotated with the argument
+  # 'annotation' or not.
   #   
-  annot.ps <- annotation.tbl[ which( annotation.tbl[ , annot.col ] == annotation ),
-    annot.prot.col ]
-  protein.pairs.tbl[ which(
-      protein.pairs.tbl[ , pairs.first.col ] %in% annot.ps |
-      protein.pairs.tbl[ , pairs.secnd.col ] %in% annot.ps
-    ), , drop=FALSE ]
+  annot.ps <- annotation.tbl[ which( annotation.tbl[ , annot.col ] ==
+                                    annotation ), annot.prot.col ]
+  prs <- protein.pairs.tbl[ which(
+    protein.pairs.tbl[ , pairs.first.col ] %in% annot.ps |
+    protein.pairs.tbl[ , pairs.secnd.col ] %in% annot.ps
+  ), , drop=FALSE ]
+
+  lhs <- prs[ , 1 ] %in% annot.ps
+  rhs <- prs[ , 2 ] %in% annot.ps
+
+  cbind( prs, 'annotation.shared'=lhs & rhs )
 }
 
 parsePhmmerTable <- function( jr,
@@ -489,4 +498,18 @@ replaceSelenocysteinInFasta <- function( source.fasta.file,
   )
   writeXStringSet( aa.seqs.fltrd, filtered.fasta.file )
   TRUE
+}
+
+project.file.path <- function( ..., dir.sep="/" ) {
+  # Returns the full file path to a file in subdirectories given in arguments
+  # '…'
+  #
+  # Args:
+  #  ...     : The path of subdirectories and finally the file to generate the
+  #            complete file path for.
+  #  dir.sep : The character to divide dirs with, '/' by default.
+  #
+  # Returns: The full path
+  #   
+  paste( path.package( "PhyloFun" ), ..., sep=dir.sep )
 }

@@ -1,26 +1,4 @@
-library(RUnit)
-library(tools)
-library(stringr)
-library(Biostrings)
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir), '', script.dir)
-  normalizePath(file.path(project.dir, ...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-
-# We set-up required libraries in the test case, not in the R file, as path
-# problems will be resolved, as soon as this R package is loaded as such.
-src.project.file('src', 'phyloFunTools.R')
-src.project.file('src', 'domainArchitectureSimilarity.R')
+require( PhyloFun )
 
 # Test parsePhmmerTable
 print("Testing parsePhmmerTable(...)")
@@ -266,3 +244,29 @@ checkEquals( toString( aa.seqs.fltrd[[ 1 ]] ), 'xxxxxxxxxxxxxXXXXXXXXXXXXXXXXX' 
 checkEquals( toString( aa.seqs.fltrd[[ 2 ]] ), 'MSTVAAYAAMSATExXxXxXPLTKTTITRS' )
 unlink( 'tmp_rslt.fasta' )
 
+# Test proteinPairsSharingAnnotation
+print("Testing proteinPairsSharingAnnotation(...)")
+prots <- read.table( text=
+"A A
+B B
+C C
+A B
+B C
+A D", stringsAsFactors=FALSE )
+prot.annos <- read.table( stringsAsFactors=FALSE, text=
+"GO:0001234 IEA A
+GO:0001234 IEA B
+GO:0001234 IEA D" )
+res.proteinPairsSharingAnnotation <- proteinPairsSharingAnnotation(
+  'GO:0001234', prots, prot.annos )
+exp.proteinPairsSharingAnnotation <- read.table( stringsAsFactors=FALSE, text=
+"A A TRUE
+B B TRUE
+A B TRUE
+B C FALSE
+A D TRUE
+")
+checkEquals(
+  as.character( unlist( res.proteinPairsSharingAnnotation ) ),
+  as.character( unlist( exp.proteinPairsSharingAnnotation ) )
+)

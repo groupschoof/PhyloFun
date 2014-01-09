@@ -1,27 +1,4 @@
-library(RUnit)
-library(tools)
-library(RCurl)
-library(Biostrings)
-library(phangorn)
-
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir),'',script.dir)
-  normalizePath(file.path(project.dir,...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-src.project.file( 'src','measureDistanceFunctions.R' )
-src.project.file( 'src','domainArchitectureSimilarity.R' )
-src.project.file( 'src','domainArchitectureSimilarityRedis.R' )
-src.project.file( 'src','loadUniprotKBEntries.R' )
+require( PhyloFun )
 
 # Test measureDistances
 print("Testing measureDistances(...)")
@@ -78,60 +55,16 @@ checkEquals( pMutation( 0, 3 ), 1 )
 checkEquals( pMutation( 3, 1, 0.5 ), 0.5 )
 
 # Test mutationProbabilityDistribution
-print("Testing mutationProbabilityDistribution(...)")
-dists.test <- matrix( c( 0.1, 0.3, 0.6, 1.0, 0.1, 0.6, 0.3, 1.0, 1, 1, 0, 1, 1.26, 1.13, 0.74, 1.27 ),
-  nrow=4, ncol=4, dimnames=list(
-    c( "A_B", "A_C", "B_C", "C_D" ),
-    c( "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:7272727", "Euclidean.Distance.To.Origin" )
-  )
-)
-# print( dists.test )
-p.mut.seq <- mutationProbabilityDistribution( dists.test, "Sequence.Distance" )
-# print( p.mut.seq )
-exp.p.mut.seq <- matrix( c( 0, 0, 0.33, 0.33 ), ncol=1,
-  dimnames=list(
-    c( "A_B", "A_C", "B_C", "C_D" ),
-    "p.mutation|Sequence.Distance"
-  )
-)
-checkEquals( round( p.mut.seq[ , "p.mutation|Sequence.Distance", drop=F ], 2 ),
-  exp.p.mut.seq
-)
-checkEquals( p.mut.seq[ , 2:ncol(p.mut.seq) ], dists.test )
-
-p.mut.das <- mutationProbabilityDistribution( dists.test, "Domain.Architecture.Distance" )
-# print( p.mut.das )
-exp.p.mut.das <- matrix( c( 0, 0.5, 0.5, 0.5 ), ncol=1,
-  dimnames=list(
-    c( "A_B", "B_C", "A_C", "C_D" ),
-    "p.mutation|Domain.Architecture.Distance"
-  )
-)
-checkEquals( p.mut.das[ , "p.mutation|Domain.Architecture.Distance", drop=F ],
-  exp.p.mut.das
-)
-checkEquals( p.mut.das[ , 2:ncol(p.mut.das) ],
-  dists.test[ sort.list( dists.test[ , "Domain.Architecture.Distance" ] ), ]
-)
-
-dists.test <- matrix( c( 0.1, 0.3, 0.6, 1.0, 0.1, 0.6, 0.3, 1.0, 0, 1, 1, 1, 1.26, 1.13, 0.74, 1.27 ),
-  nrow=4, ncol=4, dimnames=list(
-    c( "A_B", "A_C", "B_C", "C_D" ),
-    c( "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:7272727", "Euclidean.Distance.To.Origin" )
-  )
-)
-exp.p.mut.seq.das <- matrix( c( 0, 0, 0.33, 0.33 ), ncol=1,
-  dimnames=list(
-    c( "B_C", "A_C", "A_B", "C_D" ),
-    "p.mutation|Euclidean.Distance.To.Origin"
-  )
-)
-p.mut.das.seq <- round( mutationProbabilityDistribution( dists.test, "Euclidean.Distance.To.Origin" ), 2 )
-# print( p.mut.das.seq )
-checkEquals( p.mut.das.seq[ , "p.mutation|Euclidean.Distance.To.Origin", drop=F ], exp.p.mut.seq.das )
-checkEquals( p.mut.das.seq[ , 2:ncol(p.mut.das.seq) ],
-  dists.test[ sort.list( dists.test[ , "Euclidean.Distance.To.Origin" ] ), ]
-)
+dist.tbl <- read.table( stringsAsFactors=FALSE, text=
+"A B 0.1
+A C 0.5
+A D 1.0")
+annot.tbl <- read.table( stringsAsFactors=FALSE, text=
+"GO:0001234 IEA A
+GO:0001234 IEA B 
+GO:0001234 IEA D")
+res.mutationProbabilityDistribution <- mutationProbabilityDistribution(
+  dist.tbl, annot.tbl, 'GO:0001234' )
 
 
 # Test gridPMutation
