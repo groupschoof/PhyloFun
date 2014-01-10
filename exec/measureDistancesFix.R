@@ -1,7 +1,7 @@
 require( PhyloFun )
 
 # Usage:
-print( "Usage: Rscript measureDistancesFix.R path/2/protein_pairs_with_distances.tbl path/2/gene_ontology_annotations.tbl path/2/output_dir [path/2/go_term_sublist.tbl]")
+print( "Usage: Rscript measureDistancesFix.R path/2/protein_pairs_with_distances.tbl path/2/gene_ontology_annotations.tbl path/2/output [path/2/go_term_sublist.tbl]")
 
 # Input
 trailing.args <- commandArgs(trailingOnly = TRUE)
@@ -17,8 +17,8 @@ go.annos <- read.table( trailing.args[[ 2 ]], stringsAsFactors=FALSE,
   comment.char='', quote='', colClasses=c( 'character' ) )
 
 # Write Mutation Probability Distributions measured for each argument GO term
-# into output dir:
-output.dir <- trailing.args[[ 3 ]]
+# into output:
+output <- trailing.args[[ 3 ]]
 
 # For which GO terms shall mutation probability distributions be calculated? -
 # Default is ALL!
@@ -33,13 +33,19 @@ go.terms <- if ( length( trailing.args ) > 3 ) {
 # Begin
 print( "Starting computation" )
 
-no.res <- lapply( go.terms, function( go.term ) {
-  write.table( 
-    # pMutationMinMaxParentValues(
-    mutationProbabilityDistribution( prot.pairs, go.annos, go.term ),
-    file=paste( go.term.out.path, "/", go.term, "_p_mut_distrib.tbl", sep="" )
-  )
-} )
+p.mut.dists <- setNames(
+  lapply( go.terms, function( go.term ) {
+    pMutationMinMaxParentValues(
+      mutationProbabilityDistribution( prot.pairs, go.annos, go.term ),
+      p.column='p.mutation|Sequence.Distance',
+      parent.columns='Sequence.Distance'
+    )
+  } ),
+  go.terms
+)
+# Write named list of each GO terms' p( mut | seq.dist ) into a binary RData
+# file:
+save( p.mut.dists, file=output )
 
-
+# End
 print( "DONE" )
