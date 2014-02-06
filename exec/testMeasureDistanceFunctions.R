@@ -66,9 +66,16 @@ GO:0001234 IEA D")
 res.mutationProbabilityDistribution <- mutationProbabilityDistribution(
   dist.tbl, annot.tbl, 'GO:0001234' )
 
-
 # Test gridPMutation
 print("Testing gridPMutation(...)")
+dists.test <- matrix( c( 0.1, 0.3, 0.6, 1.0, 0.1, 0.6, 0.3, 1.0, 1, 1, 0, 1, 1.26, 1.13, 0.74, 1.27 ),
+  nrow=4, ncol=4, dimnames=list(
+    c( "A_B", "A_C", "B_C", "C_D" ),
+    c( "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:7272727", "Euclidean.Distance.To.Origin" )
+  )
+)
+# print( dists.test )
+p.mut.das.seq <- round( mutationProbabilityDistribution( dists.test, "Euclidean.Distance.To.Origin" ), 2 )
 p.mut.quants <- gridPMutation( p.mut.das.seq )
 exp.p.mut.quants.1 <- matrix( c( 0.0, NA, NA, 0.33, NA, NA, NA, NA, NA, NA ),
   ncol=1, dimnames=list(
