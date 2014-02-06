@@ -3,7 +3,7 @@ require( PhyloFun )
 # Initialize test data:
 #######################
 # Load list of mutation probability tables for all measured GO terms:
-load( project.file.path(  "p_mutation_tables_R_image.bin" ) )
+data( "p_mutation_tables_R_image", package="PhyloFun" )
 
 # Test tree is midpoint rooted!
 phylo.tree <- read.tree(project.file.path( 'test_tree.newick'))
@@ -202,34 +202,25 @@ p.mut.tbl <- as.matrix( read.table( header=T, text=
 11                         0.91                  1.61                            0.00                             1.62                  1.66                                1                             2.29
 12                         0.92                  1.67                            0.06                             1.71                  1.92                                1                             2.14" )
 )
-mtch.col.1 <- findMatchingRow( p.mut.tbl, 0.8, 5 )
+mtch.col.1 <- findMatchingRow( p.mut.tbl, 0.8, 4 )
 # print( mtch.col.1 )
-exp.mtch.col.1 <- as.matrix( read.table( header=T, text="
-   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
-6                          0.86                  0.12                            0.00                             0.12                  1.50                                1                             1.98" )
-)
+exp.mtch.col.1 <- c( 0.86, 0.12, 0.00, 0.12, 1.50, 1, 1.98 )
 checkEquals( exp.mtch.col.1, mtch.col.1 )
 
-mtch.col.2 <- findMatchingRow( p.mut.tbl, 1.54, 5 )
+mtch.col.2 <- findMatchingRow( p.mut.tbl, 1.54, 4 )
 # print( mtch.col.2 )
-exp.mtch.col.2 <- as.matrix( read.table( header=T, text="
-   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
-8                          0.88                  1.53                            0.00                             1.53                  1.54                                1                             1.84" )
-)
+exp.mtch.col.2 <- c( 0.88, 1.53, 0.00, 1.53, 1.54, 1, 1.84 )
 checkEquals( exp.mtch.col.2, mtch.col.2 )
 
-mtch.col.3 <- findMatchingRow( p.mut.tbl, 7272, 5 )
+mtch.col.3 <- findMatchingRow( p.mut.tbl, 7272, 4 )
 # print( mtch.col.3 )
-exp.mtch.col.3 <- as.matrix( read.table( header=T, text="
-   p.mutation.Sequence.Distance min.Sequence.Distance min.Domain.Architecture.Distance min.Euclidean.Distance.To.Origin max.Sequence.Distance max.Domain.Architecture.Distance max.Euclidean.Distance.To.Origin
-12                         0.92                  1.67                            0.06                             1.71                  1.92                                1                             2.14" )
-)
+exp.mtch.col.3 <- c( 0.92, 1.67, 0.06, 1.71, 1.92, 1, 2.14)
 checkEquals( exp.mtch.col.3, mtch.col.3 )
 
 mtch.col.4 <- findMatchingRow(
-  matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 ), 0.9, 2
+  matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 ), 0.9, 1
 )
-checkEquals( matrix( c(0.66, 1.0), ncol=2 ), mtch.col.4 )
+checkEquals( c(0.66, 1.0), mtch.col.4 )
 
 # Test eliminateUnreachableStates
 print("Testing eliminateUnreachableStates(...)")
@@ -260,7 +251,10 @@ p.mut.tbl.lst[[ "GO_1" ]] <- matrix( c(0.33, 0.66, 1.0, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_2" ]] <- matrix( c(0.25, 0.5, 0.75, 0.5, 1.0, 1.5), ncol=2 )
 p.mut.tbl.lst[[ "GO_3" ]] <- matrix( c(0.45, 0.75, 0.98, 0.5, 1.0, 1.5), ncol=2 )
 # print( p.mut.tbl.lst )
-con.prbs.tbl <- conditionalProbabilityTable( 0.9, c( ua, 'unknown' ), p.mut.tbl.lst, 2 )
+cpt.anno <- c( ua, 'unknown' )
+cpt.anno.str <- as.character( lapply( cpt.anno, annotationToString ) )
+con.prbs.tbl <- conditionalProbabilityTable( 0.9, cpt.anno, cpt.anno.str,
+  p.mut.tbl.lst, 1 )
 # print( con.prbs.tbl )
 checkEquals( 1.0, sum( con.prbs.tbl[ , 1 ] ) )
 # print( 1 - p.mut.tbl.lst[[ 1 ]][[ 2, 1 ]] )
@@ -276,8 +270,11 @@ checkEquals( 1.0, sum( con.prbs.tbl[ , 'unknown' ] ) )
 print("Testing conditionalProbabilityTables(...)")
 phylo.tree.4.brnch.lngths <- read.tree( project.file.path( 
   'test_tree_4_branch_lengths.newick' ) )
-res.conditionalProbabilityTables <- conditionalProbabilityTables( phylo.tree.4.brnch.lngths,
-  c( ua, 'unknown' ), p.mut.tbl.lst, mutTblLengthColIndx=1 )
+annos <- c( ua, 'unknown' )
+annos.str <- as.character( lapply( annos, annotationToString ) )
+res.conditionalProbabilityTables <- conditionalProbabilityTables(
+  unique( phylo.tree.4.brnch.lngths$edge.length ),
+  annos, annos.str, p.mut.tbl.lst, mutTblLengthColIndx=1 )
 # print( res.conditionalProbabilityTables )
 checkEquals( names( res.conditionalProbabilityTables ),
   as.character( unique( phylo.tree.4.brnch.lngths$edge.length ) ) )
@@ -294,7 +291,7 @@ branch.length <- 0.5
 mut.prob.tbls <- list( "A"=matrix( c(0.2, 0.5), nrow=1 ),
   "B"=matrix( c(0.3, 0.5), nrow=1 ), "C"=matrix( c(0.4, 0.5), nrow=1 )
 )
-res.mutationProbability <- mutationProbability( anno, branch.length, mut.prob.tbls, 2 )
+res.mutationProbability <- mutationProbability( anno, branch.length, mut.prob.tbls, 1 )
 exp.mutationProbability <- 0.4
 checkEquals( res.mutationProbability, exp.mutationProbability ) 
 
