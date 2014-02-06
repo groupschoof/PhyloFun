@@ -160,7 +160,8 @@ rslt <- extractExperimentallyVerifiedGoAnnos(
 )
 checkTrue( is.null(rslt) )
 rslt <- extractExperimentallyVerifiedGoAnnos(
-  xmlInternalTreeParse( project.file.path(  "Q9ZZX1.xml" ) )
+  xmlInternalTreeParse( project.file.path(  "Q9ZZX1.xml" ) ),
+  evidence.codes=c( 'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP' )
 )
 # print( rslt )
 exp.rslt <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', 'Q9ZZX1' ) )
@@ -179,7 +180,7 @@ checkEquals( exp.rslt, rslt )
 print("Testing retrieveExperimentallyVerifiedGOAnnotations(...)")
 exper.go.annos <- retrieveExperimentallyVerifiedGOAnnotations( c( "A0AEI7", "Q9ZZX1" ) )
 # print( exper.go.annos )
-checkEquals( exper.go.annos[[ 'GO', 'Q9ZZX1' ]], c( "GO:0004519", "GO:0006316" ) )
+checkEquals( length( intersect( c( "GO:0004519", "GO:0006316" ), exper.go.annos[[ 'GO', 'Q9ZZX1' ]] ) ), 2 )
 checkEquals( ncol(exper.go.annos), 1 )
 # Test with 550 accessions, triggering recursive execution:
 accs.550 <- as.character( read.table( project.file.path(  "550_exp_ver_accs.txt" ) )$V1 )
