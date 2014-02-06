@@ -2,11 +2,11 @@ require( PhyloFun )
 
 # Test measureDistances
 print("Testing measureDistances(...)")
-f <- file( project.file.path("test", "test_annotations.tbl"), "r" )
+f <- file( project.file.path( "test_annotations.tbl"), "r" )
 annos <- unserialize(f)
 close(f)
 aa.seqs <- sapply(
-  readAAStringSet( project.file.path("test", "measureDistanceFunctions.fasta") ),
+  readAAStringSet( project.file.path( "measureDistanceFunctions.fasta") ),
   function(s) toString(s)
 )
 blast.rslt.tbl <- matrix(
@@ -18,7 +18,7 @@ blast.rslt.tbl <- matrix(
   ),
   ncol=2, byrow=T
 )
-domain.weights.table <- read.table( project.file.path( "test",
+domain.weights.table <- read.table( project.file.path( 
     "domain_weights_database.tbl" )
 )
 go.term <- "GO:0017111"

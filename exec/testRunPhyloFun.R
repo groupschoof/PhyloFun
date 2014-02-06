@@ -1,5 +1,4 @@
-library(RUnit)
-library(tools)
+require( PhyloFun )
 
 # In R sourcing other files is not trivial, unfortunately.
 # WARNING:
@@ -17,8 +16,8 @@ fastTreeCall <- if( try( system( 'FastTreeMP' ), silent=T ) == 0 ) 'FastTreeMP' 
 
 system( 
   paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
-    '-q', project.file.path( 'test', 'protein_1.fasta' ),
-    '-p', project.file.path( 'test', 'protein_1_jackhmmer_out.tbl' ),
+    '-q', project.file.path(  'protein_1.fasta' ),
+    '-p', project.file.path(  'protein_1_jackhmmer_out.tbl' ),
     '-f', fastTreeCall, '-h true', '-m true'
   )
 )
@@ -37,8 +36,8 @@ unlink( "Protein_1", recursive=T )
 # Test PhyloFun with Blast results and not filtering for EVIDENCE CODES:
 system( 
   paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
-    '-q', project.file.path( 'test', 'protein_1.fasta' ),
-    '-b', project.file.path( 'test', 'protein_1_blastout.tbl' ),
+    '-q', project.file.path(  'protein_1.fasta' ),
+    '-b', project.file.path(  'protein_1_blastout.tbl' ),
     '-f', fastTreeCall, '-h true', '-m true', '-e ALL'
   )
 )
@@ -57,8 +56,8 @@ unlink( "Protein_1", recursive=T )
 # Test PhyloFun with HTML reporting:
 system( 
   paste( 'Rscript', project.file.path( 'src', 'runPhyloFun.R' ),
-    '-q', project.file.path( 'test', 'protein_1.fasta' ),
-    '-b', project.file.path( 'test', 'protein_1_blastout.tbl' ),
+    '-q', project.file.path(  'protein_1.fasta' ),
+    '-b', project.file.path(  'protein_1_blastout.tbl' ),
     '-f', fastTreeCall, '-h true', '-m true', '-e ALL', '-r true'
   )
 )

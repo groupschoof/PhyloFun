@@ -1,8 +1,9 @@
 require( PhyloFun )
+require( PhyloFun )
 
 # Test parsePhmmerTable
 print("Testing parsePhmmerTable(...)")
-jr <- scan( file=project.file.path( 'test', 'jackhmmer_out_10_prots.tbl' ),
+jr <- scan( file=project.file.path(  'jackhmmer_out_10_prots.tbl' ),
   what=character(), sep="\n" )
 jack.mat <- parsePhmmerTable( jr )
 # print( jack.mat[1,] )
@@ -17,7 +18,7 @@ checkEquals( jack.mat[ 1, ],
 # Test parseBlastTable
 print("Testing parseBlastTable(...)")
 res.parseBlastTable <- parseBlastTable( read.table(
-  project.file.path( 'test', 'test_blast_results.tbl' ) )
+  project.file.path(  'test_blast_results.tbl' ) )
 )
 exp.parseBlastTable <- read.table( text=
 '"query.name" "hit.name" "bit.score"
@@ -49,7 +50,7 @@ checkTrue( is.na( extractUniprotAccessionFromUniprotName( NA ) ) )
 
 # Test parseInterProScanTable
 print("Testing parseInterProScanTable(...)")
-ipr <- scan( file=project.file.path( "test", "interproscan_out.tsv" ),
+ipr <- scan( file=project.file.path(  "interproscan_out.tsv" ),
   what=character(), sep="\n" )
 ipr.res <- parseInterProScanTable( ipr )
 # print( ipr.res )
@@ -84,7 +85,7 @@ checkTrue( is.null( sanitizeUniprotAccession( NULL ) ) )
 
 # Test uniqueHomologs
 print("Testing uniqueHomologs(...)")
-uniqueHomologs( project.file.path( 'test', 'non_unique_hmlgs.fasta' ),
+uniqueHomologs( project.file.path(  'non_unique_hmlgs.fasta' ),
   'tmp.fasta', FALSE )
 res.uniqueHomologs <- readAAStringSet( 'tmp.fasta' )
 checkTrue( ! is.null( res.uniqueHomologs ) )
@@ -130,9 +131,9 @@ unlink( 'tmp.fasta' )
 
 # Test msaEqual
 print("Testing msaEqual(...)")
-msa.a <- readAAStringSet( project.file.path( 'test', 'test_msa_equal_A.fasta' ) )
-msa.b <- readAAStringSet( project.file.path( 'test', 'test_msa_equal_B.fasta' ) )
-msa.c <- readAAStringSet( project.file.path( 'test', 'test_msa_equal_C.fasta' ) )
+msa.a <- readAAStringSet( project.file.path(  'test_msa_equal_A.fasta' ) )
+msa.b <- readAAStringSet( project.file.path(  'test_msa_equal_B.fasta' ) )
+msa.c <- readAAStringSet( project.file.path(  'test_msa_equal_C.fasta' ) )
 checkTrue( msaEqual( msa.a, msa.b ) )
 checkTrue( ! msaEqual( msa.a, msa.c ) )
 checkTrue( ! msaEqual( msa.b, msa.c ) )
@@ -159,12 +160,12 @@ checkEquals( res.bestHits, exp.bestHits )
 
 # Test filterMultipleSequenceAlignment
 print("Testing filterMultipleSequenceAlignment(...)")
-msa <- readAAStringSet( project.file.path( 'test', 'test_msa.fasta' ) )
-res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa )
+msa <- readAAStringSet( project.file.path(  'test_msa.fasta' ) )
+res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa, 25 )
 exp.filterMultipleSequenceAlignment <- msa[ 1 ]
 checkTrue( msaEqual( res.filterMultipleSequenceAlignment, exp.filterMultipleSequenceAlignment ) ) 
-msa.empty <- readAAStringSet( project.file.path( 'test', 'test_msa_empty.fasta' ) )
-res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa.empty )
+msa.empty <- readAAStringSet( project.file.path(  'test_msa_empty.fasta' ) )
+res.filterMultipleSequenceAlignment <- filterMultipleSequenceAlignment( msa.empty, 25 )
 exp.filterMultipleSequenceAlignment <- NULL
 checkEquals( res.filterMultipleSequenceAlignment, exp.filterMultipleSequenceAlignment ) 
 
@@ -178,7 +179,7 @@ res.chooseAlignment <- chooseFilteredAlignment( msa.empty )
 exp.chooseAlignment <- FALSE
 # expected to choose unfiltered MSA
 checkTrue( ! exp.chooseAlignment )
-msa.good <- readAAStringSet( project.file.path( 'test', 'test_msa_good.fasta' ) )
+msa.good <- readAAStringSet( project.file.path(  'test_msa_good.fasta' ) )
 res.chooseAlignment <- chooseFilteredAlignment( msa.good )
 exp.chooseAlignment <- TRUE
 # expected to choose FILTERED MSA
@@ -208,9 +209,9 @@ checkEquals( as.character( res.sanitizeUniprotAccessions[ , 'hit.name' ] ),
 # Test mergeQueryPredictionsAndHomologAnnotations
 print("Testing mergeQueryPredictionsAndHomologAnnotations(...)")
 prot.acc <- 'Protein_1'
-pf.preds <- read.table( project.file.path( 'test',
+pf.preds <- read.table( project.file.path( 
   'test_phylo_fun_predictions.tbl' ), header=T )
-f <- file( project.file.path( 'test',
+f <- file( project.file.path( 
   'test_go_type_annotations_R_serialized.txt' ), 'r' )
 gt.annos <- unserialize( f )
 close( f )
@@ -237,7 +238,7 @@ for ( go.type in go.types ) {
 
 # Test replaceSelenocysteinInFasta
 print("Testing replaceSelenocysteinInFasta(...)")
-res.replaceSelenocysteinInFasta <- replaceSelenocysteinInFasta( project.file.path( 'test', 'aa_seqs_with_u.fasta'), 'tmp_rslt.fasta' )
+res.replaceSelenocysteinInFasta <- replaceSelenocysteinInFasta( project.file.path(  'aa_seqs_with_u.fasta'), 'tmp_rslt.fasta' )
 aa.seqs.fltrd <- readAAStringSet( 'tmp_rslt.fasta' )
 checkEquals( names( aa.seqs.fltrd ), c( 'protein_1', 'protein_2' ) )
 checkEquals( toString( aa.seqs.fltrd[[ 1 ]] ), 'xxxxxxxxxxxxxXXXXXXXXXXXXXXXXX' )

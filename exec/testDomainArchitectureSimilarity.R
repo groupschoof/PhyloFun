@@ -1,25 +1,4 @@
-library(RUnit)
-library(tools)
-library(RCurl)
-library(Biostrings)
-
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir),'',script.dir)
-  normalizePath(file.path(project.dir,...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-src.project.file( 'src','loadUniprotKBEntries.R' )
-src.project.file( 'src','domainArchitectureSimilarity.R' )
-src.project.file( 'src','domainArchitectureSimilarityRedis.R' )
+require( PhyloFun )
 
 # Load domain.weights.table:
 dwt <- read.table(
@@ -27,7 +6,7 @@ dwt <- read.table(
   )[ , 'DW', drop=F ]
 
 # Load test annotations:
-f <- file( project.file.path( "test", "test_annotations_2.tbl" ), "r" )
+f <- file( project.file.path(  "test_annotations_2.tbl" ), "r" )
 am <- unserialize( f )
 close( f )
 
@@ -43,10 +22,10 @@ checkEquals( vsm, expc.uniq.annos )
 # Test generateDomainArchitectureSpaceVectors
 print("Testing generateDomainArchitectureSpaceVectors(...)")
 # Initialize domain weights database:
-dwd <- read.table( project.file.path( "test", "domain_weights_database.tbl" ),
+dwd <- read.table( project.file.path(  "domain_weights_database.tbl" ),
   header=T )
 # Initialize expected result:
-f <- file( project.file.path( "test", "testDomainArchitectureSpaceVectors.txt"),
+f <- file( project.file.path(  "testDomainArchitectureSpaceVectors.txt"),
   "r" )
 exp.dasv <- unserialize( f )
 close(f)
@@ -140,7 +119,7 @@ p3 <- "MTASLWQQCLNRLQDELPSAEFSMWIRPLQAELSDNTLTLYAPNRFVLDWVRDKYLIRVNGIINELCGVDGPT
 p3.san <- "MTASLWQQCLNRLQDELPSAEFSMWIRPLQAELSDNTLTLYAPNRFVLDWVRDKYLIRVNGIINELCGVDGPTLRFDIGNRPHPVAVARAPARGADPVNNSQKSWESKAEAKPEPNHKSNTNVNYTFENFVEGKSNQLARAAARQVADNPGGAYNPLFLYGGTGLGKTHLLHAVGNAIKERKQDAKVIYMHSERFVQDMVKALQNNAIEEFKRYYRSVDALLIDDIQFFANKERSQEEFFHTFNALLEGNQQIILTSDRYPKEINGVEDRLKSRFGWGLTVAIEPPELETRVAILMRKADENQIHLPDEVAFFIAKRLRSNVRELEGALNRVIANANFTGRAINIDFVREALRDLLALQEKLVTIDNIQKTVAEYYKIKLADLLSKRRSRSVARPRQLAMALAKELTNHSLPEIGDAFGGRDHTTVLHACRKIEQLKEESHDIKEDYSNLIRTLSS"
 checkEquals( replaceSelenocystein( p3 ), p3.san )
 # Check on set of AA seqs:
-aa.seqs <- readAAStringSet( project.file.path( 'test',
+aa.seqs <- readAAStringSet( project.file.path( 
   'non_unique_hmlgs.fasta' ) )
 no.u.aa.seqs <- lapply( aa.seqs, replaceSelenocystein )
 exp.aa.seq <- 'MAYNHDGMPDQQFLWDVFQRVDKDRSGHISADELQVALSNGTWSAFNPETIRLMIGMFDRENKGTVSFKDFGALWKYVTDWQNCFRSFDRDNSGNIDKTELKTALTSFGYRLSDHLIDVLLRKFDRFGRGTILFDDFIQCCIVLYTLTTAFRQHDTDLDGIITIHYEQFLXSMVFSLKI'

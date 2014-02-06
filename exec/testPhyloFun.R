@@ -1,26 +1,4 @@
-library(RUnit)
-library(tools)
-library(ape)
-library(RMySQL)
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir), '', script.dir)
-  normalizePath(file.path(project.dir, ...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-# We set-up required libraries in the test case, not in the R file, as path
-# problems will be resolved, as soon as this R package is loaded as such.
-src.project.file('src', 'loadUniprotKBEntries.R')
-src.project.file('src', 'phyloFun.R')
-src.project.file('src', 'geneOntologySQL.R')
+require( PhyloFun )
 
 # Initialize test data:
 #######################
@@ -28,8 +6,8 @@ src.project.file('src', 'geneOntologySQL.R')
 load( project.file.path( "data", "p_mutation_tables_R_image.bin" ) )
 
 # Test tree is midpoint rooted!
-phylo.tree <- read.tree(project.file.path('test', 'test_tree.newick'))
-fl <- file(project.file.path('test','test_annotations_2.tbl'),"r")
+phylo.tree <- read.tree(project.file.path( 'test_tree.newick'))
+fl <- file(project.file.path('test_annotations_2.tbl'),"r")
 annotation.matrix <- unserialize(fl)
 close(fl)
 
@@ -68,7 +46,7 @@ exp.mostAppropriateAnnotation <- c( 'GO:0009267', 'GO:0036170', 'GO:0036180', 'G
 checkEquals( res.mostAppropriateAnnotation, exp.mostAppropriateAnnotation ) 
 
 # Some PhyloFun results to be arguments for tesed methods:
-f <- file( project.file.path( 'test', 'test_phyloFun_serialized_result.bin' ), 'r' )
+f <- file( project.file.path(  'test_phyloFun_serialized_result.bin' ), 'r' )
 phylo.fun.rslt <- unserialize( f )
 close( f )
 
@@ -82,7 +60,7 @@ checkEquals( res.highScoringAnnotations$biological_process,
 checkTrue( is.na( res.highScoringAnnotations$cellular_component ) )
 checkTrue( is.na( res.highScoringAnnotations$molecular_function ) )
 
-f <- file( project.file.path( 'test',
+f <- file( project.file.path( 
   'Query_Q9NTK1_phyloFun_annotations_serialized.txt'), "r" )
 q9ntk1.pf.res <- unserialize( f )
 close( f )
@@ -100,7 +78,7 @@ checkEquals( res.highScoringAnnotations$molecular_function,
 # Test tree whose Baysian network representation has nodes with unreachable
 # states:
 phylo.tree.unreachbl.stts <- read.tree(
-  project.file.path( 'test', 'test_tree_unreachbl_stts.newick')
+  project.file.path(  'test_tree_unreachbl_stts.newick')
 )
 
 # Test predictionsToCharacterVector
@@ -296,7 +274,7 @@ checkEquals( 1.0, sum( con.prbs.tbl[ , 'unknown' ] ) )
 
 # Test conditionalProbabilityTables
 print("Testing conditionalProbabilityTables(...)")
-phylo.tree.4.brnch.lngths <- read.tree( project.file.path( 'test',
+phylo.tree.4.brnch.lngths <- read.tree( project.file.path( 
   'test_tree_4_branch_lengths.newick' ) )
 res.conditionalProbabilityTables <- conditionalProbabilityTables( phylo.tree.4.brnch.lngths,
   c( ua, 'unknown' ), p.mut.tbl.lst, mutTblLengthColIndx=1 )

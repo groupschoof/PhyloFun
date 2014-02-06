@@ -1,25 +1,4 @@
-library(RUnit)
-library(tools)
-library(stringr)
-library( RMySQL )
-
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir),'',script.dir)
-  normalizePath(file.path(project.dir,...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-src.project.file( 'src', 'evaluation.R' )
-src.project.file( 'src', 'phyloFunTools.R' )
-src.project.file( 'src', 'geneOntologySQL.R' )
+require( PhyloFun )
 
 # Setup:
 go.con <- connectToGeneOntology()
@@ -127,7 +106,7 @@ checkEquals( res.fScore, exp.fScore )
 
 # Test parseBlast2GOresults
 print("Testing parseBlast2GOresults(...)")
-res.parseBlast2GOresults <- parseBlast2GOresults( readLines( project.file.path( 'test', 'blast2GO.annot' ) ) )
+res.parseBlast2GOresults <- parseBlast2GOresults( readLines( project.file.path(  'blast2GO.annot' ) ) )
 checkTrue( ! is.null( res.parseBlast2GOresults ) )
 checkEquals( class( res.parseBlast2GOresults ), 'matrix' )
 checkEquals( ncol( res.parseBlast2GOresults ), 97 )
@@ -136,7 +115,7 @@ checkEquals( res.parseBlast2GOresults[[ 'GO', 'Q9USJ5' ]], c( "GO:0006779", "GO:
 
 # Test parseInterProScan2GOresults
 print("Testing parseInterProScan2GOresults(...)")
-res.parseInterProScan2GOresults <- parseInterProScan2GOresults( readLines( project.file.path( 'test', 'interproscan_out.tsv' ) ) )
+res.parseInterProScan2GOresults <- parseInterProScan2GOresults( readLines( project.file.path(  'interproscan_out.tsv' ) ) )
 checkTrue( ! is.null( res.parseInterProScan2GOresults ) )
 checkEquals( class( res.parseInterProScan2GOresults ), 'matrix' )
 checkEquals( ncol( res.parseInterProScan2GOresults ), 7 )

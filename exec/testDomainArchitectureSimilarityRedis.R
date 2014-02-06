@@ -1,24 +1,4 @@
-library(tools)
-library(RUnit)
-library(rredis)
-library(parallel)
-
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir),'',script.dir)
-  normalizePath(file.path(project.dir,...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-src.project.file( 'src','domainArchitectureSimilarityRedis.R' )
-src.project.file( 'src','domainArchitectureSimilarity.R' )
+require( PhyloFun )
 
 redis.con <- try( redisConnect() )
 if( identical( class( redis.con ), "try-error" ) )
@@ -28,7 +8,7 @@ if( identical( class( redis.con ), "try-error" ) )
 redisFlushAll()
 
 # Test initializeDomainWeights
-dwt <- read.table( project.file.path( "test", "domain_weights_database_test.tbl" ) )
+dwt <- read.table( project.file.path(  "domain_weights_database_test.tbl" ) )
 print("Testing initializeDomainWeights(...)")
 no.res <- initializeDomainWeights( dwt )
 checkEquals( length( redisKeys() ), nrow( dwt ) )
@@ -38,7 +18,7 @@ checkEquals( redisGet( dom.id ), dwt[[ dom.id, 1 ]] )
 # Test initializeDomainAnnotations
 print("Testing initializeDomainAnnotations(...)")
 redisFlushAll()
-f <- file( project.file.path( "test", "test_annotations_2.tbl" ), "r" )
+f <- file( project.file.path(  "test_annotations_2.tbl" ), "r" )
 dom.annos <- unserialize( f )
 close( f )
 no.res <- initializeDomainAnnotations( dom.annos )

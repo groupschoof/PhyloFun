@@ -1,23 +1,4 @@
-library(RUnit)
-library(tools)
-library(RCurl)
-
-# In R sourcing other files is not trivial, unfortunately.
-# WARNING:
-# This method ONLY works for project files in depth one sub dirs!
-project.file.path <- function(...) {
-  initial.options <- commandArgs(trailingOnly = FALSE)
-  file.arg.name <- "--file="
-  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
-  script.dir <- dirname(file_path_as_absolute(script.name))
-  project.dir <- sub(basename(script.dir),'',script.dir)
-  normalizePath(file.path(project.dir,...))
-}
-src.project.file <- function(...) {
-  source(project.file.path(...))
-}
-src.project.file('src','loadUniprotKBEntries.R')
-src.project.file('src','domainArchitectureSimilarity.R')
+require( PhyloFun )
 
 # Accessions of Proteins involved in the following tests:
 test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
@@ -25,14 +6,14 @@ test.accessions <- c('Q0KFR8','B2AFZ7','Q1LSI9','Protein_1')
 # Test extractName
 print("Testing extractName(...)")
 res.extractName <- extractName(
-  xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) ),
+  xmlInternalTreeParse( project.file.path(  "Q9ZZX1.xml" ) ),
   xpath.prefix='//xmlns:entry/'
 )
 exp.extractName <- "Q9ZZX1"
 checkEquals( res.extractName, exp.extractName ) 
 # With the result of getEntries:
 res.extractName <- extractName( getEntries(
-  readLines( project.file.path( "test", "Q9ZZX1.xml" ) ) )[[ 1 ]] )
+  readLines( project.file.path(  "Q9ZZX1.xml" ) ) )[[ 1 ]] )
 exp.extractName <- "Q9ZZX1"
 checkEquals( res.extractName, exp.extractName ) 
 # NULL argument should return NULL accession:
@@ -71,7 +52,7 @@ checkEquals( uniprotkb.url('Q0KFR8', frmt='fasta'),
 
 # Test extractAnnotations
 print("Testing extractAnnotations(...)")
-d <- xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) )
+d <- xmlInternalTreeParse( project.file.path(  "Q9ZZX1.xml" ) )
 annos <- extractAnnotations(d, 'InterPro')
 # print( d )
 # print( annos )
@@ -113,7 +94,7 @@ checkTrue( ncol( res.retrieveUniprotAnnotations ) > 0 )
 
 # Test uniq.annotations
 print("Testing uniq.annotations(...)")
-fl <- file(project.file.path('test','test_annotations.tbl'),'r')
+fl <- file(project.file.path('test_annotations.tbl'),'r')
 an.ma <- unserialize(fl)
 close(fl)
 u.an.ma <- uniq.annotations(an.ma, 'GO')
@@ -125,7 +106,7 @@ checkEquals(u.an.ma, c("GO:0003688","GO:0005524",
 
 # Test sharedFunction
 print("Testing sharedFunction(...)")
-f <- file( project.file.path( "test", "test_annotations.tbl" ), "r" )
+f <- file( project.file.path(  "test_annotations.tbl" ), "r" )
 shr.func.anno.mtrx <- unserialize( f )
 close( f )
 shrd.funk.res <- sharedFunction( shr.func.anno.mtrx )
@@ -155,7 +136,7 @@ checkEquals( shrd.funk.res, exp.shrd.funk.res[ shrd.funk.accs, ] )
 
 # Test sharedAnnotation
 print("Testing sharedAnnotation(...)")
-f <- file( project.file.path( "test", "test_annotations.tbl" ), "r" )
+f <- file( project.file.path(  "test_annotations.tbl" ), "r" )
 annos <- unserialize( f )
 close( f )
 shrd.annos.1 <- sharedAnnotation( annos, "GO:0017111" )
@@ -175,11 +156,11 @@ checkEquals( shrd.annos.2[[ "GO", "A0Q3U7" ]], annos[[ "GO", "A0Q3U7" ]] )
 # Test extractExperimentallyVerifiedGoAnnos
 print("Testing extractExperimentallyVerifiedGoAnnos(...)")
 rslt <- extractExperimentallyVerifiedGoAnnos(
-  xmlInternalTreeParse( project.file.path( "test", "A0AEI7.xml" ) )
+  xmlInternalTreeParse( project.file.path(  "A0AEI7.xml" ) )
 )
 checkTrue( is.null(rslt) )
 rslt <- extractExperimentallyVerifiedGoAnnos(
-  xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) )
+  xmlInternalTreeParse( project.file.path(  "Q9ZZX1.xml" ) )
 )
 # print( rslt )
 exp.rslt <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', 'Q9ZZX1' ) )
@@ -187,7 +168,7 @@ exp.rslt[[ 1, 1 ]] <- c( "GO:0004519", "GO:0006316" )
 checkEquals( exp.rslt, rslt )
 # including evidence codes TAS and IC
 rslt <- extractExperimentallyVerifiedGoAnnos(
-  xmlInternalTreeParse( project.file.path( "test", "Q9ZZX1.xml" ) ),
+  xmlInternalTreeParse( project.file.path(  "Q9ZZX1.xml" ) ),
   evidence.codes=c( 'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC' )
 )
 exp.rslt <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', 'Q9ZZX1' ) )
@@ -201,7 +182,7 @@ exper.go.annos <- retrieveExperimentallyVerifiedGOAnnotations( c( "A0AEI7", "Q9Z
 checkEquals( exper.go.annos[[ 'GO', 'Q9ZZX1' ]], c( "GO:0004519", "GO:0006316" ) )
 checkEquals( ncol(exper.go.annos), 1 )
 # Test with 550 accessions, triggering recursive execution:
-accs.550 <- as.character( read.table( project.file.path( "test", "550_exp_ver_accs.txt" ) )$V1 )
+accs.550 <- as.character( read.table( project.file.path(  "550_exp_ver_accs.txt" ) )$V1 )
 exper.go.annos.550 <- retrieveExperimentallyVerifiedGOAnnotations( accs.550 )
 checkTrue( ! is.null( exper.go.annos.550 ) )
 checkEquals( "matrix", class( exper.go.annos.550 ) )
