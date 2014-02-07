@@ -2,7 +2,6 @@ require( PhyloFun )
 
 # Setup:
 go.con <- connectToGeneOntology()
-data( "p_mutation_tables_R_image", package="PhyloFun" )
 
 # Test precision
 print("Testing precision(...)")

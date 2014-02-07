@@ -2,8 +2,6 @@ require( PhyloFun )
 
 # Initialize test data:
 #######################
-# Load list of mutation probability tables for all measured GO terms:
-data( "p_mutation_tables_R_image", package="PhyloFun" )
 
 # Test tree is midpoint rooted!
 phylo.tree <- read.tree(project.file.path( 'test_tree.newick'))

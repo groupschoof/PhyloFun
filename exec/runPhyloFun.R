@@ -1,7 +1,5 @@
 require( PhyloFun )
 
-data( "p_mutation_tables_R_image", package="PhyloFun" )
-
 # Hail User:
 print( paste(
   "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta ( -p path/2/phmmer_results.tbl OR -b path/2/blast_results.tbl )",
