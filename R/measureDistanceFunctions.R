@@ -316,23 +316,25 @@ pMutationMinMaxParentValues <- function( p.mut.dists.mtrx, p.column,
   # Returns: A matrix in which for each unique rounded p-value the found
   # matching min and max values of the 'parent.columns' are stored.
   #   
-  rnd <- p.mut.dists.mtrx
-  rnd[ , p.column ] <- round( rnd[ , p.column ], round.2.digits )
-  ps <- unique( rnd[ , p.column ] )
-  do.call( 'rbind',
-    lapply( ps, function( p ) {
-      candidates <- rnd[ rnd[ , p.column ] == p, , drop=F ] 
-      parent.mins <- lapply( parent.columns, function( p.parent ) {
-        min( candidates[ , p.parent ], na.rm=T )
-      })
-      parent.maxs <- lapply( parent.columns, function( p.parent ) {
-        max( candidates[ , p.parent ], na.rm=T )
-      })
-      matrix( c( p, unlist(parent.mins), unlist( parent.maxs ) ), nrow=1,
-        dimnames=list( c(), c( p.column, paste( "min", parent.columns, sep="." ),
-            paste( "max", parent.columns, sep="." ) )
+  if ( ! is.null( p.mut.dists.mtrx ) && ! is.na( p.mut.dists.mtrx ) ) {
+    rnd <- p.mut.dists.mtrx
+    rnd[ , p.column ] <- round( rnd[ , p.column ], round.2.digits )
+    ps <- unique( rnd[ , p.column ] )
+    do.call( 'rbind',
+      lapply( ps, function( p ) {
+        candidates <- rnd[ rnd[ , p.column ] == p, , drop=F ] 
+        parent.mins <- lapply( parent.columns, function( p.parent ) {
+          min( candidates[ , p.parent ], na.rm=T )
+        })
+        parent.maxs <- lapply( parent.columns, function( p.parent ) {
+          max( candidates[ , p.parent ], na.rm=T )
+        })
+        matrix( c( p, unlist(parent.mins), unlist( parent.maxs ) ), nrow=1,
+          dimnames=list( c(), c( p.column, paste( "min", parent.columns, sep="." ),
+              paste( "max", parent.columns, sep="." ) )
+          )
         )
-      )
-    })
-  )
+      })
+    )
+  }
 }

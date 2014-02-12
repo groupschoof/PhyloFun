@@ -45,7 +45,10 @@ p.mut.dists <- setNames(
 )
 # Write named list of each GO terms' p( mut | seq.dist ) into a binary RData
 # file:
-save( p.mut.dists, file=output )
+save(
+  p.mut.dists[ which( ! as.logical( lapply( p.mut.dists, is.null ) ) ) ],
+  file=output
+)
 
 # End
 print( "DONE" )
