@@ -1,4 +1,4 @@
-require( PhyloFun )
+require( 'PhyloFun' )
 
 # Usage:
 print( "Usage: Rscript measureDistancesFix.R path/2/protein_pairs_with_distances.tbl path/2/gene_ontology_annotations.tbl path/2/output [path/2/go_term_sublist.tbl]")
@@ -45,10 +45,10 @@ p.mut.dists <- setNames(
 )
 # Write named list of each GO terms' p( mut | seq.dist ) into a binary RData
 # file:
-save(
-  p.mut.dists[ which( ! as.logical( lapply( p.mut.dists, is.null ) ) ) ],
-  file=output
-)
+pmds.no.null <- p.mut.dists[
+  which( ! as.logical( lapply( p.mut.dists, is.null ) ) )
+]
+save( pmds.no.null, file=output )
 
 # End
 print( "DONE" )
