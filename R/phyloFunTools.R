@@ -513,3 +513,42 @@ project.file.path <- function( ..., dir.sep="/" ) {
   #   
   paste( path.package( "PhyloFun" ), ..., sep=dir.sep )
 }
+
+joinGOTermMutationProbabilityTables <- function( binary.tbl.paths ) {
+  # Loads all binary RData in files listed in argument 'binary.tbl.paths' and
+  # appends the loaded 'pmds.no.null' lists into a single list
+  # GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE.
+  #
+  # Args:
+  #  binary.tbl.paths : A character vector of valid paths to lists of GO term
+  #                     mutation probability tables stored as binary RData.
+  #                     Each such list should be named 'pmds.no.null'. This
+  #                     argument can be created from all files resulting from
+  #                     parallel calibration of the mentioned GO term mutation
+  #                     probabilities - initialization of this argument can be
+  #                     achieved by the following R expression using the
+  #                     directory 'res.dir' where all resulting binary lists of
+  #                     mutation tables have been stored:
+  #                     binary.tbl.paths <-
+  #                     system( "find res.dir -name '*.RData'", intern=TRUE )
+  #
+  # Returns: The named list 'GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE'
+  # holding GO term mutation tables for each GO term available.
+  # After having called this function the calibration of PhyloFun has been
+  # successfully done and the resulting GO term mutation probability
+  # distributions should be saved in the PhyloFun package itself, using:
+  # save(
+  #   GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
+  #   file="path/2/PhyloFun/data/go_term_mutation_prob_distribs.RData"
+  # )
+  #   
+  GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE <- list()
+  lapply( binary.tbl.paths, function( pth ) {
+    load( pth )
+    GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE <<- append(
+      GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE,
+      pmds.no.null
+    )
+  } )
+  GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE
+}
