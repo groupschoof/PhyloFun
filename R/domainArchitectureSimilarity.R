@@ -171,13 +171,16 @@ partialDomainArchitectureDistances <- function( annotation.matrix,
 }
 
 pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject,
-  sub.matrix='PAM250', gap.open.pnlty=-10, gap.extension.pnlty=-0.1,
+  sub.matrix='PAM250', gap.open.pnlty=-12, gap.extension.pnlty=-1,
   distance.model='Dayhoff') {
   # For the two argument amino acid sequences this function computes first a
   # global pairwise alignment based on the supplied substitution matrix with
   # the argument gap opening and extension penalties. Then the sequence
   # distance is computed based on the argument model. See libraries Biostrings
   # and phangorn for details on functions pairwiseAlignment and dist.ml.
+  # Default gap and gap extension penalties were taken from "Comparison of
+  # methods for searching protein sequence databases" ( W.R.Pearson - Protein
+  # Sci. 1995 June; 4(6): 1145–1160 )
   #
   # Args:
   #  aa.seq.pattern, aa.seq.subject : argument amino acid sequences
@@ -194,7 +197,7 @@ pairwiseSequenceDistance <- function( aa.seq.pattern, aa.seq.subject,
   # sequences as instance of 'dist'. 
   #   
   funk.body <- function( aa.seq.pattern, aa.seq.subject, sub.matrix="PAM250",
-    gap.open.pnlty=-10, gap.extension.pnlty=-0.1, distance.model="Dayhoff" ) {
+    gap.open.pnlty=-12, gap.extension.pnlty=-1, distance.model="Dayhoff" ) {
     pa <- pairwiseAlignment(
       AAString( replaceSelenocystein( aa.seq.pattern ) ),
       AAString( replaceSelenocystein( aa.seq.subject ) ),
