@@ -123,6 +123,48 @@ checkEquals( nrow(shrd.annos.2), 3 )
 checkEquals( ncol(shrd.annos.2), 2 )
 checkEquals( shrd.annos.2[[ "GO", "A0Q3U7" ]], annos[[ "GO", "A0Q3U7" ]] )
 
+# Test getEvidenceCode
+ns <- c( xmlns="http://uniprot.org/uniprot" ) 
+db.ref.tag <- '<?xml version="1.0" encoding="UTF-8"?>
+<uniprot xmlns="http://uniprot.org/uniprot" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://uniprot.org/uniprot http://www.uniprot.org/support/docs/uniprot.xsd">
+<dbReference type="GO" id="GO:0009815">
+<property type="term" value="F:1-aminocyclopropane-1-carboxylate oxidase activity"/>
+<property type="evidence" value="IEA:UniProtKB-EC"/>
+</dbReference>
+</uniprot>'
+print("Testing getEvidenceCode(...)")
+res.getEvidenceCode <- getEvidenceCode(
+  getNodeSet( xmlInternalTreeParse( db.ref.tag ),
+    "//xmlns:dbReference", namespace=ns )[[1]] 
+)
+exp.getEvidenceCode <- 'IEA'
+checkEquals( res.getEvidenceCode, exp.getEvidenceCode ) 
+db.ref.tag <- '<?xml version="1.0" encoding="UTF-8"?>
+<uniprot xmlns="http://uniprot.org/uniprot" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://uniprot.org/uniprot http://www.uniprot.org/support/docs/uniprot.xsd">
+<dbReference type="GO" id="GO:0009815">
+<property type="term" value="F:1-aminocyclopropane-1-carboxylate oxidase activity"/>
+</dbReference>
+</uniprot>'
+res.getEvidenceCode <- getEvidenceCode(
+  getNodeSet( xmlInternalTreeParse( db.ref.tag ),
+    "//xmlns:dbReference", namespace=ns )[[1]] 
+)
+exp.getEvidenceCode <- NA
+checkEquals( res.getEvidenceCode, exp.getEvidenceCode ) 
+db.ref.tag <- '<?xml version="1.0" encoding="UTF-8"?>
+<uniprot xmlns="http://uniprot.org/uniprot" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://uniprot.org/uniprot http://www.uniprot.org/support/docs/uniprot.xsd">
+<dbReference type="GO" id="GO:0009815">
+<property type="term" value="F:1-aminocyclopropane-1-carboxylate oxidase activity"/>
+<property type="evidence" value="IDA:UniProtKB-EC"/>
+</dbReference>
+</uniprot>'
+res.getEvidenceCode <- getEvidenceCode(
+  getNodeSet( xmlInternalTreeParse( db.ref.tag ),
+    "//xmlns:dbReference", namespace=ns )[[1]] 
+)
+exp.getEvidenceCode <- 'IDA'
+checkEquals( res.getEvidenceCode, exp.getEvidenceCode ) 
+
 # Test extractExperimentallyVerifiedGoAnnos
 print("Testing extractExperimentallyVerifiedGoAnnos(...)")
 rslt <- extractExperimentallyVerifiedGoAnnos(

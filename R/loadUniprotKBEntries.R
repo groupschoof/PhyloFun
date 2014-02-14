@@ -353,26 +353,6 @@ intersectAnnotations <- function( annotation.matrix, acc.a, acc.b, annotation.ty
   )
 }
 
-shareAnnotation <- function( annotation, annotation.matrix, acc.a, acc.b,
-  annotation.type="GO" ) {
-  # Looks up the annotations of both arguments 'acc.a' and 'acc.b' and checks
-  # if both have argument 'annotation' in their 'annotation.type' set. 
-  #
-  # Args:
-  #  annotation : The GO term, InterPro ID, or Pfam ID to look up.
-  #  annotation.matrix : The annotations as returned i.e. by
-  #                      'retrieveAnnotationsBiomart'
-  #  acc.a : Accession of first protein 
-  #  acc.b : Accession of second protein 
-  #
-  # Returns: TRUE if and only if, both proteins share the argument
-  # 'annotation', FALSE otherwise.
-  #   
-  annotation %in% intersectAnnotations( annotation.matrix, acc.a, acc.b,
-    annotation.type
-  )
-}
-
 extractExperimentallyVerifiedGoAnnos <- function( doc, xpath.prefix='//',
   evidence.codes=EVIDENCE.CODES ) {
   # Uses XPath to extract those GO annotations that are experimentally
@@ -399,10 +379,22 @@ extractExperimentallyVerifiedGoAnnos <- function( doc, xpath.prefix='//',
   #   
   block <- function() {
     ns <- c( xmlns="http://uniprot.org/uniprot" )
-    xpath.ev.cds <- paste( lapply( evidence.codes, function( ec ) paste( "contains(@value, '", ec, "')", sep="" ) ), collapse=" or " )
+    xpath.ev.cds <- if ( is.null( evidence.codes ) || is.na( evidence.codes )
+      || evidence.codes == 'ALL' || evidence.codes == 'all' ) {
+      ''
+    } else {
+      paste(  ' and (',
+        paste( lapply( evidence.codes, function( ec ) {
+            paste( "contains(@value, '", ec, "')", sep="") 
+          } ),
+          collapse=" or "
+        ),
+        ') '
+      )
+    }
     xpath.query <- paste( xpath.prefix, 
-      "xmlns:dbReference[@type='GO']//xmlns:property[@type='evidence' and ", 
-      "( ", xpath.ev.cds, " ) ]/..",
+      "xmlns:dbReference[@type='GO']//xmlns:property[@type='evidence' ", 
+      xpath.ev.cds, " ]/..",
       sep=''
     )
     ndst <- suppressWarnings( getNodeSet( doc, xpath.query, namespaces=ns ) )
@@ -420,6 +412,37 @@ extractExperimentallyVerifiedGoAnnos <- function( doc, xpath.prefix='//',
   tryCatch( block(), error=function( err ) {
     warning( err, " caused by document ", doc )
   })
+}
+
+getEvidenceCode <- function( db.ref.tag, xpath.prefix='./' ) {
+  # Uses XPATH to find and extract the GO annotation 'db.ref.tag' evidence
+  # code.
+  #
+  # Args:
+  #  db.ref.tag   : An instance of class 'XMLAbstractNode' representing the
+  #                 Uniprot 'dbReference' tag.
+  #  xpath.prefix : The prefix to put at the beginning of the XPATH query,
+  #                 default is './'.
+  #
+  # Returns: Returns the extracted and parsed evidence code, shortened to the
+  # three letter abbreviation. For example 'IEA'. If no matching evidence code
+  # can be found or argument db.ref.tag is NULL the return value of this
+  # function is NULL.
+  #   
+  if ( ! is.null( db.ref.tag ) ) {
+    ns <- c( xmlns="http://uniprot.org/uniprot" ) 
+    ev.ns <- getNodeSet( db.ref.tag,
+      paste( xpath.prefix, "xmlns:property[@type='evidence']", sep="" ),
+      namespace=ns )
+    if ( length( ev.ns ) > 0 ) {
+      ev.cd <- xmlGetAttr( ev.ns[[ 1 ]], 'value' )
+      sub( ':.*$', '', ev.cd )
+    } else {
+      NA
+    }
+  } else {
+    NA
+  }
 }
 
 getEntries <- function( uniprot.xml, uniprot.error.msg.regex='^ERROR' ) {
