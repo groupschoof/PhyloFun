@@ -104,36 +104,6 @@ u.an.ma <- uniq.annotations(an.ma, 'GO', T)
 checkEquals(u.an.ma, c("GO:0003688","GO:0005524",
     "GO:0005737", "GO:0006270", "GO:0006275","GO:0017111"))
 
-# Test sharedFunction
-print("Testing sharedFunction(...)")
-f <- file( project.file.path(  "test_annotations.tbl" ), "r" )
-shr.func.anno.mtrx <- unserialize( f )
-close( f )
-shrd.funk.res <- sharedFunction( shr.func.anno.mtrx )
-# print( shrd.funk.res )
-col.row.nms <- c("A0RLX8", "A0LE53", "Protein_1", "A0PKB2", "A0Q3U6", "A0AEI7",
-  "A0K2M8", "A0KR35", "A0KEC3", "A0Q3U7", "A0L3I7")
-bools <- c( TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
-  TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE,
-  FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-  TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
-  TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE,
-  FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE,
-  TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE,
-  FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE,
-  TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE,
-  TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE,
-  TRUE, TRUE, TRUE, TRUE )
-exp.shrd.funk.res <- matrix( bools, byrow=T, ncol=11, nrow=11,
-    dimnames=list( col.row.nms, col.row.nms )
-  )
-checkEquals( exp.shrd.funk.res, shrd.funk.res )
-# Test function when called to only compute partial shared functions:
-shrd.funk.accs <- c( "A0AEI7", "A0KEC3" )
-shrd.funk.res <- sharedFunction( shr.func.anno.mtrx, accessions=shrd.funk.accs )
-# print( shrd.funk.res )
-checkEquals( shrd.funk.res, exp.shrd.funk.res[ shrd.funk.accs, ] )
-
 # Test sharedAnnotation
 print("Testing sharedAnnotation(...)")
 f <- file( project.file.path(  "test_annotations.tbl" ), "r" )
