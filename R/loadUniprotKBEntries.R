@@ -493,20 +493,19 @@ retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
   # matrix can be of zero columns and a single row.
   #   
   uniprot.entries <- downloadUniprotDocuments( uniprot.accessions )  
-  if ( ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
-    go.anno.df <- do.call( 'rbind',
-      lapply( uniprot.entries , function( d ) {
-        extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./',
-          evidence.codes=evidence.codes )
-      })
-    )
-    if ( is.null( go.anno.df ) ) {
-      go.anno.df <- as.data.frame( matrix( nrow=0, ncol=3 ),
-        stringsAsFactor=FALSE )
-    }
-    # return
-    go.anno.df
+  go.anno.df <- if (
+    ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
+    do.call( 'rbind', lapply( uniprot.entries , function( d ) {
+       extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./',
+         evidence.codes=evidence.codes )
+    }))
   }
+  if ( is.null( go.anno.df ) ) {
+    go.anno.df <- as.data.frame( matrix( nrow=0, ncol=3 ),
+      stringsAsFactor=FALSE )
+  }
+  # return
+  go.anno.df
 }
 
 extractRefSeqAccession <- function( ref.seq.prot.name,
