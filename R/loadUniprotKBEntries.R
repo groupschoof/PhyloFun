@@ -494,12 +494,18 @@ retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
   #   
   uniprot.entries <- downloadUniprotDocuments( uniprot.accessions )  
   if ( ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
-    do.call( 'rbind',
+    go.anno.df <- do.call( 'rbind',
       lapply( uniprot.entries , function( d ) {
         extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./',
           evidence.codes=evidence.codes )
       })
     )
+    if ( is.null( go.anno.df ) ) {
+      go.anno.df <- as.data.frame( matrix( nrow=0, ncol=3 ),
+        stringsAsFactor=FALSE )
+    }
+    # return
+    go.anno.df
   }
 }
 
