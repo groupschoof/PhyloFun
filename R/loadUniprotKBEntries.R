@@ -371,12 +371,15 @@ extractExperimentallyVerifiedGoAnnos <- function( doc, xpath.prefix='//',
   #                   Add 'TAS' and 'IC' to also accept 'Traceable Author
   #                   Statement' and 'Inferred by Curator', respectively. See
   #                   http://www.geneontology.org/GO.evidence.shtml for more.
+  #                   If set to NULL, NA, 'all', or 'ALL', no filtering for
+  #                   specific evidence codes will be performed and all
+  #                   available GO annotations will thus be returned.
   #
-  # Returns: A 1*1 matrix containing a character vector of the extracted
-  # experimentally verified GO annotations. Row name is 'GO' and column name is
-  # the proteins FIRST accession as appearing in the XML document. Returns
-  # NULL, if no experimentally verified Go annotations can be found.
-  #   
+  # Returns: A three column data.frame where each row represents a single
+  # protein GO term annotation. The first column of holds the GO term
+  # accessions, the second the evidence codes, and the final third column holds
+  # the protein accessions.
+  #
   block <- function() {
     ns <- c( xmlns="http://uniprot.org/uniprot" )
     xpath.ev.cds <- if ( is.null( evidence.codes ) || is.na( evidence.codes )
@@ -403,9 +406,11 @@ extractExperimentallyVerifiedGoAnnos <- function( doc, xpath.prefix='//',
         xmlValue, namespaces=ns )[[1]]
     )
     if ( ! is.null( ndst ) && length( ndst ) > 0 ) {
-      mtrx <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', acc ) )
-      mtrx[[ 1, 1 ]] <- vapply( ndst, xmlGetAttr, vector( mode='character', length=1 ), 'id' )
-      mtrx
+      as.data.frame( cbind(
+        as.character( lapply( ndst, xmlGetAttr, 'id' ) ),
+        as.character( lapply( ndst, getEvidenceCode ) ),
+        'V3'=acc
+      ), stringsAsFactors=FALSE )
     } else
       NULL
   }
@@ -489,14 +494,12 @@ retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
   #   
   uniprot.entries <- downloadUniprotDocuments( uniprot.accessions )  
   if ( ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
-    annos <- do.call( 'cbind',
+    do.call( 'rbind',
       lapply( uniprot.entries , function( d ) {
         extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./',
           evidence.codes=evidence.codes )
       })
     )
-    # Exclude NULL columns:
-    annos[ , as.character( annos[ 'GO', ] ) != 'NULL' , drop=F ]
   }
 }
 

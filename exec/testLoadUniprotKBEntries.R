@@ -194,20 +194,16 @@ checkEquals( exp.rslt, rslt )
 print("Testing retrieveExperimentallyVerifiedGOAnnotations(...)")
 exper.go.annos <- retrieveExperimentallyVerifiedGOAnnotations( c( "A0AEI7", "Q9ZZX1" ) )
 # print( exper.go.annos )
-checkEquals( length( intersect( c( "GO:0004519", "GO:0006316" ), exper.go.annos[[ 'GO', 'Q9ZZX1' ]] ) ), 2 )
-checkEquals( ncol(exper.go.annos), 1 )
+checkEquals( length(
+    intersect( c( "GO:0004519", "GO:0006316" ), exper.go.annos[, 1] )
+  ), 2 )
+checkEquals( ncol(exper.go.annos), 3 )
 # Test with 550 accessions, triggering recursive execution:
 accs.550 <- as.character( read.table( project.file.path(  "550_exp_ver_accs.txt" ) )$V1 )
 exper.go.annos.550 <- retrieveExperimentallyVerifiedGOAnnotations( accs.550 )
 checkTrue( ! is.null( exper.go.annos.550 ) )
-checkEquals( "matrix", class( exper.go.annos.550 ) )
-checkEquals( 1, nrow( exper.go.annos.550 ) )
-# Uniprot constantly changes their annotations, hence make a very conservative
-# test:
-checkTrue( ncol( exper.go.annos.550 ) > 400 )
-checkEquals( ncol( exper.go.annos.550 ),
-  length( unique( colnames( exper.go.annos.550 ) ) )
-)
+checkEquals( "data.frame", class( exper.go.annos.550 ) )
+checkEquals( 3, ncol( exper.go.annos.550 ) )
 
 # Test extractRefSeqAccession
 print("Testing extractRefSeqAccession(...)")
