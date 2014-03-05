@@ -552,3 +552,25 @@ joinGOTermMutationProbabilityTables <- function( binary.tbl.paths ) {
   } )
   GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE
 }
+
+retrieveGOAnnotations <- function( prot.accs, evidence.codes=EVIDENCE.CODES,
+  go.con=connectToGeneOntology(), close.db.con=TRUE ) {
+  go.db.annos <- goTermsForProteinAccessionAndEvidenceCodes( prot.accs,
+    evidence.codes, go.con ) 
+  if ( close.db.con ) {
+    dbDisconnect( go.con )
+  }
+  unipr.go.annos <- if ( is.null( evidence.codes ) || is.na( evidence.codes )
+    || evidence.codes == 'ALL' || evidence.codes == 'all' ) {
+    retrieveUniprotAnnotations( prot.accs )
+  } else {
+    retrieveExperimentallyVerifiedGOAnnotations( prot.accs,
+      evidence.codes=evidence.codes )
+  }
+  if ( ! is.null( go.db.annos ) && ! is.na( go.db.annos ) &&
+    nrow( go.db.annos) > 0 ) {
+    rbind(
+      go.db.annos[ , c( 'acc', 'code', 'xref_key' ) ],
+    )
+  }
+}
