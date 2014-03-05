@@ -478,17 +478,73 @@ goTermsForProteinAccession <- function( prot.acc, con=connectToGeneOntology() ) 
   )
 }
 
-goTermsForProteinAccessionAndEvidenceCodes <- function( prot.acc,
+goTermsForProteinAccessionsAndEvidenceCodes <- function( prot.accs,
   ec=EVIDENCE.CODES, con=connectToGeneOntology() ) {
+  # Queries the Gene Ontology (GO) database accessible via DB connection 'con'
+  # for all GO term annotations available for protein accessions 'prot.accs'.
+  # If argument evidence codes 'ec' are provided only those annotations
+  # matching any of the provided evidence codes will be returned.
+  #
+  # Args:
+  #  prot.accs : The protein accessions to find GO term annotations for.
+  #  ec        : A character vector of evidence codes, default is the constant
+  #              'EVIDENCE.CODES'. Set this argument to NULL or 'ALL', if no
+  #              restrictions should be made.
+  #  con       : A valid and active MySQL database connection to an instance of
+  #              the Gene Ontology database.
+  #
+  # Returns: A data frame with the found GO term annotations. Columns are
+  # 'xref_key', 'term_type', 'acc', 'is_obsolete', 'is_root', 'is_relation',
+  # 'code'.
+  #   
+  ec.sql <- if ( is.null( ec ) || is.na( ec ) || ec == 'ALL' || ec == 'all' ) {
+    ''
+  } else {
+    paste( " AND ev.code in ('", paste( ec, collapse="','" ), "')", sep="" )
+  }
   dbGetQuery( con,
-    paste( "select t.*, ev.code from term t left join association a on a.term_id = t.id ",
+    paste( "select d.xref_key, t.*, ev.code from term t ",
+           "left join association a on a.term_id = t.id ",
            "left join gene_product gp on gp.id = a.gene_product_id ",
            "left join dbxref d on d.id = gp.dbxref_id ",
            "left join evidence ev on ev.association_id = a.id ",
-           "where d.xref_key ='", prot.acc, "' ",
-           "and ev.code in ('",
-           paste( ec, collapse="','" ),
-           "')", sep=""
+           "where d.xref_key in ('",
+           paste( prot.accs, collapse="','" ), "')", ec.sql , sep=""
     )
   )
+}
+
+extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
+  close.db.con=TRUE, append.term.type=TRUE ) {
+  unq.gos <- unique( go.anno.df[ , 1 ] )
+  go.prnts <- setNames( lapply( unq.gos, function( go.acc ) { 
+    parentGoTermsForAccession( go.acc, include.selves=TRUE,
+      relationship.type.id=NULL, con=con )
+    }),
+    unq.gos
+  )
+  if ( close.db.con ) {
+    dbDisconnect( con )
+  }
+  do.call( 'rbind', lapply( unique( go.anno.df[ , 3 ] ), function( prot.acc ) {
+    # For each prot select a df with cols 'acc', 'ec', 'prot.acc', 'term_type'
+    # ec should be inherited by original annotation!
+    prot.go.annos <- go.anno.df[ which( go.anno.df[ , 3 ] == prot.acc ), ]
+    do.call( 'rbind', lapply(
+      intersect( names( go.prnts ), prot.go.annos[ , 1 ] ),
+      function( go.term ) {
+        go.prnt.df <- go.prnts[[ go.term ]]
+        if ( ! is.null( go.prnt.df ) && nrow( go.prnt.df ) > 0 ) {
+          gpd <- go.prnt.df[ , c( 'acc', 'term_type' ) ] 
+          ev.cd <- prot.go.annos[
+            which( prot.go.annos[ , 1 ] == go.term ), 2 ]
+          res.df <- data.frame( stringsAsFactors=FALSE, 'V1'=gpd$acc, 'V2'=ev.cd,
+            'V3'=prot.acc )
+          if ( append.term.type ) {
+            res.df$'V4' <- gpd$term_type 
+          }
+          res.df
+        }
+    }))
+  }))
 }
