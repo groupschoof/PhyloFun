@@ -1,52 +1,5 @@
 require( PhyloFun )
 
-# Test measureDistances
-print("Testing measureDistances(...)")
-f <- file( project.file.path( "test_annotations.tbl"), "r" )
-annos <- unserialize(f)
-close(f)
-aa.seqs <- sapply(
-  readAAStringSet( project.file.path( "measureDistanceFunctions.fasta") ),
-  function(s) toString(s)
-)
-blast.rslt.tbl <- matrix(
-  c( 
-    "A0RLX8", "A0PKB2",
-    "A0RLX8", "A0K2M8",
-    "A0K2M8", "A0KR35",
-    "A0Q3U6", "A0KEC3"
-  ),
-  ncol=2, byrow=T
-)
-domain.weights.table <- read.table( project.file.path( 
-    "domain_weights_database.tbl" )
-)
-go.term <- "GO:0017111"
-dists <- measureDistances( go.term, annos, blast.rslt.tbl, aa.seqs,
-  domain.weights.table )
-# print( dists )
-checkTrue( ! is.null( dists ) )
-checkEquals( class(dists), 'matrix' )
-checkEquals( nrow(dists), 4 )
-exp.dists <- matrix(
-  c(
-    1.14, 0.56, T, 1.27,
-    1.13, 0.00, T, 1.13,
-    0.67, 0.32, 0, 0.74,
-    0.80, 1.00, 0, 1.28
-  ),
-  byrow=T, nrow=4,
-  dimnames=list(
-    c( "A0PKB2_A0RLX8", "A0K2M8_A0RLX8", "A0K2M8_A0KR35", "A0KEC3_A0Q3U6" ),
-    c( "Sequence.Distance", "Domain.Architecture.Distance", "Share.GO:0017111", "Euclidean.Distance.To.Origin" )
-  )
-)
-# print( exp.dists )
-checkEquals( round( dists, 2 ), exp.dists )
-no.dists <- measureDistances( "GO:0005737", annos, blast.rslt.tbl, aa.seqs,
-  domain.weights.table )
-checkTrue( is.null( no.dists ) )
-
 # Test pMutation
 print("Testing pMutation(...)")
 checkEquals( pMutation( 0, 0 ), 0 )
