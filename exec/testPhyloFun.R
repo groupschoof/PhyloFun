@@ -161,7 +161,7 @@ GO:0003688 IC A0K2M8 molecular_function
 GO:9696967 IC A0K2M8 molecular_function
 ")
 go.type.annos.no.restriction <- goTypeAnnotationMatrices( annotation.df, NULL )
-print( go.type.annos.no.restriction )
+# print( go.type.annos.no.restriction )
 checkEquals( names( go.type.annos.no.restriction ), c( 'biological_process', 'cellular_component', 'molecular_function' ) )
 anno.df <- go.type.annos.no.restriction$biological_process
 checkEquals( anno.df[[ which( anno.df[ , 3 ] == 'A0K2M8' ), 1 ]],
@@ -178,20 +178,14 @@ checkEquals( anno.df[[ which( anno.df[ , 3 ] == 'A0K2M8' ), 1 ]],
 # Test goAnnotationSpaceList
 print("Testing goAnnotationSpaceList(...)")
 res.annotationSpace <- goAnnotationSpaceList( go.type.annos.no.restriction, unknown.annot=NULL )
-exp.annotationSpace <- list(
-  'biological_process'=list( c("GO:0006270","GO:0006275"), "GO:0006275", "GO:0006270" ),
-  'cellular_component'=list( "GO:0005737" ),
-  'molecular_function'=list( c("GO:0003688","GO:0005524","GO:0017111"), "GO:0005524", "GO:0003688" )
-)
+exp.annotationSpace <- list(biological_process = c("GO:0006275"), cellular_component = character(0), 
+    molecular_function = c("GO:0003688", "GO:9696967")) 
 # print( res.annotationSpace )
 checkEquals( res.annotationSpace, exp.annotationSpace ) 
 # With UNKOWN annotation
 res.annotationSpace <- goAnnotationSpaceList( go.type.annos.no.restriction, unknown.annot='unknown' )
-exp.annotationSpace <- list(
-  'biological_process'=list( c("GO:0006270","GO:0006275"), "GO:0006275", "GO:0006270", "unknown" ),
-  'cellular_component'=list( "GO:0005737", "unknown" ),
-  'molecular_function'=list( c("GO:0003688","GO:0005524","GO:0017111"), "GO:0005524", "GO:0003688", "unknown" )
-)
+exp.annotationSpace <- list(biological_process = c("GO:0006275", "unknown"), cellular_component = c("unknown"), 
+    molecular_function = c("GO:0003688", "GO:9696967", "unknown")) 
 # print( res.annotationSpace )
 checkEquals( res.annotationSpace, exp.annotationSpace ) 
 

@@ -396,22 +396,21 @@ goAnnotationSpaceList <- function( go.type.annotation.matrices,
  )
 }
 
-annotationSpace <- function( annotation.matrix, annotation.type='GO' ) {
-  # Generates the set of unique anntations found in the columns of argument
-  # 'annotation.matrix' in row 'annotation.type'.
-  #
-  # IMPORTANT NOTE: This function expects each proteins annotations vector to
-  # be alphabetically sorted! - See function goTypeAnnotationMatrices for
-  # further details.
+annotationSpace <- function( annotation.df ) {
+  # Generates the set of unique anntations found in the column 1 of argument
+  # 'annotation.df'.
   #
   # Args:
-  #  annotation.matrix : The matrix of protein annotations as returned by
-  #                      retrieveAnnotationsBiomart.
-  #  annotation.type   : The type of annotations to select, default 'GO'.
+  #  annotation.df : The matrix of protein annotations as returned by
+  #                  retrieveGOAnnotations(…)
   #
   # Returns: A character vector of unique annotations.
   #   
-  unique( annotation.matrix[ annotation.type, ] )
+  if ( nrow( anno.df ) > 0 ) {
+    unique( annotation.df[ , 1 ] )
+  } else {
+    ''
+  }
 }
 
 bayesNode <- function( phylo.tree, annotation.space, node.index, cond.prob.tbls,
