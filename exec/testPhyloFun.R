@@ -177,17 +177,28 @@ checkEquals( anno.df[[ which( anno.df[ , 3 ] == 'A0K2M8' ), 1 ]],
 
 # Test goAnnotationSpaceList
 print("Testing goAnnotationSpaceList(...)")
-res.annotationSpace <- goAnnotationSpaceList( go.type.annos.no.restriction, unknown.annot=NULL )
-exp.annotationSpace <- list(biological_process = c("GO:0006275"), cellular_component = character(0), 
-    molecular_function = c("GO:0003688", "GO:9696967")) 
+go.type.annos.lst <- list( 
+biological_process=read.table( stringsAsFactors=FALSE, text=
+"GO:0042263  IC Q5ZL72 biological_process
+GO:0042267 IDA Q5ZL72 biological_process
+GO:0042269 IDA A0K2M8 biological_process"),
+cellular_component=as.data.frame( stringsAsFactors=FALSE, matrix( nrow=0, ncol=4 ) ),
+molecular_function=read.table( stringsAsFactors=FALSE, text=
+"GO:0004530 IEA A0K2M8 molecular_function
+GO:0004525  IC A0K2M8 molecular_function
+GO:0004527  IC Q5ZL72 molecular_function"
+))
+res.annotationSpace <- goAnnotationSpaceList( go.type.annos.lst, unknown.annot=NULL )
+exp.annotationSpace <- list(biological_process = list(c("GO:0042263", "GO:0042267"), 
+    c("GO:0042269")), cellular_component = list(), molecular_function = list(c("GO:0004525", 
+    "GO:0004530"), c("GO:0004527"))) 
 # print( res.annotationSpace )
 checkEquals( res.annotationSpace, exp.annotationSpace ) 
 # With UNKOWN annotation
-res.annotationSpace <- goAnnotationSpaceList( go.type.annos.no.restriction, unknown.annot='unknown' )
-exp.annotationSpace <- list(biological_process = c("GO:0006275", "unknown"), cellular_component = c("unknown"), 
-    molecular_function = c("GO:0003688", "GO:9696967", "unknown")) 
+res.annotationSpace <- goAnnotationSpaceList( go.type.annos.lst, unknown.annot='unknown' )
+exp.annotationSpace.with.unknown <- lapply( exp.annotationSpace, function(x) append( x, 'unknown' ) )
 # print( res.annotationSpace )
-checkEquals( res.annotationSpace, exp.annotationSpace ) 
+checkEquals( res.annotationSpace, exp.annotationSpace.with.unknown ) 
 
 # Test findMatchingRow
 print("Testing findMatchingRow(...)")
@@ -336,16 +347,23 @@ for( i in 2:length(res.bayesNodes) ) {
   desc.cpt <- res.bayesNodes[[ i ]]
   print( 
     checkEquals( desc.cpt[[ 'values' ]],
-      matrix( c( 1, 0, 1, 0 ), nrow=2, ncol=2,
-        dimnames=list( exp.anno.space, exp.anno.space )
+      matrix( c( 0.96, 0.04, 1, 0 ), nrow=2, ncol=2,
+        dimnames=list( exp.anno.space, exp.anno.space)
       )
     )
   )
   print( checkEquals( exp.anno.space, desc.cpt[[ 'levels' ]] ) )
 }
 
-# Test tree without unreachable 'unkown' state:
-go.type.annos <- goTypeAnnotationMatrices( annotation.matrix, go.con=go.con )
+# Test tree without unreachable 'unknown' state:
+annot.df <- read.table( stringsAsFactors=FALSE, text=
+"GO:0004530 IEA A0K2M8 molecular_function
+GO:0004525 IC A0K2M8 molecular_function
+GO:0004527 IC Q5ZL72 molecular_function
+GO:0042263 IC Q5ZL72 biological_process
+GO:0042267 IDA Q5ZL72 biological_process
+GO:0042269 IDA A0K2M8 biological_process")
+go.type.annos <- goTypeAnnotationMatrices( annot.df )
 anno.space.lst <- goAnnotationSpaceList( go.type.annos )
 bys.nds <- bayesNodes( phylo.tree, anno.space.lst$molecular_function )
 checkTrue( length( bys.nds ) == 21 )
@@ -368,13 +386,13 @@ checkTrue( ! identical( 'try-error', class( grain.res ) ) )
 # Check conditional probability table for leaf '"A0KEC3"':
 print( "Testing conditional probability tables of compiled Bayesian network" )
 res.cpt <- as.matrix( plist$'"A0KEC3"' )
-exp.states <- c( "GO:0005524 & GO:0017111", "GO:0005524", "unknown" )
+exp.states <- c( "GO:0004525 & GO:0004530", "GO:0004527", "unknown" )
 checkTrue( ! is.null( res.cpt ) )
 checkEquals( class( res.cpt ), c( "parray", "array" ) )
 checkEquals( rownames( res.cpt ), exp.states )
 checkEquals( colnames( res.cpt ), exp.states )
-checkEquals( as.numeric( res.cpt[ , 1 ] ), c( 0.46, 0.27, 0.27 ) )
-checkEquals( as.numeric( res.cpt[ , 2 ] ), c( 0.12, 0.76, 0.12 ) )
+checkEquals( as.numeric( res.cpt[ , 1 ] ), c( 0.670, 0.165, 0.165 ) )
+checkEquals( as.numeric( res.cpt[ , 2 ] ), c( 0.135, 0.730, 0.135 ) )
 checkEquals( as.numeric( res.cpt[ , 3 ] ), c( 0.5, 0.5, 0 ) )
 
 # Test getTipsWithNaAnnotation

@@ -397,17 +397,24 @@ goAnnotationSpaceList <- function( go.type.annotation.matrices,
 }
 
 annotationSpace <- function( annotation.df ) {
-  # Generates the set of unique anntations found in the column 1 of argument
-  # 'annotation.df'.
+  # Generates the set of unique and possibly compound anntations found in the
+  # column 1 of argument 'annotation.df'. Here all compound annotations found
+  # annotated to all proteins in 'annotation.df' are considered.
   #
   # Args:
   #  annotation.df : The matrix of protein annotations as returned by
   #                  retrieveGOAnnotations(…)
   #
-  # Returns: A character vector of unique annotations.
+  # Returns: A list of character vectors holding unique and possibly compound
+  # annotations.
   #   
   if ( nrow( anno.df ) > 0 ) {
-    unique( annotation.df[ , 1 ] )
+    unique( lapply( unique( annotation.df[ , 3 ] ),
+      function( prot.acc ) {
+        sort( unique(
+          annotation.df[ which( annotation.df[ , 3 ] == prot.acc ) , 1 ]
+        ) )
+    } ) )
   } else {
     ''
   }
@@ -489,7 +496,7 @@ bayesNodes <- function( phylo.tree, annotation.space,
     annotationToString ) )
   cpts <- conditionalProbabilityTables( uniq.branch.lengths,
     annotation.space, annos.as.strs,
-    mutation.probability.tables.list, mutTblLengthColIndx=4
+    mutation.probability.tables.list, mutTblLengthColIndx=2
   )
   phylo.nodes <- c( get.root.node( phylo.tree ), phylo.tree$edge[ , 2 ] )
   unlist(
