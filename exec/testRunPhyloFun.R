@@ -62,4 +62,4 @@ checkTrue( file.exists( 'Protein_1/report/Protein_1_phylo_fun_tree.newick' ) )
 checkTrue( file.exists( 'Protein_1/report/Protein_1_phylo_fun_tree.png' ) ) 
 
 # clean up:
-unlink( "Protein_1", recursive=T )
+# unlink( "Protein_1", recursive=T )

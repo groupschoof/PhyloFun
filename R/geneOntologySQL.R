@@ -525,7 +525,9 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
   # Args:
   #  go.anno.df       : A data frame of GO term annotations for proteins.
   #                     Columns are expected to be 1. GO term accession, 2.
-  #                     Evidence Code, and 3.  Protein accession
+  #                     Evidence Code, and 3. Protein accession. It is required
+  #                     to be cleaned up by
+  #                     uniqueGOAnnotationsWithMostSignificantEvidenceCodes(…).
   #  con              : A valid and active MySQL connection to an instance of
   #                     the GO database - default is connectToGeneOntology(…)
   #  close.db.con     : If set to TRUE, the database connection 'con' will be
@@ -547,10 +549,13 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
   if ( close.db.con ) {
     dbDisconnect( con )
   }
-  do.call( 'rbind', lapply( unique( go.anno.df[ , 3 ] ), function( prot.acc ) {
-    # For each prot select a df with cols 'acc', 'ec', 'prot.acc', 'term_type'
-    # ec should be inherited by original annotation!
-    prot.go.annos <- go.anno.df[ which( go.anno.df[ , 3 ] == prot.acc ), ]
+  unique( do.call( 'rbind', lapply( unique( go.anno.df[ , 3 ] ),
+    function( prot.acc ) {
+    # For each prot select a df with cols
+    # 'acc', 'ec', 'prot.acc', 'term_type'.
+    # evidence.code should be inherited by original annotation!
+    prot.go.annos <- go.anno.df[
+      which( go.anno.df[ , 3 ] == prot.acc ), ]
     do.call( 'rbind', lapply(
       intersect( names( go.prnts ), prot.go.annos[ , 1 ] ),
       function( go.term ) {
@@ -559,13 +564,54 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
           gpd <- go.prnt.df[ , c( 'acc', 'term_type' ) ] 
           ev.cd <- prot.go.annos[
             which( prot.go.annos[ , 1 ] == go.term ), 2 ]
-          res.df <- data.frame( stringsAsFactors=FALSE, 'V1'=gpd$acc, 'V2'=ev.cd,
-            'V3'=prot.acc )
+          if ( length( ev.cd ) > 1 ) {
+            ev.cd <- selectMostSignificantEvidenceCode( ev.cd )
+          }
+          res.df <- data.frame( stringsAsFactors=FALSE, 'V1'=gpd$acc,
+            'V2'=ev.cd, 'V3'=prot.acc )
           if ( append.term.type ) {
             res.df$'V4' <- gpd$term_type 
           }
           res.df
         }
     }))
-  }))
+  })))
+}
+
+selectMostSignificantEvidenceCode <- function( evidence.codes,
+  experiment=c("EXP", "IDA", "IPI", "IMP", "IGI", "IEP"),
+  experiment.general="EXP",
+  author=c( "TAS", "NAS"), curator=c( "IC", "ND"), automatic= "IEA" ) {
+  # Identifies the most trustworthy evidence.code in a set of many.
+  #
+  # Args:
+  #  evidence.codes     : The evidence.codes assigned to a single protein GO
+  #                       term pair
+  #  experiment         : The evidence.codes categorized as proved by
+  #                       laboratory experiment
+  #  experiment.general : The evidence.code to return, if more than one
+  #                       experimental evidence codes are in argument
+  #                       'evidence.codes'
+  #  author             : The evidence.codes indicating a publication or
+  #                       scientist statement yielding the GO term
+  #                       annotation(s)
+  #  curator            : The evidence.codes indicating a curator decision
+  #                       yielding the GO term annotation(s)
+  #  automatic          : The default evidence.code to return if none of the
+  #                       above categories are matched
+  #
+  # Returns: The single evidence.code interpreted most significant and
+  # trustworthy.
+  #   
+  if ( length( evidence.codes ) == 1 ) {
+    evidence.codes
+  } else if ( any( experiment %in% evidence.codes ) ) {
+    experiment.general
+  } else if ( any( author %in% evidence.codes ) ) {
+    intersect( author, evidence.codes )[[1]]
+  } else if ( any( curator %in% evidence.codes ) ) {
+    intersect( curator, evidence.codes )[[1]]
+  } else {
+    automatic[[1]] 
+  }
 }

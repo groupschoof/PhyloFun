@@ -566,7 +566,8 @@ retrieveGOAnnotations <- function( prot.accs, evidence.codes=EVIDENCE.CODES,
   #                   recommended.
   #  evidence.codes : A character vector of evidence codes to accept as valid
   #                   (trustworthy) to be included in the resulting
-  #                   annotations.
+  #                   annotations. Set to NULL, 'all', or 'ALL' to accept any
+  #                   evidence code.
   #  go.con         : A valid and active MySQL database connection to an
   #                   instance of the GO database - default is retrieved by
   #                   calling
@@ -578,22 +579,57 @@ retrieveGOAnnotations <- function( prot.accs, evidence.codes=EVIDENCE.CODES,
   # Protein's GO annotation. Column one holds the GO term accessions, column
   # two the Evidence Codes, and column three the protein accessions.
   #    
-  go.db.annos <- goTermsForProteinAccessionAndEvidenceCodes( prot.accs,
+  go.db.annos <- goTermsForProteinAccessionsAndEvidenceCodes( prot.accs,
     evidence.codes, go.con ) 
   if ( close.db.con ) {
     dbDisconnect( go.con )
   }
-  unipr.go.annos <- if ( is.null( evidence.codes ) || is.na( evidence.codes )
-    || evidence.codes == 'ALL' || evidence.codes == 'all' ) {
-    retrieveUniprotAnnotations( prot.accs )
-  } else {
-    retrieveExperimentallyVerifiedGOAnnotations( prot.accs,
-      evidence.codes=evidence.codes )
-  }
+  unipr.go.annos <- retrieveExperimentallyVerifiedGOAnnotations( prot.accs,
+    evidence.codes=evidence.codes )
   if ( ! is.null( go.db.annos ) && ! is.na( go.db.annos ) &&
     nrow( go.db.annos) > 0 ) {
-    rbind(
-      go.db.annos[ , c( 'acc', 'code', 'xref_key' ) ],
-    )
+    gdas.df <- go.db.annos[ , c( 'acc', 'code', 'xref_key' ) ]
+    colnames( gdas.df ) <- c( 'V1', 'V2', 'V3' )
+    unique( rbind( gdas.df, unipr.go.annos ) )
+  }
+}
+
+uniqueGOAnnotationsWithMostSignificantEvidenceCodes <- function( annotation.df ) {
+  # If the argument 'annotation.df' has the same GO term annotations for the
+  # very same protein only differing in evidence.codes the one with the most
+  # trustworthy evidence.code is selected using function
+  # selectMostSignificantEvidenceCode(…). This cleanup is required for
+  # extendGOAnnosWithParents(…)!
+  #
+  # Args:
+  #  annotation.df : The GO term annotation data frame of three or four columns
+  #                  as returned by function retrieveGOAnnotations(…). 
+  #
+  # Returns: A data frame of protein GO term pairs with the most informative
+  # and trustworthy evidence.codes and, if present in the argument
+  # 'annotation.df' the GO term types.
+  #   
+  adf <- unique( annotation.df )
+  col.inds <- c( 1, 3, if ( ncol( adf ) == 4 ) 4 )
+  if ( nrow( adf ) != nrow( unique( annotation.df[ , c( 1, 3 ) ] ) ) ) {
+    do.call( 'rbind', lapply( unique( adf[ , 3 ] ), function( prot.acc ) {
+      prot.annos <- adf[ which( adf[ , 3 ] == prot.acc ), ]
+      unq.pas <- unique( prot.annos[ , col.inds ] )
+      do.call( 'rbind', lapply( 1:nrow(unq.pas), function(i) {
+        unq.pa <- unq.pas[ i, c( 1, 2 ), drop=FALSE ]
+        match.pas <- prot.annos[ which(
+          prot.annos[ , 1 ] == unq.pa[[1,1]] & prot.annos[ , 3 ] == unq.pa[[1,2]]
+        ), ] 
+        if ( nrow( match.pas ) > 1 ) {
+          prot.anno <- match.pas[ 1, ]
+          prot.anno[ , 2 ] <- selectMostSignificantEvidenceCode( match.pas[ , 2 ] )
+          prot.anno
+        } else {
+          match.pas
+        }
+      }))
+    } ) )
+  } else {
+    adf
   }
 }

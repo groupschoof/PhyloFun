@@ -271,3 +271,34 @@ checkEquals(
   as.character( unlist( res.proteinPairsSharingAnnotation ) ),
   as.character( unlist( exp.proteinPairsSharingAnnotation ) )
 )
+
+#################################################################
+# The following function is the only one tested that is of file #
+# geneOntologySql.R                                             #
+#################################################################
+# Test selectMostSignificantEvidenceCode
+print("Testing selectMostSignificantEvidenceCode(...)")
+res.selectMostSignificantEvidenceCode <- selectMostSignificantEvidenceCode( c( 'EXP', 'TAS', 'IEA', 'IDA' ) )
+exp.selectMostSignificantEvidenceCode <- 'EXP'
+checkEquals( res.selectMostSignificantEvidenceCode, exp.selectMostSignificantEvidenceCode ) 
+res.selectMostSignificantEvidenceCode <- selectMostSignificantEvidenceCode( 'IEA' )
+exp.selectMostSignificantEvidenceCode <- 'IEA'
+checkEquals( res.selectMostSignificantEvidenceCode, exp.selectMostSignificantEvidenceCode ) 
+res.selectMostSignificantEvidenceCode <- selectMostSignificantEvidenceCode( c( 'IEA', 'IC' ) )
+exp.selectMostSignificantEvidenceCode <- 'IC'
+checkEquals( res.selectMostSignificantEvidenceCode, exp.selectMostSignificantEvidenceCode ) 
+
+# Test uniqueGOAnnotationsWithMostSignificantEvidenceCodes
+print("Testing uniqueGOAnnotationsWithMostSignificantEvidenceCodes(...)")
+clean.up.anno.df <- read.table( stringsAsFactors=FALSE, text=
+"GO:0001234 IEA A
+GO:0001234 IEA B
+GO:0001234 IC B
+GO:0001234 IEA D" )
+res.uniqueGOAnnotationsWithMostSignificantEvidenceCodes <- uniqueGOAnnotationsWithMostSignificantEvidenceCodes( clean.up.anno.df )
+exp.uniqueGOAnnotationsWithMostSignificantEvidenceCodes <- read.table( stringsAsFactors=FALSE, text=
+"GO:0001234 IEA A
+GO:0001234 IC B
+GO:0001234 IEA D" )
+rownames( res.uniqueGOAnnotationsWithMostSignificantEvidenceCodes ) <- c()
+checkEquals( res.uniqueGOAnnotationsWithMostSignificantEvidenceCodes, exp.uniqueGOAnnotationsWithMostSignificantEvidenceCodes ) 

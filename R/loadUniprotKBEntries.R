@@ -175,6 +175,37 @@ retrieveAnnotationsBiomart <- function( accs,
   )
 }
 
+retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
+  uniprot.webfetch.max.ids=200, evidence.codes=EVIDENCE.CODES ) {
+  # Downloads and parses XML documents from Uniprot for each accession in
+  # argument. Extracts all experimentally verified GO annotations.
+  #
+  # Args:
+  #  uniprot.accessions       : A character vector of Uniprot accessions.
+  #  uniprot.webfetch.max.ids : The current maximum number of IDs in a batch
+  #                             fetch allowed by the Uniprot webfetch service.
+  #
+  # Returns: A matrix with row 'GO' and one column for each Uniprot accession.
+  # Each cell is either NULL or a character vector holding all experimentally
+  # verified GO annotations. NULL annotations are excluded, so the returned
+  # matrix can be of zero columns and a single row.
+  #   
+  uniprot.entries <- downloadUniprotDocuments( uniprot.accessions )  
+  go.anno.df <- if (
+    ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
+    do.call( 'rbind', lapply( uniprot.entries , function( d ) {
+       extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./',
+         evidence.codes=evidence.codes )
+    }))
+  }
+  if ( is.null( go.anno.df ) ) {
+    go.anno.df <- as.data.frame( matrix( nrow=0, ncol=3 ),
+      stringsAsFactor=FALSE )
+  }
+  # return
+  go.anno.df
+}
+
 extractName <- function( uniprot.entry, xpath.prefix='./', noverbose=T,
   return.error=F ) {
   # Finds and returns the content of the first accession tag inside the
@@ -475,37 +506,6 @@ getEntries <- function( uniprot.xml, uniprot.error.msg.regex='^ERROR' ) {
   } else {
     NULL
   }
-}
-
-retrieveExperimentallyVerifiedGOAnnotations <- function( uniprot.accessions,
-  uniprot.webfetch.max.ids=200, evidence.codes=EVIDENCE.CODES ) {
-  # Downloads and parses XML documents from Uniprot for each accession in
-  # argument. Extracts all experimentally verified GO annotations.
-  #
-  # Args:
-  #  uniprot.accessions       : A character vector of Uniprot accessions.
-  #  uniprot.webfetch.max.ids : The current maximum number of IDs in a batch
-  #                             fetch allowed by the Uniprot webfetch service.
-  #
-  # Returns: A matrix with row 'GO' and one column for each Uniprot accession.
-  # Each cell is either NULL or a character vector holding all experimentally
-  # verified GO annotations. NULL annotations are excluded, so the returned
-  # matrix can be of zero columns and a single row.
-  #   
-  uniprot.entries <- downloadUniprotDocuments( uniprot.accessions )  
-  go.anno.df <- if (
-    ! is.null(uniprot.entries) && length( uniprot.entries ) > 0 ) {
-    do.call( 'rbind', lapply( uniprot.entries , function( d ) {
-       extractExperimentallyVerifiedGoAnnos( d, xpath.prefix='./',
-         evidence.codes=evidence.codes )
-    }))
-  }
-  if ( is.null( go.anno.df ) ) {
-    go.anno.df <- as.data.frame( matrix( nrow=0, ncol=3 ),
-      stringsAsFactor=FALSE )
-  }
-  # return
-  go.anno.df
 }
 
 extractRefSeqAccession <- function( ref.seq.prot.name,
