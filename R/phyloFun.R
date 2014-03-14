@@ -116,53 +116,37 @@ edge.to.formula <- function(phyloTree, edge.index) {
   eval(bquote(~ .(child) | .(prnt) ))
 }
 
-goTypeAnnotationMatrices <- function( annotation.matrix,
-  valid.go.terms=names( GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE ),
-  go.con=connectToGeneOntology(), exclude.empty.cols=T ) {
+goTypeAnnotationMatrices <- function( annotation.df,
+  valid.go.terms=names( GO.TERM.MUTATION.PROBABILITIES.SEQUENCE.DISTANCE ) ) {
   # For each type of Gene Ontology terms, 'molecular_function',
   # 'biological_process', and 'cellular_component', a separate annotation
   # matrix is generated. These matrices hold the set of GO term annotations for
-  # each protein as in the column names of argument 'annotation.matrix'. If a
+  # each protein as in the column names of argument 'annotation.df'. If a
   # non NULL and non empty valid.go.terms list is provided only GO term
   # annotations appearing in this list will appear.
   #
   # Args:
-  #  annotation.matrix  : A funtion annotation matrix as returned by
-  #                       'retrieveAnnotationsBiomart'.
-  #  valid.go.terms     : If non NULL and non empty only terms appearing in
-  #                       this list will be assigned.
-  #  go.con             : database connection to the gene-ontology-MySQL-db
-  #  exclude.empty.cols : If set to FALSE proteins with no annotations in the
-  #                       current GO term type will have character(0) entries.
-  #                       If this switch is set to TRUE, such columns will
-  #                       simply be excluded from the resulting matrices. 
+  #  annotation.df  : A Gene Ontology (GO) term annotation data frame as
+  #                   returned by 'extendGOAnnosWithParents( …,
+  #                   append.term.type=TRUE )'.
+  #  valid.go.terms : If non NULL and non empty only terms appearing in
+  #                   this list will be assigned.
   #
   # Returns: A named list with three annotation matrices 'biological_process',
-  # 'cellular_component', and 'molecular_function'. Each annotation matrix has
-  # a single row and the same columns as argument 'annotation.matrix'. Each
-  # cell contains the filtered GO annotations of the corresponding GO term
-  # type.
+  # 'cellular_component', and 'molecular_function'. Each of these annotation
+  # data frames is the subset of argument 'annotation.df' where the fourth
+  # column matches the respective GO type. 
   #   
-  all.distinct.annos <- uniq.annotations( annotation.matrix, 'GO', exclude.NAs=T )
-  annos <- goTermsForAccessionWithLevel( all.distinct.annos, con=go.con )
   go.types <- c( 'biological_process', 'cellular_component', 'molecular_function' ) 
   setNames(
     lapply( go.types, function( go.tp ) {
-      gos.of.type <- annos[ which( annos$term_type == go.tp ), 'acc' ]
-      if ( ! is.null( valid.go.terms ) && length( valid.go.terms ) > 0 )
-        gos.of.type <- intersect( gos.of.type, valid.go.terms )
-      do.call( 'cbind',
-        lapply( colnames( annotation.matrix ), function( prot ) {
-          prot.mtrx <- matrix( list(), ncol=1, nrow=1, dimnames=list( 'GO', prot ) )
-          prot.mtrx[[ 'GO', prot ]] <- sort( intersect( annotation.matrix[[ 'GO', prot ]], gos.of.type ) )
-          if ( ! is.null(prot.mtrx[[ 'GO', prot ]]) &&
-              length(prot.mtrx[[ 'GO', prot ]]) > 0 ||
-              ! exclude.empty.cols ) 
-            prot.mtrx
-          else
-            NULL
-        })
-      )
+      rows.inds <- annotation.df[ , 4 ] == go.tp &
+        if ( ! is.null( valid.go.terms ) ) {
+          annotation.df[ , 1 ] %in% valid.go.terms
+        } else {
+          TRUE
+        }
+      annotation.df[ which( rows.inds ), ]
     }),
     go.types
   )

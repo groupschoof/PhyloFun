@@ -516,6 +516,27 @@ goTermsForProteinAccessionsAndEvidenceCodes <- function( prot.accs,
 
 extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
   close.db.con=TRUE, append.term.type=TRUE ) {
+  # For every GO term a protein is annotated with it will be annotated with all
+  # ancestors of this GO term no matter what kind of relationship the ancestor
+  # has to its descendant. The evidence code will be "reused". If requested,
+  # the GO term type ('biological_process', 'cellular_component',
+  # 'molecular_function') is also added to the annotation matrix.
+  #
+  # Args:
+  #  go.anno.df       : A data frame of GO term annotations for proteins.
+  #                     Columns are expected to be 1. GO term accession, 2.
+  #                     Evidence Code, and 3.  Protein accession
+  #  con              : A valid and active MySQL connection to an instance of
+  #                     the GO database - default is connectToGeneOntology(…)
+  #  close.db.con     : If set to TRUE, the database connection 'con' will be
+  #                     closed automatically before this function returns
+  #  append.term.type : If set to TRUE, a fourth column will be added to the
+  #                     returned annotation data frame. This column will hold
+  #                     the type of the GO term annotated (BP, CC, or MF)
+  #
+  # Returns: A data frame, the extension of the argument 'go.anno.df', if
+  # requested with an additional column holding the GO term types.
+  #   
   unq.gos <- unique( go.anno.df[ , 1 ] )
   go.prnts <- setNames( lapply( unq.gos, function( go.acc ) { 
     parentGoTermsForAccession( go.acc, include.selves=TRUE,

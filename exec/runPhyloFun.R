@@ -150,13 +150,16 @@ for ( prot.acc in accs ) {
     print( "Starting PhyloFun on phylogenetic tree" )
     print( "Note: Branch Lengths of phylogenetic tree will be rounded to two decimal digits!" )
     acc.phyl.tree <- roundBranchLengths( read.tree( acc.phyl.tree.file ) )
-    acc.hmlgs.annos <- if ( length( go.anno.evdnc.cds ) == 1 &&
-      go.anno.evdnc.cds == 'ALL' ) {
-      retrieveUniprotAnnotations( hit.accs )
-    } else {
-      retrieveExperimentallyVerifiedGOAnnotations(
-        hit.accs, evidence.codes=go.anno.evdnc.cds )
-    }    
+    # Query Uniprot web services and the Gene Ontology database for all
+    # available GO annotations matching the trusted evidence codes:
+    go.con <- connectToGeneOntology()
+    acc.hmlgs.annos.descendants <- retrieveGOAnnotations( hit.accs,
+      evidence.codes=go.anno.evdnc.cds, go.con=go.con, close.db.con=FALSE )
+    # Extend the hits' GO annotations with their respective ancestor terms and
+    # each term's GO type - one of BP, CC, or MF:
+    acc.hmlgs.annos <- extendGOAnnosWithParents( acc.hmlgs.annos.descendants,
+      con=go.con, close.db.con=FALSE )
+    dbDisconnect( go.con )
     
     if ( ! is.null( acc.hmlgs.annos ) && ncol( acc.hmlgs.annos ) > 0 ) {
       go.con <- connectToGeneOntology()

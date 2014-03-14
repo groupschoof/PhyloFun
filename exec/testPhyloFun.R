@@ -155,13 +155,25 @@ checkEquals( res.annotationToString, exp.annotationToString )
 
 # Test goTypeAnnotationMatrices
 print("Testing goTypeAnnotationMatrices(...)")
-go.type.annos.no.restriction <- goTypeAnnotationMatrices( annotation.matrix, NULL, go.con=go.con )
-# print( go.type.annos.no.restriction )
+annotation.df <- read.table( stringsAsFactors=FALSE, text=
+"GO:0006275 IEA A0K2M8 biological_process
+GO:0003688 IC A0K2M8 molecular_function
+GO:9696967 IC A0K2M8 molecular_function
+")
+go.type.annos.no.restriction <- goTypeAnnotationMatrices( annotation.df, NULL )
+print( go.type.annos.no.restriction )
 checkEquals( names( go.type.annos.no.restriction ), c( 'biological_process', 'cellular_component', 'molecular_function' ) )
-checkEquals( go.type.annos.no.restriction$biological_process[[ 'GO', 'A0K2M8' ]],
+anno.df <- go.type.annos.no.restriction$biological_process
+checkEquals( anno.df[[ which( anno.df[ , 3 ] == 'A0K2M8' ), 1 ]],
   'GO:0006275' )
-checkEquals( go.type.annos.no.restriction$molecular_function[[ 'GO', 'A0K2M8' ]],
+anno.df <- go.type.annos.no.restriction$molecular_function
+checkTrue( 'GO:0003688' %in% anno.df[ which( anno.df[ , 3 ] == 'A0K2M8' ), 1 ] )
+go.type.annos.restriction <- goTypeAnnotationMatrices( annotation.df )
+anno.df <- go.type.annos.restriction$molecular_function
+checkEquals( nrow( anno.df ), 1 )
+checkEquals( anno.df[[ which( anno.df[ , 3 ] == 'A0K2M8' ), 1 ]],
   'GO:0003688' )
+
 
 # Test goAnnotationSpaceList
 print("Testing goAnnotationSpaceList(...)")

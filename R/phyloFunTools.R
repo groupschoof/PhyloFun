@@ -555,6 +555,29 @@ joinGOTermMutationProbabilityTables <- function( binary.tbl.paths ) {
 
 retrieveGOAnnotations <- function( prot.accs, evidence.codes=EVIDENCE.CODES,
   go.con=connectToGeneOntology(), close.db.con=TRUE ) {
+  # Retrieves and merges all GO annotations available for argument protein
+  # accessions 'prot.accs'. Data sources are the UniprotKB web services and the
+  # Gene Ontology (GO) database as available using argument db connection
+  # 'go.con'.
+  #
+  # Args:
+  #  prot.accs      : A character vector of valid UniprotKB protein accessions.
+  #                   Usage of sanitizeUniprotAccessions(prot.accs) is strongly
+  #                   recommended.
+  #  evidence.codes : A character vector of evidence codes to accept as valid
+  #                   (trustworthy) to be included in the resulting
+  #                   annotations.
+  #  go.con         : A valid and active MySQL database connection to an
+  #                   instance of the GO database - default is retrieved by
+  #                   calling
+  #                   connectToGeneOntology(…).
+  #  close.db.con   : If set to TRUE the database connection 'go.con' will
+  #                   automatically be closed before this function returns.
+  #
+  # Returns: A data.frame with three columns where each row holds a single
+  # Protein's GO annotation. Column one holds the GO term accessions, column
+  # two the Evidence Codes, and column three the protein accessions.
+  #    
   go.db.annos <- goTermsForProteinAccessionAndEvidenceCodes( prot.accs,
     evidence.codes, go.con ) 
   if ( close.db.con ) {
