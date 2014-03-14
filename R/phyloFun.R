@@ -527,48 +527,51 @@ surroundEachWithQuotes <- function(char.vector) {
     USE.NAMES=F)
 }
 
-annotationMatrixForBayesNetwork <- function( annotation.matrix,
-  all.accessions=colnames( annotation.matrix ), annotation.type='GO',
+annotationMatrixForBayesNetwork <- function( annotation.df,
+  all.accessions=unique( annotation.df[ , 3 ] ),
   unknown.annot='unknown' ) {
-  # Prepares an annotation.matrix to be used i.e. as diagnostic evidence inside
-  # an Bayesian independence network.
+  # Prepares an annotation.df to be used i.e. as diagnostic evidence inside an
+  # Bayesian independence network (package:gRain).
   #
   # Args:
-  #  annotation.matrix : A matrix of function annotations for some leaves in a
-  #                      phylogenetic tree. Use for example all experimentally
-  #                      verified molecular function annotations. The matrix's
-  #                      columns should be the protein accessions and the row
-  #                      the type of annotation, i.e. 'GO'.
-  #  all.accessions    : The accessions of the query protein's homologs. If
-  #                      more than in colnames( annotation.matrix ) those
-  #                      without an experimentally verified function annotation
-  #                      will be annotated with 'unknown.annot'.
-  #  annotation.type   : The row of the 'annotation.matrix' to select.
-  #  unknown.annot     : The unkown function annotation, set to any convenient
-  #                      string.
+  #  annotation.df  : A matrix of function annotations for some leaves in a
+  #                   phylogenetic tree. Use for example all experimentally
+  #                   verified molecular function annotations. The matrix's
+  #                   columns should be the protein accessions and the row the
+  #                   type of annotation, i.e. 'GO'.
+  #  all.accessions : The accessions of the query protein's homologs. If
+  #                   more than in unique( annotation.df[ , 3 ] ) those without
+  #                   an experimentally verified function annotation will be
+  #                   annotated with 'unknown.annot'.
+  #  unknown.annot  : The unkown function annotation, set to any convenient
+  #                   string. Default is 'unknown'.
   #
-  # Returns: An annotation matrix, in which each protein accession is
-  # surrounded by escaped quotes (surroundEachWithQuotes) and each cell is the
-  # compound and sorted set of annotation terms (annotationToString). If
-  # requested unkown annotations are added for protein accessions missing
-  # annotations in argument 'annotation.matrix'.
+  # Returns: An annotation.df, in which each protein accession is surrounded by
+  # escaped quotes -surroundEachWithQuotes(…)- and each cell is the compound
+  # and sorted set of annotation terms -annotationToString(…)-. If requested
+  # unkown annotations are added for protein accessions missing annotations in
+  # argument 'annotation.df'.
   #   
-  if ( ! is.null( annotation.matrix ) ) {
+  if ( ! is.null( annotation.df ) && nrow( annotation.df ) > 0 ) {
+    accs.with.annos <- unique( annotation.df[ , 3 ] )
     am <- do.call( 'cbind', setNames(
-      lapply( annotation.matrix[ annotation.type, ],
-        function( a ) annotationToString( sort( a ) ) ),
-      surroundEachWithQuotes( colnames( annotation.matrix ) )
+      lapply( accs.with.annos,
+        function( a ) {
+          annotationToString( sort( unique(
+            annotation.df[ which( annotation.df[ , 3 ] == a ), 1 ]
+          ) ) )
+        } ),
+      surroundEachWithQuotes( accs.with.annos )
       )
     )
-    rownames( am ) <- annotation.type
+    rwnm <- 'GO'
+    rownames( am ) <- rwnm
     # Add 'unkown' annotations, if needed:
-    accs.without.annos <- setdiff( all.accessions,
-      colnames( annotation.matrix )
-    )
+    accs.without.annos <- setdiff( all.accessions, accs.with.annos )
     if ( length( accs.without.annos ) > 0 ) {
       am <- cbind( am,
         matrix( unknown.annot, ncol=length( accs.without.annos ), nrow=1,
-          dimnames=list( annotation.type, surroundEachWithQuotes(
+          dimnames=list( rwnm, surroundEachWithQuotes(
            accs.without.annos ) )
         )
       )

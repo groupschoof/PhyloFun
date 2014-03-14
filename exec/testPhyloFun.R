@@ -120,28 +120,35 @@ checkTrue( is.null( getDescendantNodes( phylo.tree, 8 ) ) )
 
 # Test annotationMatrixForBayesNetwork
 print("Testing annotationMatrixForBayesNetwork(...)")
-res.annotationMatrixForBayesNetwork <- annotationMatrixForBayesNetwork( annotation.matrix )
+annot.df.diag.evidnc <- read.table( stringsAsFactors=FALSE, text=
+"GO:0004530 IEA A0K2M8 molecular_function
+GO:0004525 IC A0K2M8 molecular_function
+GO:0004527 IC Q5ZL72 molecular_function
+GO:0042263 IC Q5ZL72 biological_process
+GO:0042267 IDA Q5ZL72 biological_process
+GO:0042269 IDA A0K2M8 biological_process")
+res.annotationMatrixForBayesNetwork <- annotationMatrixForBayesNetwork( annot.df.diag.evidnc )
 # print( res.annotationMatrixForBayesNetwork )
 checkTrue( ! is.null( res.annotationMatrixForBayesNetwork ) )
 checkEquals( class( res.annotationMatrixForBayesNetwork ), 'matrix' )
 checkEquals( ncol( res.annotationMatrixForBayesNetwork ),
-  ncol( annotation.matrix ) )
+  length( unique( annot.df.diag.evidnc[ , 3 ] ) ) )
 checkEquals( rownames( res.annotationMatrixForBayesNetwork ), 'GO' )
 checkEquals( colnames( res.annotationMatrixForBayesNetwork ),
-  surroundEachWithQuotes( colnames( annotation.matrix ) ) )
-checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"A0RLX8"' ]],
-  "GO:0003688 & GO:0005524 & GO:0005737 & GO:0006270 & GO:0006275 & GO:0017111"
+  surroundEachWithQuotes( unique( annot.df.diag.evidnc[ , 3 ] ) ) )
+checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"A0K2M8"' ]],
+  "GO:0004525 & GO:0004530 & GO:0042269"
 )
 checkTrue( is.null( annotationMatrixForBayesNetwork( NULL ) ) )
 # Check with homologs missing experimentally verified function annotations:
 res.annotationMatrixForBayesNetwork <- annotationMatrixForBayesNetwork(
-  annotation.matrix, all.accessions=c( colnames( annotation.matrix ),
+  annot.df.diag.evidnc, all.accessions=c( unique( annot.df.diag.evidnc[ , 3 ] ),
     'Protein_A', 'Protein_B' )
 )
 # print( res.annotationMatrixForBayesNetwork )
 checkTrue( ! is.null( res.annotationMatrixForBayesNetwork ) )
 checkEquals( ncol( res.annotationMatrixForBayesNetwork ),
-  ncol( annotation.matrix ) + 2 )
+  length( unique( annot.df.diag.evidnc[ , 3 ] ) ) + 2 )
 checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"Protein_A"' ]],
   'unknown' )
 checkEquals( res.annotationMatrixForBayesNetwork[[ 'GO', '"Protein_B"' ]],
