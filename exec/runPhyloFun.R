@@ -162,11 +162,7 @@ for ( prot.acc in accs ) {
     dbDisconnect( go.con )
     
     if ( ! is.null( acc.hmlgs.annos ) && ncol( acc.hmlgs.annos ) > 0 ) {
-      go.con <- connectToGeneOntology()
-      acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos,
-        go.con=go.con
-      )
-      dbDisconnect( go.con )
+      acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos )
       acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
       quoted.acc <- surroundEachWithQuotes( prot.acc )
   

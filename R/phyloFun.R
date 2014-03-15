@@ -408,7 +408,7 @@ annotationSpace <- function( annotation.df ) {
   # Returns: A list of character vectors holding unique and possibly compound
   # annotations.
   #   
-  if ( nrow( anno.df ) > 0 ) {
+  if ( nrow( annotation.df ) > 0 ) {
     unique( lapply( unique( annotation.df[ , 3 ] ),
       function( prot.acc ) {
         sort( unique(
