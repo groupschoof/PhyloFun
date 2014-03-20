@@ -44,6 +44,8 @@ seq.search.rslts <- if ( ! is.null( phylo.fun.args[[ 'b' ]] ) ) {
     scan( file=phylo.fun.args[[ 'p' ]], what=character(), sep="\n" )
   )
 }
+query.accs <- as.character( lapply( unique( as.character( seq.search.rslts[ , 'query.name' ] ) ),
+  sanitizeUniprotAccession ) )
 print( paste( "Parsed sequence similarity search results table. Got", nrow(seq.search.rslts), "query-hit pairs" ) )
 
 # Sanitize protein accessions:
@@ -55,8 +57,12 @@ print(
   "See function sanitizeUniprotAccession(…) for details." )
 )
 
+# How many of the queries have hits in the sequence similarity search results?
+print( paste( "The provided sequence similarity search result has hits for",
+  length( query.accs ), "distinct queries" ) )
+
 # For each query protein, do:
-for ( prot.acc in accs ) {
+for ( prot.acc in intersect( accs, query.accs ) ) {
   homologs <- sanitizeUniprotAccessions(
     bestHits( seq.search.rslts, prot.acc, n.best.hits=phylo.fun.args[[ 'n' ]] )
   )
@@ -76,7 +82,7 @@ for ( prot.acc in accs ) {
     # Generate multiple sequence alignment ( MSA ) using MAFFT:
     print( "Generating multiple sequence alignment (MSA)" )
     acc.hmlgs.file <- paste( prot.acc, '/homologs.fasta', sep='' )
-    hit.accs <- as.character( homologs[ , 'hit.name' ] )
+    hit.accs <- unique( as.character( homologs[ , 'hit.name' ] ) )
     # Obtain AA sequences from Uniprot's Web Service:
     downloadSequences( hit.accs, acc.hmlgs.file )   
     # Replace all possible occurrences of u or U with x and X respectively:
@@ -163,6 +169,7 @@ for ( prot.acc in accs ) {
     
     if ( ! is.null( acc.hmlgs.annos ) && ncol( acc.hmlgs.annos ) > 0 ) {
       acc.go.type.annos  <- goTypeAnnotationMatrices( acc.hmlgs.annos )
+      dbDisconnect( go.con )
       acc.go.anno.spaces <- goAnnotationSpaceList( acc.go.type.annos )
       quoted.acc <- surroundEachWithQuotes( prot.acc )
   
