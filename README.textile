@@ -71,7 +71,7 @@ Results of this test run will be written into the folder @Protein_1/@ in your cu
 
 h3. Generate PhyloFun's input
 
-The only thing you have to do, is to run _either_ BLAST or _PHMMER_ for your query proteins against the provided database of UniprotKB proteins with trusted Gene Ontology term annotations (*trusted-UniKB*).
+The only thing you have to do, is to run _either_ *BLAST* or *PHMMER* for your query proteins against the provided database of UniprotKB proteins with trusted Gene Ontology term annotations (*trusted-UniKB*).
 
 # First copy and unpack *trusted-UniKB* from PhyloFun to your directory of choice. @cp inst/ukb_proteins_with_trusted_go_annos.fasta.bz2 path/to/your/directory@, and then unpack it @bunzip2 ukb_proteins_with_trusted_go_annos.fasta.bz2@
 # Now run BLAST or PHMMER. If you choose BLAST you must provide its output as a table, use the command line switch @-m 8@. If you choose PHMMER a tabular result file will also be required and can be obtained by usage of the command line argument @--tblout@.
