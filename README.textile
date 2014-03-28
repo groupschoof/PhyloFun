@@ -55,10 +55,10 @@ The arguments are printed whenever the Rscript is executed.
 
 * @-q@ path to Query Proteins' amino acid sequences in fasta format
 * @-p@ or @-b@ path to sequence similarity search results. Provide @-b@ for BLAST tables (tabular output @-m 8@) or @-p@ for PHMMER (HMMER-3) search results in @--tblout@ format.
-* @-e@ provide comma separated list of GO evidence codes you want to be accepted as "trusted", e.g. @-e ISO,RCA@ or provide @-e ALL@ if any evidence code is good for you
+* @-e@ provide comma separated list of GO evidence codes you want to be accepted as "trusted", e.g. @-e ISO,RCA@ or provide @-e ALL@ if any evidence code is good for you. See http://www.geneontology.org/GO.evidence.shtml for details on GO evidence codes.
 * @-n@ use the n best hits for function prediction. If you want to speed up PhyloFun, reduce this number to e.g. @-n 250@
 * @-h true@ to print out statistics of each Query Proteins' found homologs - result file @homologs_stats.txt@
-* @-m true@ to print out statistics of each generated Multiple Sequnce Alignment (MSA) - result_file @msa_stats.txt@
+* @-m true@ to print out statistics of each generated Multiple Sequnce Alignment (MSA) - result file @msa_stats.txt@
 * @-r true@ to generate an HTML report of PhyloFun's results
 
 h3. A short test run can be done as follows
