@@ -251,7 +251,7 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
   }, error=function(e) {
     print( paste( "An error occurred while predicting GO terms for", prot.acc ) )
     print( e )
-    print( "Will continue with nex query protein…" )
+    print( "Will continue with next query protein…" )
   } )
   # END of for loop iterating over the query proteins
 }
