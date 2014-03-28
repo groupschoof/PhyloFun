@@ -45,34 +45,74 @@ proteinPairsSharingAnnotation <- function( annotation, protein.pairs.tbl,
   cbind( prs, 'annotation.shared'=lhs & rhs )
 }
 
-parsePhmmerTable <- function( jr,
-  skip.lines=3, parse.line=list( '1'='hit.name', '3'='query.name',
-    '6'='bit.score' )
-  ) {
-  # Parses the table output of HMMER-3's PHMMER. Reads out hit accessions
-  # and query accessions.
+
+parsePhmmerTable <- function( hmmer.tbl, skip.lines=3,
+  sel.cols=c( 1, 3, 6 ), col.names=c( 'hit.name', 'query.name', 'bit.score' ),
+  col.classes=c( "character", "character", "character", "character", "numeric",
+  "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "integer",
+  "integer", "integer", "integer", "integer", "integer", "integer", "character"
+  ) ) {
+  # Parses the table output of HMMER-3. Subselection of columns and renaming
+  # them enables PhyloFun to handle HMMER-3 and BLAST results in the same
+  # manner.
   #
   # Args:
-  #  jr : List of lines of the tabular Jackhmmer output. As a result of
-  #       function 'scan(...)'
-  #  skip.lines : Skip so many lines of the argument list 'jr', default: 3.
-  #  parse.line : Read out position 'i' and return as list entry, named as
-  #               value of 'i'. I.e. position '1' is read out as 'hit.name'. 
+  #  hmmer.tbl   : Path to the HMMER '--tblout' result file (works with
+  #                HMMER3-output).
+  #  skip.lines  : Skip so many lines of the argument file 'hmmer.tbl',
+  #                default: 3.
+  #  col.classes : In order to speed up the execution of read.table( hmmer.tbl,
+  #                … ) the argument colClasses will be provided with this value.
+  #  sel.cols    : Select columns by indixes.
+  #  col.names   : Assign these new column names.
   #
-  # Returns: Matrix with colnames as the values in argument 'parse.line' and
-  # one row per line in jr, the first 'skip.lines' are ignored.
+  # Returns: Data frame with only the column specified in 'sel.cols' and
+  # column names specified in 'col.names'.
   #   
-  jr.body <- jr[ ( skip.lines + 1 ) : length(jr) ]
-  do.call( 'rbind',
-    lapply( jr.body, function( ln ) {
-      split.line <- strsplit( ln, "\\s+", perl=T )[[1]]
-      setNames(
-        lapply( names( parse.line ), function( pos ) {
-          split.line[ as.integer( pos ) ]
-        }),
-      parse.line )
-    })
-  )
+  h.tbl <- tryCatch( {
+    read.table( hmmer.tbl, skip=skip.lines, stringsAsFactors=FALSE,
+      comment.char='#', quote='', colClasses=col.classes )[ , sel.cols ]
+  }, error=function(e) {
+    # Assume white space separated entries in the last 'description of target'
+    # column:
+    read.table(
+      text=preProcessHmmerTable( hmmer.tbl, skip.lines=skip.lines ),
+      stringsAsFactors=FALSE, comment.char='#', quote='"',
+      colClasses=col.classes )[ , sel.cols ]
+  } )
+  colnames( h.tbl ) <- col.names
+  h.tbl
+}
+
+preProcessHmmerTable <- function( path.2.hmmer.table, skip.lines=3,
+  filter.regex=paste( '^(', paste( rep( '\\S+\\s+', 18 ), collapse='' ),
+    ')(.+)$', sep='' ) ) {
+  # In certain cases the - white space separated - table provided by HMMER3
+  # contains non-quoted trailing "description of target" column that, if it
+  # contains white spaces, makes using read.table(…) on it fail. This function
+  # preprocesses the HMMER3 table simply quoting this last problematic column
+  # in '"'.
+  #
+  # Args:
+  #  path.2.hmmer.table : The valid file path to the HMMER3 result table
+  #  skip.lines         : HMMER3 tables have ia header of three lines
+  #  filter.regex       : In each line retain the substring that matches this
+  #                       regular expression
+  #
+  # Returns: A string to be used in
+  # read.table(
+  #   text=preProcessHmmerTable( path.2.hmmer.table ),
+  #   quote='"', stringsAsFactors=FALSE
+  # )  
+  #
+  hmmer.lines <- readLines( path.2.hmmer.table )
+  paste( lapply( hmmer.lines[ ( skip.lines+1 ):( length( hmmer.lines ) ) ],
+    function( hmmer.line ) {
+      m <- str_match( hmmer.line, filter.regex )
+      if ( ! is.null( m ) && nrow( m ) > 0 && ncol( m ) > 1 ) {
+        paste( m[[ 1, 2 ]], ' "', m[[ 1, 3 ]], '"', sep='' )
+      }
+  } ), collapse='\n' )
 }
 
 parseBlastTable <- function( br,

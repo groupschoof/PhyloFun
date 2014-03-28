@@ -41,7 +41,7 @@ seq.search.rslts <- if ( ! is.null( phylo.fun.args[[ 'b' ]] ) ) {
   parseBlastTable( read.table( phylo.fun.args[[ 'b' ]] ) )
 } else if ( ! is.null( phylo.fun.args[[ 'p' ]] ) ) {
   parsePhmmerTable( 
-    scan( file=phylo.fun.args[[ 'p' ]], what=character(), sep="\n" )
+    phylo.fun.args[[ 'p' ]]
   )
 }
 query.accs <- as.character( lapply( unique( as.character( seq.search.rslts[ , 'query.name' ] ) ),
