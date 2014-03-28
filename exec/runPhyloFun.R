@@ -3,7 +3,7 @@ require( PhyloFun )
 # Hail User:
 print( paste(
   "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta ( -p path/2/phmmer_results.tbl OR -b path/2/blast_results.tbl )",
-  "[ -c cores_to_use (default all) ] [ -f FastTree[MP] (default FastTreeMP) ]",
+  "[ -f FastTree[MP] (default FastTreeMP) ]",
   "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified. Set to 'ALL', if no filtering for evidence-codes is wanted. ) ]",
   "[ -n n.best.hits Maximum number of best scoring results from sequence similarity search to use for each query protein. (default 1000) ]",
   "[ -h true ( Write out a statistics table 'homologs_stats.txt' for each Query Protein's set of homologs: Set-size and bit.score distribution. ) ]",
@@ -20,7 +20,7 @@ print(
 )
 
 # Input
-phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'c'=detectCores(), 'f'='FastTreeMP', 'n'=1000 ) )
+phylo.fun.args <- commandLineArguments( commandArgs(trailingOnly = TRUE), list( 'f'='FastTreeMP', 'n'=1000 ) )
 
 # Evidence codes of GO annotations to accept:
 go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
