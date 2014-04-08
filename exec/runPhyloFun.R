@@ -1,7 +1,7 @@
 require( PhyloFun )
 
 # Hail User:
-print( paste(
+message( paste(
   "Usage: Rscript runPhyloFun.R -q path/2/query_proteins.fasta ( -p path/2/phmmer_results.tbl OR -b path/2/blast_results.tbl )",
   "[ -f FastTree[MP] (default FastTreeMP) ]",
   "[ -e add.evidence.codes ( example: '-e TAS,IC' - Default all experimentally verified. Set to 'ALL', if no filtering for evidence-codes is wanted. ) ]",
@@ -10,8 +10,8 @@ print( paste(
   "[ -m true ( Write out a statistics table 'msa_stats.txt' for each Query Protein's multiple sequence alignments: Differences in number of sequences and positions betwen original and filtered MSAs. ) ]",
   "[ -r true ( Generate an HTML report for each Query Protein. Will be stored in an extra folder 'report'. Default: false ) ]"
 ) )
-print( '' )
-print(
+message( '' )
+message(
   paste( "WARNING: The PhyloFun pipeline uses other programs to generate multiple sequence alignments (MAFFT),",
     "filter them for conserved regions (GBlocks), and generate a phylogenetic tree of the MSA (FastTree[MP]).",
     "These programs need to be in your $PATH and require protein accessions of your PHMMER or Blast homolgy searches to be Uniprot accessions.",
@@ -34,7 +34,7 @@ go.anno.evdnc.cds <- if ( is.null( phylo.fun.args[[ 'e' ]] ) ) {
 
 # Read fasta:
 aa.seqs <- sapply( readAAStringSet( phylo.fun.args[[ 'q' ]] ), function(s) replaceSelenocystein( toString(s) ) )
-print( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
+message( paste("Read", length(aa.seqs), "sequences from", phylo.fun.args[[ 'q' ]] ) )
 
 # Parse sequence similarity search results:
 seq.search.rslts <- if ( ! is.null( phylo.fun.args[[ 'b' ]] ) ) {
@@ -46,19 +46,19 @@ seq.search.rslts <- if ( ! is.null( phylo.fun.args[[ 'b' ]] ) ) {
 }
 query.accs <- as.character( lapply( unique( as.character( seq.search.rslts[ , 'query.name' ] ) ),
   sanitizeUniprotAccession ) )
-print( paste( "Parsed sequence similarity search results table. Got", nrow(seq.search.rslts), "query-hit pairs" ) )
+message( paste( "Parsed sequence similarity search results table. Got", nrow(seq.search.rslts), "query-hit pairs" ) )
 
 # Sanitize protein accessions:
 accs <- unlist( setNames( lapply( names(aa.seqs), sanitizeUniprotAccession ), names(aa.seqs) ) )
-print( "Parsed the query proteins' accessions using function sanitizeUniprotAccession(...) ." )
-print( 
+message( "Parsed the query proteins' accessions using function sanitizeUniprotAccession(...) ." )
+message( 
   paste( "WARNING: If your query accessions are not matching, PhyloFun will fail to find their",
   "accessions in the sequence similarity search results, nor will Gblocks accept such sequence names!",
   "See function sanitizeUniprotAccession(…) for details." )
 )
 
 # How many of the queries have hits in the sequence similarity search results?
-print( paste( "The provided sequence similarity search result has hits for",
+message( paste( "The provided sequence similarity search result has hits for",
   length( query.accs ), "distinct queries" ) )
 
 # For each query protein, do:
@@ -81,7 +81,7 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
       }
 
       # Generate multiple sequence alignment ( MSA ) using MAFFT:
-      print( "Generating multiple sequence alignment (MSA)" )
+      message( "Generating multiple sequence alignment (MSA)" )
       acc.hmlgs.file <- paste( prot.acc, '/homologs.fasta', sep='' )
       hit.accs <- unique( as.character( homologs[ , 'hit.name' ] ) )
       # Obtain AA sequences from Uniprot's Web Service:
@@ -100,11 +100,11 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
       system( paste( "mafft --auto", acc.hmlgs.file, ">", acc.msa.file ) )
 
       # Remove duplicated accessions from MSA:
-      print( "Removing duplicated accessions -if existing- from MSA" )
+      message( "Removing duplicated accessions -if existing- from MSA" )
       uniqueHomologs( acc.msa.file )
 
       # Filter the MSA for highly conserved regions using GBlocks:
-      print( "Filtering MSA for highly conserved regions" )
+      message( "Filtering MSA for highly conserved regions" )
       acc.gblocks.msa.file <- paste( acc.msa.file, '-gb', sep='' )
       system( paste( 'Gblocks', acc.msa.file, '-b5=h -t=p -p=n' ) )
 
@@ -131,9 +131,9 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
         acc.msa.file
       }
       # Tell the User, which MSA is going to be used:
-      print( paste( 'MSA has been filtered with Gblocks and PhyloFun. Going to use',
+      message( paste( 'MSA has been filtered with Gblocks and PhyloFun. Going to use',
         acc.msa.chosen.file, 'for the phylogenetic reconstruction' ) )
-      print( '' )
+      message( '' )
       # Report MSA statistics, if requested:
       if ( ! is.null( phylo.fun.args[[ 'm' ]] ) ) {
         write.table( 
@@ -147,15 +147,15 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
 
       # Construct the phylogenetic max likelihood tree of the above alignment
       # using FastTree[MP]:
-      print( "Constructing maximum likelihood phylogenetic tree" )
+      message( "Constructing maximum likelihood phylogenetic tree" )
       acc.phyl.tree.file <- paste( prot.acc, '/ml_tree.newick', sep='' )
       system( paste( phylo.fun.args[[ 'f' ]], '<', acc.msa.chosen.file, '>', acc.phyl.tree.file ) ) 
 
       # Compute probability distributions for GO terms of the three different
       # types 'biological_process', 'cellular_component', and
       # 'molecular_function':
-      print( "Starting PhyloFun on phylogenetic tree" )
-      print( "Note: Branch Lengths of phylogenetic tree will be rounded to two decimal digits!" )
+      message( "Starting PhyloFun on phylogenetic tree" )
+      message( "Note: Branch Lengths of phylogenetic tree will be rounded to two decimal digits!" )
       acc.phyl.tree <- roundBranchLengths( read.tree( acc.phyl.tree.file ) )
       # Query Uniprot web services and the Gene Ontology database for all
       # available GO annotations matching the trusted evidence codes:
@@ -180,7 +180,7 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
         acc.go.predictions <- setNames(
           lapply( go.types, function( go.type ) {
     
-            print( paste( 'Computing function predictions for GO type', go.type ) )
+            message( paste( 'Computing function predictions for GO type', go.type ) )
     
             acc.bayes.evdnc <- annotationMatrixForBayesNetwork(
               acc.go.type.annos[[ go.type ]], 
@@ -215,7 +215,7 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
 
         # If requested generate an HTML report:
         if ( ! is.null( phylo.fun.args[[ 'r' ]] ) ) {
-          print( "Generating HTML report" )
+          message( "Generating HTML report" )
           report.dir <- paste( prot.acc, '/report', sep='' )
           report.tree.fn <- paste( prot.acc, '_phylo_fun_tree', sep='' ) 
           report.tree.path <- paste( report.dir, '/', report.tree.fn, sep='' )
@@ -235,25 +235,26 @@ for ( prot.acc in intersect( accs, query.accs ) ) {
           "WARNING: There were no GO term annotations available for the found homologous sequences of significant similarity.",
           paste( prot.acc, "will therefore have NO PhyloFun predictions!" ) 
         )
-        print( msg )
+        message( msg )
         f <- file( paste( prot.acc, '/go_term_predictions.tbl', sep='' ), 'w' )
         writeLines( msg, con=f )
         close( f )
       }
 
-      print( paste( "Finished computations for", orig.acc ) )
+      message( paste( "Finished computations for", orig.acc ) )
     } else {
-      print( paste(
+      message( paste(
         "Warning: No sequence homologs were found for query protein",
         prot.acc ) )
     }
   # END of block provided to tryCatch(…)
   }, error=function(e) {
-    print( paste( "An error occurred while predicting GO terms for", prot.acc ) )
-    print( e )
-    print( "Will continue with next query protein…" )
+    message( paste( "An error occurred while predicting GO terms for", prot.acc ) )
+    message( e )
+    message( "Will continue with next query protein…" )
+    NULL
   } )
   # END of for loop iterating over the query proteins
 }
 
-print( "DONE" )
+message( "DONE" )
