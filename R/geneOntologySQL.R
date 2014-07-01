@@ -161,8 +161,7 @@ ancestralGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
     paste( "SELECT t.*, r.acc AS relationship FROM term t ",
       "LEFT JOIN graph_path p ",
       "ON t.id = p.term1_id LEFT JOIN term r ON p.relationship_type_id = r.id ",
-      "WHERE r.term_type = 'gene_ontology' AND ",
-      "p.term2_id = ", go.term.id,
+      "WHERE p.term2_id = ", go.term.id,
       " AND NOT t.is_root GROUP BY t.id",
       sep="" )
   )
