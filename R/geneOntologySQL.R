@@ -155,14 +155,15 @@ ancestralGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
   #  con        : A valid and active database connection to an instance of the
   #               Gene Ontology mysql database.
   #
-  # Returns: A data frame, excluding the 'all' GO DAG root node.
+  # Returns: A data frame, excluding both the 'all' GO DAG root node as well as
+  # the self match 'go.term.id'.
   #   
   dbGetQuery( con,
     paste( "SELECT t.*, r.acc AS relationship FROM term t ",
       "LEFT JOIN graph_path p ",
       "ON t.id = p.term1_id LEFT JOIN term r ON p.relationship_type_id = r.id ",
       "WHERE p.term2_id = ", go.term.id,
-      " AND NOT t.is_root GROUP BY t.id",
+      " AND NOT t.is_root AND t.id != ", go.term.id, " GROUP BY t.id",
       sep="" )
   )
 }
