@@ -200,8 +200,8 @@ parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
   } else {
     ''
   }
-  sql <- paste( "SELECT t.*, to_root.relation_distance FROM graph_path res ",
-      "LEFT JOIN term t ON t.id = res.term1_id ",
+  sql <- paste( "SELECT t.*, to_root.relation_distance, child.acc as child_acc ",
+      "FROM graph_path res LEFT JOIN term t ON t.id = res.term1_id ",
       "LEFT JOIN graph_path to_root ON t.id = to_root.term2_id ",
       "LEFT JOIN term child ON child.id = res.term2_id ",
       "WHERE ", rel.sql,
@@ -515,7 +515,7 @@ goTermsForProteinAccessionsAndEvidenceCodes <- function( prot.accs,
 }
 
 extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
-  close.db.con=TRUE, append.term.type=TRUE ) {
+  close.db.con=TRUE ) {
   # For every GO term a protein is annotated with it will be annotated with all
   # ancestors of this GO term no matter what kind of relationship the ancestor
   # has to its descendant. The evidence code will be "reused". If requested,
@@ -523,59 +523,42 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
   # 'molecular_function') is also added to the annotation matrix.
   #
   # Args:
-  #  go.anno.df       : A data frame of GO term annotations for proteins.
-  #                     Columns are expected to be 1. GO term accession, 2.
-  #                     Evidence Code, and 3. Protein accession. It is required
-  #                     to be cleaned up by
-  #                     uniqueGOAnnotationsWithMostSignificantEvidenceCodes(…).
-  #  con              : A valid and active MySQL connection to an instance of
-  #                     the GO database - default is connectToGeneOntology(…)
-  #  close.db.con     : If set to TRUE, the database connection 'con' will be
-  #                     closed automatically before this function returns
-  #  append.term.type : If set to TRUE, a fourth column will be added to the
-  #                     returned annotation data frame. This column will hold
-  #                     the type of the GO term annotated (BP, CC, or MF)
+  #  go.anno.df    : A data frame of GO term annotations for proteins.  Columns
+  #                  are expected to be 1. GO term accession, 2.  Evidence
+  #                  Code, and 3. Protein accession. It is required to be
+  #                  cleaned up by
+  #                  uniqueGOAnnotationsWithMostSignificantEvidenceCodes(…).
+  #  con           : A valid and active MySQL connection to an instance of the
+  #                  GO database - default is connectToGeneOntology(…)
+  #  close.db.con  : If set to TRUE, the database connection 'con' will be
+  #                  closed automatically before this function returns
   #
   # Returns: A data frame, the extension of the argument 'go.anno.df', if
   # requested with an additional column holding the GO term types.
   #   
   unq.gos <- unique( go.anno.df[ , 1 ] )
-  go.prnts <- setNames( lapply( unq.gos, function( go.acc ) { 
-    parentGoTermsForAccession( go.acc, include.selves=TRUE,
-      relationship.type.id=NULL, con=con )
-    }),
-    unq.gos
+  go.prnts <- parentGoTermsForAccession( unq.gos, include.selves=TRUE,
+    relationship.type.id=NULL, con=con )
+  if ( close.db.con ) dbDisconnect( con )
+
+  d.f <- as.data.frame( matrix( vector(), nrow=0, ncol=4,
+    dimnames=list( c(), c('acc', 'ec', 'prot.acc', 'term_type') ) ),
+    stringsAsFactors=FALSE
   )
-  if ( close.db.con ) {
-    dbDisconnect( con )
-  }
-  unique( do.call( 'rbind', lapply( unique( go.anno.df[ , 3 ] ),
-    function( prot.acc ) {
+  for ( i in 1:nrow(go.prnts) ) {
     # For each prot select a df with cols
     # 'acc', 'ec', 'prot.acc', 'term_type'.
     # evidence.code should be inherited by original annotation!
-    prot.go.annos <- go.anno.df[
-      which( go.anno.df[ , 3 ] == prot.acc ), ]
-    do.call( 'rbind', lapply(
-      intersect( names( go.prnts ), prot.go.annos[ , 1 ] ),
-      function( go.term ) {
-        go.prnt.df <- go.prnts[[ go.term ]]
-        if ( ! is.null( go.prnt.df ) && nrow( go.prnt.df ) > 0 ) {
-          gpd <- go.prnt.df[ , c( 'acc', 'term_type' ) ] 
-          ev.cd <- prot.go.annos[
-            which( prot.go.annos[ , 1 ] == go.term ), 2 ]
-          if ( length( ev.cd ) > 1 ) {
-            ev.cd <- selectMostSignificantEvidenceCode( ev.cd )
-          }
-          res.df <- data.frame( stringsAsFactors=FALSE, 'V1'=gpd$acc,
-            'V2'=ev.cd, 'V3'=prot.acc )
-          if ( append.term.type ) {
-            res.df$'V4' <- gpd$term_type 
-          }
-          res.df
-        }
-    }))
-  })))
+    go.row <- go.prnts[ i, ]
+    prot.annos <- go.anno.df[ which( go.anno.df[ , 1 ] ==
+      go.row[[1,'child_acc']] ), ]
+    r.inds <- (nrow(d.f)+1):(nrow(d.f)+nrow(prot.annos))
+    d.f[ r.inds, 'acc' ] <- go.row[[1,'acc']]
+    d.f[ r.inds, 'ec' ] <- prot.annos[ , 2 ]
+    d.f[ r.inds, 'prot.acc' ] <- prot.annos[ , 3 ]
+    d.f[ r.inds, 'term_type' ] <- go.row[[1,'term_type']]
+  }
+  d.f
 }
 
 selectMostSignificantEvidenceCode <- function( evidence.codes,
