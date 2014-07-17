@@ -171,7 +171,7 @@ ancestralGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
 parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
   relationship.type.id=1, con=connectToGeneOntology() ) {
   # Finds the Gene Ontology (GO) terms that are parent to the argument
-  # 'go.term.accs'.
+  # 'go.term.accs' and are NOT obsolete.
   #
   # Args:
   #  go.term.accs         : The GO term accessions of the GO terms to find the
@@ -209,6 +209,7 @@ parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
       "AND child.acc in (", gta, ") ",
       incl.selves.sql,
       "AND to_root.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND t_is_obsolete = 0 ",
       "GROUP BY t.id ORDER BY to_root.relation_distance ASC",
       sep=""
     )
