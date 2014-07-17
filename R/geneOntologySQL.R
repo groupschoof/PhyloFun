@@ -209,7 +209,7 @@ parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
       "AND child.acc in (", gta, ") ",
       incl.selves.sql,
       "AND to_root.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
-      "AND t_is_obsolete = 0 ",
+      "AND t.is_obsolete = 0 ",
       "GROUP BY t.id ORDER BY to_root.relation_distance ASC",
       sep=""
     )
@@ -553,11 +553,12 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
     go.row <- go.prnts[ i, ]
     prot.annos <- go.anno.df[ which( go.anno.df[ , 1 ] ==
       go.row[[1,'child_acc']] ), ]
-    r.inds <- (nrow(d.f)+1):(nrow(d.f)+nrow(prot.annos))
-    d.f[ r.inds, 'acc' ] <- go.row[[1,'acc']]
-    d.f[ r.inds, 'ec' ] <- prot.annos[ , 2 ]
-    d.f[ r.inds, 'prot.acc' ] <- prot.annos[ , 3 ]
-    d.f[ r.inds, 'term_type' ] <- go.row[[1,'term_type']]
+    d.f <- rbind( d.f, data.frame( list(
+      acc = rep( go.row[[1, "acc"]], nrow(prot.annos) ), 
+      ec = prot.annos[, 2],
+      prot.acc = prot.annos[, 3],
+      term_type = rep( go.row[[1, "term_type"]], nrow(prot.annos) )
+    ), stringsAsFactors = FALSE ) ) 
   }
   d.f
 }
