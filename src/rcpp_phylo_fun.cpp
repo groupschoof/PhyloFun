@@ -1,5 +1,6 @@
 #include "rcpp_phylo_fun.h"
-using namespace Rcpp ;
+
+using namespace Rcpp;
 
 SEXP findMatchingRow( SEXP sTable, SEXP val, SEXP colInd ){
   BEGIN_RCPP
@@ -94,30 +95,69 @@ SEXP conditionalProbabilityTables( SEXP uniqueEdgeLengths, SEXP annos, SEXP
   END_RCPP
 }
 
-SEXP proteinsWithGOtermAnnotation( SEXP goTermAccession, SEXP
-    proteinGOannotationMatrix, SEXP proteinAccessionColIndx, SEXP goTermColInd
-    ) {
+SEXP characterMatrixEraseRow( SEXP charMatrix, SEXP rowIndex ) {
   BEGIN_RCPP
 
-    // Initializations:
-    std::string goAcc( CharacterVector( goTermAccession )( 0 ) );
-    
-    int colProt( NumericVector( proteinAccessionColIndx )( 0 ) );
-    int colGO( NumericVector( goTermColInd )( 0 ) );
-    CharacterMatrix protGOannos( proteinGOannotationMatrix );
-    CharacterVector annotatedGOs( protGOannos( _, colGO ) );
-    CharacterVector annotatedProts( protGOannos( _, colProt ) );
-    CharacterVector matchingProts;
+    // Initialisations:
+    int rInd ( NumericVector( rowIndex )( 0 ) );
+    CharacterMatrix mtrx( charMatrix );
+    CharacterMatrix resM( mtrx.nrow() - 1, mtrx.ncol() );
+    CharacterVector col;
 
-    // Find accessions of proteins annotated with the GO term
-    // 'goTermAccession':
-    for (int i = 0; i < annotatedGOs.size(); ++i) {
-      if ( std::string( annotatedGOs( i ) ) == goAcc ) {
-        matchingProts.push_back( annotatedProts( i ) );
+    // Copy argument matrix column by column, omitting row 'rowIndex':
+    for ( int k=0; k<mtrx.ncol(); ++k ) {
+      col = mtrx( _, k ) ;
+      col.erase( rInd );
+      resM( _, k ) = col;
+    }
+
+    return( resM );
+
+  END_RCPP
+}
+
+SEXP extendGOAnnosWithParentsRcpp( SEXP proteinGOAnnosMtrx, SEXP
+    goParentTermsMtrx, SEXP goaTermCol, SEXP gpTermCol, SEXP gpAncestorCol,
+    SEXP goaEcCol, SEXP goaProtCol, SEXP gpTermTypeCol ) {
+  BEGIN_RCPP
+
+    // Initialisations:
+    CharacterMatrix ga( proteinGOAnnosMtrx );
+    CharacterMatrix gp( goParentTermsMtrx );
+    int gaTermInd     ( NumericVector( goaTermCol    )( 0 ) );
+    int gpTermInd     ( NumericVector( gpTermCol     )( 0 ) );
+    int gpAncestorInd ( NumericVector( gpAncestorCol )( 0 ) );
+    int gaEcInd       ( NumericVector( goaEcCol      )( 0 ) );
+    int gaProtInd     ( NumericVector( goaProtCol    )( 0 ) );
+    int gpTermTypeInd ( NumericVector( gpTermTypeCol )( 0 ) );
+
+    // Columns of returned DataFrame:
+    CharacterVector accsCol;
+    CharacterVector ecCol;
+    CharacterVector protCol;
+    CharacterVector termTypeCol;
+
+    for ( int i=0; i<ga.nrow(); ++i ) {
+      std::string gt( ga( i, gaTermInd ) );
+      for ( int k=0; k<gp.nrow(); ++k ) {
+        if ( gt == std::string( gp( k, gpTermInd ) ) ) {
+          accsCol.push_back( std::string( gp( k, gpAncestorInd ) ) );
+          ecCol.push_back( std::string( ga( i, gaEcInd ) ) );
+          protCol.push_back( std::string( ga( i, gaProtInd ) ) );
+          termTypeCol.push_back( std::string( gp( k, gpTermTypeInd ) ) );
+          // In future iterations this row does not need to be processed any
+          // more. But erasing it, speeds up the process:
+          gp = characterMatrixEraseRow( gp, wrap( k ) );
+        }
       }
     }
 
-    return( wrap( matchingProts ) );
+    return( DataFrame::create(
+      Named( "acc" )       = accsCol,
+      Named( "ec" )        = ecCol,
+      Named( "prot.acc" )  = protCol,
+      Named( "term_type" ) = termTypeCol
+    ) );
 
   END_RCPP
 }

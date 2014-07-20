@@ -542,25 +542,31 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
     relationship.type.id=NULL, con=con )
   if ( close.db.con ) dbDisconnect( con )
 
-  d.f <- as.data.frame( matrix( vector(), nrow=0, ncol=4,
-    dimnames=list( c(), c('acc', 'ec', 'prot.acc', 'term_type') ) ),
-    stringsAsFactors=FALSE
-  )
-  for ( i in 1:nrow(go.prnts) ) {
-    # For each prot select a df with cols
-    # 'acc', 'ec', 'prot.acc', 'term_type'.
-    # evidence.code should be inherited by original annotation!
-    go.row <- go.prnts[ i, ]
-    prot.annos <- go.anno.df[ which( go.anno.df[ , 1 ] ==
-      go.row[[1,'child_acc']] ), ]
-    d.f <- rbind( d.f, data.frame( list(
-      acc = rep( go.row[[1, "acc"]], nrow(prot.annos) ), 
-      ec = prot.annos[, 2],
-      prot.acc = prot.annos[, 3],
-      term_type = rep( go.row[[1, "term_type"]], nrow(prot.annos) )
-    ), stringsAsFactors = FALSE ) ) 
-  }
-  d.f
+  # d.f <- as.data.frame( matrix( vector(), nrow=0, ncol=4,
+  #   dimnames=list( c(), c('acc', 'ec', 'prot.acc', 'term_type') ) ),
+  #   stringsAsFactors=FALSE
+  # )
+  # i <- 1
+  # for ( go.term in unq.gos ) {
+  #   # For each prot select a df with cols
+  #   # 'acc', 'ec', 'prot.acc', 'term_type'.
+  #   # evidence.code should be inherited by original annotation!
+  #   go.prnts.sel <- go.prnts[ which( go.prnts$child_acc == go.term ), ]
+  #   prot.annos <- go.anno.df[ which( go.anno.df[ , 1 ] == go.term ), ]
+  #   n.rows <- nrow( go.prnts.sel ) * nrow( prot.annos )
+  #   d.f <- rbind( d.f, data.frame(
+  #     acc = rep( go.prnts.sel[ , 'acc' ], nrow(prot.annos) ), 
+  #     ec = unlist( lapply( prot.annos[ , 2 ], function(x)
+  #       rep( x, nrow( go.prnts.sel) ) ) ),
+  #     prot.acc = unlist( lapply( prot.annos[ , 3 ], function(x)
+  #       rep( x, nrow( go.prnts.sel ) ) ) ),
+  #     term_type = rep( go.prnts.sel[ , 'term_type' ], nrow(prot.annos) )
+  #   , stringsAsFactors = FALSE ) ) 
+  #   message( paste( round( i / length( unq.gos ), digits=4 ), ' ', sep='' ), appendLF=FALSE )
+  #   i <- i + 1
+  # }
+  # d.f
+  extendGOAnnosWithParentsRcpp( go.anno.df, go.prnts )
 }
 
 selectMostSignificantEvidenceCode <- function( evidence.codes,

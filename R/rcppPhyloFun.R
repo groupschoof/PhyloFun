@@ -157,6 +157,59 @@ filterAnnotationMutationProbabilityTableList <- function( annotations,
   lapply( annotsMutationProbTables[ uniq.annos ], as.matrix )
 }
 
+extendGOAnnosWithParentsRcpp <- function( prot.go.annos.df,
+  go.parent.terms.df, goa.term.col=0, gp.term.col='child_acc',
+  gp.ancestor.col='acc', goa.ec.col=1, goa.prot.col=2,
+  gp.term.type.col='term_type' ) {
+  # Merges data from the two argument Matrices into a single GO annotation
+  # data frame, in which the protein GO annotations of argument
+  # 'proteinGOAnnosMtrx' are extended with the PARENT GO terms as provided in
+  # the argument 'goParentTermsMtrx'. Evidence Codes ('EC's) for parental
+  # annotations are obtained from the respective child (descendant)
+  # annotation.
+  # Note: The arguments ending in '.col' enable dynamic setting of column
+  # indices or names of the two argument data.frames. The columns of argument
+  # 'go.parent.terms.df' are given by name, and will be translated into
+  # indices. These indices are for usage in Rcpp/C++, hence start with 0, not
+  # 1 as do R indices normally.
+  #
+  # Args:
+  #  prot.go.annos.df   : The Gene Ontology (GO) annotations in three columns
+  #                       as returned e.g. by retrieveGOAnnotations(…)
+  #  go.parent.terms.df : The ancestral GO terms for those found in argument
+  #                       'go.anno.df', as returned by function
+  #                       parentGoTermsForAccession(…)
+  #  goa.term.col       : The column index of 'go.anno.df' in which to find the
+  #                       GO terms.
+  #  gp.term.col        : The column name of 'go.parent.terms.df' in which to
+  #                       find the child (descendant) GO term
+  #  gp.ancestor.col    : The column name of 'go.parent.terms.df' in which to
+  #                       find the ancestral GO term
+  #  goa.ec.col         : The column index of 'go.anno.df' in which to find the
+  #                       evidence codes (see
+  #                       http://www.geneontology.org/page/guide-go-evidence-codes)
+  #  goa.prot.col       : The column index of 'go.anno.df' in which to find the
+  #                       protein accessions.
+  #  gp.term.type.col   : The column name of 'go.parent.terms.df' in which to
+  #                       find the ancestral GO term's ontology (type), one of
+  #                       'biological_process', 'cellular_component', or
+  #                       'molecular_function'.
+  #
+  # Returns: The returned data.frame has four columns: 'acc', 'ec', 'prot.acc',
+  # and 'term_type'.
+  #
+  gp.term.ind <-
+    which( colnames( go.parent.terms.df ) == gp.term.col ) - 1
+  gp.ancestor.ind <-
+    which( colnames( go.parent.terms.df ) == gp.ancestor.col ) - 1
+  gp.term.type.ind <-
+    which( colnames( go.parent.terms.df ) == gp.term.type.col ) - 1
+
+  .Call( 'extendGOAnnosWithParentsRcpp', as.matrix(prot.go.annos.df),
+    as.matrix(go.parent.terms.df), goa.term.col, gp.term.ind, gp.ancestor.ind,
+    goa.ec.col, goa.prot.col, gp.term.type.ind )
+}
+
 uniqueProteinPairs <- function( proteinPairsTbl,
   pairFirstMemberColIndex=0, pairSecondMemberColIndex=1 ) {
   # Identifies unique pairs in the set of un-ordered protein pairs in
