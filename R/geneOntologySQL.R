@@ -516,34 +516,51 @@ goTermsForProteinAccessionsAndEvidenceCodes <- function( prot.accs,
 }
 
 extendGOAnnosWithParentsForSingleProt <- function( prot.go.anno.df ) {
-  prot.col <- paste( "'", prot.go.anno.df[[1,3]], "' as prot, (CASE child.acc ",
-    paste( lapply( 1:nrow(prot.go.anno.df), function(i) {
-      paste( "WHEN '", prot.go.anno.df[[i,1]], "' THEN '",
-        prot.go.anno.df[[i,2]], "' ", sep="" )
-    } ), collapse="" ),
-    "ELSE NULL END) as ec ", sep="");
-  paste( "SELECT t.*, to_root.relation_distance, child.acc as child_acc, ",
-    prot.col,
-    "FROM graph_path res LEFT JOIN term t ON t.id = res.term1_id ",
-    "LEFT JOIN graph_path to_root ON t.id = to_root.term2_id ",
-    "LEFT JOIN term child ON child.id = res.term2_id ",
-    "WHERE ",
-    "res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
-    "AND child.acc in ('", paste( prot.go.anno.df[,1], collapse="','" ), "') ",
-    "AND to_root.term1_id = ",
-    "(SELECT r.id FROM term r WHERE r.is_root = 1) ",
-    "GROUP BY t.id ORDER BY to_root.relation_distance ASC ",
-    sep="" )
+    prot.col <- paste( "'", prot.go.anno.df[[1,3]], "' as prot, (CASE child.acc ",
+      paste( lapply( 1:nrow(prot.go.anno.df), function(i) {
+        paste( "WHEN '", prot.go.anno.df[[i,1]], "' THEN '",
+          prot.go.anno.df[[i,2]], "' ", sep="" )
+      } ), collapse="" ),
+      "ELSE NULL END) as ec ", sep="");
+    paste( "SELECT t.*, to_root.relation_distance, child.acc as child_acc, ",
+      prot.col,
+      "FROM graph_path res LEFT JOIN term t ON t.id = res.term1_id ",
+      "LEFT JOIN graph_path to_root ON t.id = to_root.term2_id ",
+      "LEFT JOIN term child ON child.id = res.term2_id ",
+      "WHERE ",
+      "res.term1_id != (SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "AND child.acc in ('", paste( prot.go.anno.df[,1], collapse="','" ), "') ",
+      "AND to_root.term1_id = ",
+      "(SELECT r.id FROM term r WHERE r.is_root = 1) ",
+      "GROUP BY t.id ORDER BY to_root.relation_distance ASC ",
+      sep="" )
 }
 
-extendGOAnnosWithParentsForMultProt <- function( go.anno.df, con=connectToGeneOntology(), close.db.con=TRUE ) {
-  unq.prots <- unique( go.anno.df[,3] )
-  sql.stmnt <- paste( "( ",
-    paste( lapply( unq.prots, function(prot) {
-        extendGOAnnosWithParentsForSingleProt( go.anno.df[ which( go.anno.df[,3] == prot ), ] )
-      } ), collapse=") UNION ALL (" ),
-    " )", sep="" ) 
-  res <- dbGetQuery( con, sql.stmnt )
+extendGOAnnosWithParentsForMultProt <- function( go.anno.df,
+  con=connectToGeneOntology() ) {
+  tryCatch( {
+    unq.prots <- unique( go.anno.df[,3] )
+    sql.stmnt <- paste( "( ",
+      paste( lapply( unq.prots, function(prot) {
+          extendGOAnnosWithParentsForSingleProt( go.anno.df[ which( go.anno.df[,3] == prot ), ] )
+        } ), collapse=") UNION ALL (" ),
+      " )", sep="" ) 
+    dbGetQuery( con, sql.stmnt )
+  }, error=function(e) {
+    message(e)
+    browser()
+  })
+}
+
+extendGOAnnosWithParentsRec <- function( go.anno.df,
+  con=connectToGeneOntology(), close.db.con=TRUE, batch.size=1000 ) {
+  n.iter <- ceiling( nrow( go.anno.df ) / batch.size )
+  res <- do.call( 'rbind', lapply( 1:n.iter, function(i) {
+    n.from <- if ( i == 1 ) i else (i-1) * batch.size + 1
+    n.to   <- if ( i * batch.size > nrow( go.anno.df ) ) nrow( go.anno.df )
+              else i * batch.size
+    extendGOAnnosWithParentsForMultProt( go.anno.df[ n.from:n.to, ], con=con )
+  } ) )
   if ( close.db.con ) dbDisconnect( con )
   res
 }
