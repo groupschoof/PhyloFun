@@ -130,6 +130,10 @@ SEXP extendGOAnnosWithParentsRcpp( SEXP proteinGOAnnosMtrx, SEXP
     int gaEcInd       ( NumericVector( goaEcCol      )( 0 ) );
     int gaProtInd     ( NumericVector( goaProtCol    )( 0 ) );
     int gpTermTypeInd ( NumericVector( gpTermTypeCol )( 0 ) );
+    int gpCurr = 0;
+    int gpNext = 0;
+    std::string currGoTerm( "" );
+    std::string nextGoTerm( "" );
 
     // Columns of returned DataFrame:
     CharacterVector accsCol;
@@ -138,25 +142,32 @@ SEXP extendGOAnnosWithParentsRcpp( SEXP proteinGOAnnosMtrx, SEXP
     CharacterVector termTypeCol;
 
     for ( int i=0; i<ga.nrow(); ++i ) {
-      std::string gt( ga( i, gaTermInd ) );
-      for ( int k=0; k<gp.nrow(); ++k ) {
-        if ( gt == std::string( gp( k, gpTermInd ) ) ) {
-          accsCol.push_back( std::string( gp( k, gpAncestorInd ) ) );
-          ecCol.push_back( std::string( ga( i, gaEcInd ) ) );
-          protCol.push_back( std::string( ga( i, gaProtInd ) ) );
-          termTypeCol.push_back( std::string( gp( k, gpTermTypeInd ) ) );
-          // In future iterations this row does not need to be processed any
-          // more. But erasing it, speeds up the process:
-          gp = characterMatrixEraseRow( gp, wrap( k ) );
-        }
+      std::string nextGoTerm( ga( i, gaTermInd ) );
+      if ( currGoTerm != nextGoTerm ) {
+        gpCurr = gpNext;
+      }
+      currGoTerm = nextGoTerm;
+
+      // TODO: WARNING, if currGoTerm != pTerm
+      for ( int k=gpCurr; k < gp.nrow(); ++k ) {
+        std::string pTerm( gp( k, gpTermInd ) );
+        if ( pTerm != currGoTerm ) {
+          gpNext = k;
+          break;
+        } // else:
+        accsCol.push_back( std::string( gp( k, gpAncestorInd ) ) );
+        ecCol.push_back( std::string( ga( i, gaEcInd ) ) );
+        protCol.push_back( std::string( ga( i, gaProtInd ) ) );
+        termTypeCol.push_back( std::string( gp( k, gpTermTypeInd ) ) );
       }
     }
 
     return( DataFrame::create(
-      Named( "acc" )       = accsCol,
-      Named( "ec" )        = ecCol,
-      Named( "prot.acc" )  = protCol,
-      Named( "term_type" ) = termTypeCol
+      Named( "acc" )              = accsCol,
+      Named( "ec" )               = ecCol,
+      Named( "prot.acc" )         = protCol,
+      Named( "term_type" )        = termTypeCol,
+      Named( "stringsAsFactors" ) = false
     ) );
 
   END_RCPP

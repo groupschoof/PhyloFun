@@ -160,7 +160,7 @@ filterAnnotationMutationProbabilityTableList <- function( annotations,
 extendGOAnnosWithParentsRcpp <- function( prot.go.annos.df,
   go.parent.terms.df, goa.term.col=0, gp.term.col='child_acc',
   gp.ancestor.col='acc', goa.ec.col=1, goa.prot.col=2,
-  gp.term.type.col='term_type' ) {
+  gp.term.type.col='term_type', sort.prot.go.annos.df=TRUE ) {
   # Merges data from the two argument Matrices into a single GO annotation
   # data frame, in which the protein GO annotations of argument
   # 'proteinGOAnnosMtrx' are extended with the PARENT GO terms as provided in
@@ -174,26 +174,36 @@ extendGOAnnosWithParentsRcpp <- function( prot.go.annos.df,
   # 1 as do R indices normally.
   #
   # Args:
-  #  prot.go.annos.df   : The Gene Ontology (GO) annotations in three columns
-  #                       as returned e.g. by retrieveGOAnnotations(…)
-  #  go.parent.terms.df : The ancestral GO terms for those found in argument
-  #                       'go.anno.df', as returned by function
-  #                       parentGoTermsForAccession(…)
-  #  goa.term.col       : The column index of 'go.anno.df' in which to find the
-  #                       GO terms.
-  #  gp.term.col        : The column name of 'go.parent.terms.df' in which to
-  #                       find the child (descendant) GO term
-  #  gp.ancestor.col    : The column name of 'go.parent.terms.df' in which to
-  #                       find the ancestral GO term
-  #  goa.ec.col         : The column index of 'go.anno.df' in which to find the
-  #                       evidence codes (see
-  #                       http://www.geneontology.org/page/guide-go-evidence-codes)
-  #  goa.prot.col       : The column index of 'go.anno.df' in which to find the
-  #                       protein accessions.
-  #  gp.term.type.col   : The column name of 'go.parent.terms.df' in which to
-  #                       find the ancestral GO term's ontology (type), one of
-  #                       'biological_process', 'cellular_component', or
-  #                       'molecular_function'.
+  #  prot.go.annos.df      : The Gene Ontology (GO) annotations in three
+  #                          columns as returned e.g. by
+  #                          retrieveGOAnnotations(…). It is expected to have
+  #                          no duplicate entries (protein, GO-Term),
+  #                          _disregarding_ multiple Evidence Code annotations.
+  #  go.parent.terms.df    : The ancestral GO terms for those found in argument
+  #                          'go.anno.df', as returned by function
+  #                          parentGoTermsForAccession(…). It is expected to be
+  #                          sorted by column 'child_acc' ascending.
+  #  goa.term.col          : The column index of 'go.anno.df' in which to find the
+  #                          GO terms.
+  #  gp.term.col           : The column name of 'go.parent.terms.df' in which to
+  #                          find the child (descendant) GO term
+  #  gp.ancestor.col       : The column name of 'go.parent.terms.df' in which to
+  #                          find the ancestral GO term
+  #  goa.ec.col            : The column index of 'go.anno.df' in which to find the
+  #                          evidence codes (see
+  #                          http://www.geneontology.org/page/guide-go-evidence-codes)
+  #  goa.prot.col          : The column index of 'go.anno.df' in which to find the
+  #                          protein accessions.
+  #  gp.term.type.col      : The column name of 'go.parent.terms.df' in which to
+  #                          find the ancestral GO term's ontology (type), one
+  #                          of 'biological_process', 'cellular_component', or
+  #                          'molecular_function'.
+  #  sort.prot.go.annos.df : If set to TRUE the argument 'prot.go.annos.df'
+  #                          still requires sorting. The algorithm used to
+  #                          efficiently merge the argument data.frames into a
+  #                          protein-GO-annotation extended with parent GO
+  #                          terms _requires_ that both argument data.frames
+  #                          are sorted by their respective GO term columns.
   #
   # Returns: The returned data.frame has four columns: 'acc', 'ec', 'prot.acc',
   # and 'term_type'.
@@ -205,9 +215,18 @@ extendGOAnnosWithParentsRcpp <- function( prot.go.annos.df,
   gp.term.type.ind <-
     which( colnames( go.parent.terms.df ) == gp.term.type.col ) - 1
 
+  # The following function REQUIRES both argument data.frames to be sorted by
+  # the column of GO terms. For 'go.parent.terms.df' this is expected to have
+  # happened using the respective SQL 'ORDER BY…' statement, the GO annotation
+  # 'prot.go.annos.df' data.frame will have to be sorted here:
+  if ( sort.prot.go.annos.df ) {
+    prot.go.annos.df <- prot.go.annos.df[ order( prot.go.annos.df[,1],
+      decreasing=FALSE ), ]
+  }
+
   .Call( 'extendGOAnnosWithParentsRcpp', as.matrix(prot.go.annos.df),
-    as.matrix(go.parent.terms.df), goa.term.col, gp.term.ind, gp.ancestor.ind,
-    goa.ec.col, goa.prot.col, gp.term.type.ind )
+     as.matrix(go.parent.terms.df), goa.term.col, gp.term.ind, gp.ancestor.ind,
+     goa.ec.col, goa.prot.col, gp.term.type.ind )
 }
 
 uniqueProteinPairs <- function( proteinPairsTbl,

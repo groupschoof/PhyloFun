@@ -169,7 +169,8 @@ ancestralGoTerms <- function( go.term.id, con=connectToGeneOntology() ) {
 }
 
 parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
-  relationship.type.id=1, con=connectToGeneOntology() ) {
+  relationship.type.id=1, order.by="ORDER BY child.acc ASC",
+  con=connectToGeneOntology() ) {
   # Finds the Gene Ontology (GO) terms that are parent to the argument
   # 'go.term.accs' and are NOT obsolete.
   #
@@ -183,6 +184,10 @@ parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
   #                         the query to. The default '1' refers to 'is_a'. To
   #                         select all available relationships provide this
   #                         argument as NULL.
+  #  order.by             : The SQL 'ORDER BY…' clause to be used. Table term
+  #                         is abreviated as 't' and table of descendents
+  #                         (children) is abbreviated 'child'. Default value is
+  #                         'ORDER BY child.acc ASC'
   #  con                  : A valid and active database connection to an
   #                         instance of the Gene Ontology relation database.
   #
@@ -210,7 +215,7 @@ parentGoTermsForAccession <- function( go.term.accs, include.selves=FALSE,
       incl.selves.sql,
       "AND to_root.term1_id = (SELECT r.id FROM term r WHERE r.is_root = 1) ",
       "AND t.is_obsolete = 0 ",
-      "GROUP BY t.id ORDER BY to_root.relation_distance ASC",
+      "GROUP BY t.id ", order.by,
       sep=""
     )
   dbGetQuery( con, sql )
@@ -524,11 +529,9 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
   # 'molecular_function') is also added to the annotation matrix.
   #
   # Args:
-  #  go.anno.df    : A data frame of GO term annotations for proteins.  Columns
-  #                  are expected to be 1. GO term accession, 2.  Evidence
-  #                  Code, and 3. Protein accession. It is required to be
-  #                  cleaned up by
-  #                  uniqueGOAnnotationsWithMostSignificantEvidenceCodes(…).
+  #  go.anno.df    : A data frame of GO term annotations for proteins. Columns
+  #                  are expected to be 1. GO term accession, 2. Evidence
+  #                  Code, and 3. Protein accession. 
   #  con           : A valid and active MySQL connection to an instance of the
   #                  GO database - default is connectToGeneOntology(…)
   #  close.db.con  : If set to TRUE, the database connection 'con' will be
@@ -542,31 +545,33 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
     relationship.type.id=NULL, con=con )
   if ( close.db.con ) dbDisconnect( con )
 
-  # d.f <- as.data.frame( matrix( vector(), nrow=0, ncol=4,
-  #   dimnames=list( c(), c('acc', 'ec', 'prot.acc', 'term_type') ) ),
-  #   stringsAsFactors=FALSE
-  # )
-  # i <- 1
-  # for ( go.term in unq.gos ) {
-  #   # For each prot select a df with cols
-  #   # 'acc', 'ec', 'prot.acc', 'term_type'.
-  #   # evidence.code should be inherited by original annotation!
-  #   go.prnts.sel <- go.prnts[ which( go.prnts$child_acc == go.term ), ]
-  #   prot.annos <- go.anno.df[ which( go.anno.df[ , 1 ] == go.term ), ]
-  #   n.rows <- nrow( go.prnts.sel ) * nrow( prot.annos )
-  #   d.f <- rbind( d.f, data.frame(
-  #     acc = rep( go.prnts.sel[ , 'acc' ], nrow(prot.annos) ), 
-  #     ec = unlist( lapply( prot.annos[ , 2 ], function(x)
-  #       rep( x, nrow( go.prnts.sel) ) ) ),
-  #     prot.acc = unlist( lapply( prot.annos[ , 3 ], function(x)
-  #       rep( x, nrow( go.prnts.sel ) ) ) ),
-  #     term_type = rep( go.prnts.sel[ , 'term_type' ], nrow(prot.annos) )
-  #   , stringsAsFactors = FALSE ) ) 
-  #   message( paste( round( i / length( unq.gos ), digits=4 ), ' ', sep='' ), appendLF=FALSE )
-  #   i <- i + 1
-  # }
-  # d.f
-  extendGOAnnosWithParentsRcpp( go.anno.df, go.prnts )
+  extendGOAnnosWithParentsRcpp( discardObsoleteGOAnnos( go.anno.df, go.prnts ),
+    go.prnts )
+}
+
+discardObsoleteGOAnnos <- function( go.anno.df, go.prnts ) {
+  # Identifies those GO terms that are annotated to proteins, but are no longer
+  # found in the GO database. Warns about obsolete GO Terms, if any are found.
+  #
+  # Args:
+  #  go.anno.df : The Gene Ontology (GO) annotations (Column 1) for the
+  #               respective proteins (Column 3), with evidence codes (Column
+  #               2), as e.g. returned by retrieveGOAnnotations(…).
+  #  go.prnts   : The data frame of GO terms which are ancestors of the terms
+  #               annotated in 'go.anno.df'. This data frame is obtained e.g.
+  #               by parentGoTermsForAccession(…).
+  #
+  # Returns: The subset of 'go.anno.df' that are _non_ obsolete GO
+  # term-annotations.
+  #   
+  obs.go.trms <- setdiff( go.anno.df[,1], go.prnts$child_acc )
+  if ( length( obs.go.trms ) > 0 ) {
+    warning( "The following GO terms were found to be annotated to proteins, ",
+      "but are no longer in the GO database:\n",
+      paste( obs.go.trms, collapse="," )
+    )
+    go.anno.df[ which( go.anno.df[,1] %in% go.prnts$child_acc ), ]
+  } else go.anno.df
 }
 
 selectMostSignificantEvidenceCode <- function( evidence.codes,

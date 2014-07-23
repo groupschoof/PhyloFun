@@ -617,7 +617,9 @@ retrieveGOAnnotations <- function( prot.accs, evidence.codes=EVIDENCE.CODES,
   #
   # Returns: A data.frame with three columns where each row holds a single
   # Protein's GO annotation. Column one holds the GO term accessions, column
-  # two the Evidence Codes, and column three the protein accessions.
+  # two the Evidence Codes, and column three the protein accessions. Double
+  # annotations are removed, _disregarding_ different evidence codes. In the
+  # latter case, the EC that first appears is conserved.
   #    
   go.db.annos <- goTermsForProteinAccessionsAndEvidenceCodes( prot.accs,
     evidence.codes, go.con ) 
@@ -630,7 +632,10 @@ retrieveGOAnnotations <- function( prot.accs, evidence.codes=EVIDENCE.CODES,
     nrow( go.db.annos) > 0 ) {
     gdas.df <- go.db.annos[ , c( 'acc', 'code', 'xref_key' ) ]
     colnames( gdas.df ) <- c( 'V1', 'V2', 'V3' )
-    unique( rbind( gdas.df, unipr.go.annos ) )
+    goa.df <- rbind( gdas.df, unipr.go.annos )
+    # Remove double annotations disregarding different evidence codes. In the
+    # latter case, take the EC that first appears:
+    goa.df[ ! duplicated( goa.df[,c(1,3)] ), ]
   }
 }
 
