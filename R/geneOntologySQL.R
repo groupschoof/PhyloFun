@@ -516,7 +516,7 @@ goTermsForProteinAccessionsAndEvidenceCodes <- function( prot.accs,
 }
 
 extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
-  close.db.con=TRUE ) {
+  close.db.con=TRUE, remove.duplicated.rows=TRUE ) {
   # For every GO term a protein is annotated with it will be annotated with all
   # ancestors of this GO term no matter what kind of relationship the ancestor
   # has to its descendant. The evidence code will be "reused". If requested,
@@ -524,18 +524,25 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
   # 'molecular_function') is also added to the annotation matrix.
   #
   # Args:
-  #  go.anno.df    : A data frame of GO term annotations for proteins.  Columns
-  #                  are expected to be 1. GO term accession, 2.  Evidence
-  #                  Code, and 3. Protein accession. It is required to be
-  #                  cleaned up by
-  #                  uniqueGOAnnotationsWithMostSignificantEvidenceCodes(…).
-  #  con           : A valid and active MySQL connection to an instance of the
-  #                  GO database - default is connectToGeneOntology(…)
-  #  close.db.con  : If set to TRUE, the database connection 'con' will be
-  #                  closed automatically before this function returns
+  #  go.anno.df             : A data frame of GO term annotations for proteins.
+  #                           Columns are expected to be 1. GO term accession,
+  #                           2.  Evidence Code, and 3. Protein accession. It
+  #                           is required to be cleaned up by
+  #                           uniqueGOAnnotationsWithMostSignificantEvidenceCodes(…).
+  #  con                    : A valid and active MySQL connection to an
+  #                           instance of the GO database - default is
+  #                           connectToGeneOntology(…)
+  #  close.db.con :           If set to TRUE, the database connection 'con'
+  #                           will be closed automatically before this function
+  #                           returns
+  #  remove.duplicated.rows : If set to TRUE rows only differing in the
+  #                           evidence codes will be removed, retaining the
+  #                           first appearing evidence code.
   #
-  # Returns: A data frame, the extension of the argument 'go.anno.df', if
-  # requested with an additional column holding the GO term types.
+  # Returns: A data frame, the extension of the argument 'go.anno.df' an
+  # additional column holds the GO term types. Rows that encode identical
+  # protein GO term annotations and only differ in the Evidence Codes are
+  # removed. The first appearing evidence code will be retained.
   #   
   unq.gos <- unique( go.anno.df[ , 1 ] )
   go.prnts <- parentGoTermsForAccession( unq.gos, include.selves=TRUE,
@@ -560,6 +567,8 @@ extendGOAnnosWithParents <- function( go.anno.df, con=connectToGeneOntology(),
       term_type = rep( go.row[[1, "term_type"]], nrow(prot.annos) )
     ), stringsAsFactors = FALSE ) ) 
   }
+  if ( remove.duplicated.rows )
+    d.f <- d.f[ ! duplicated( d.f[ , c( 'acc', 'prot.acc' ) ] ), ]
   d.f
 }
 
