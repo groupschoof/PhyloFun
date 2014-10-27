@@ -631,6 +631,8 @@ retrieveGOAnnotations <- function( prot.accs, evidence.codes=EVIDENCE.CODES,
     gdas.df <- go.db.annos[ , c( 'acc', 'code', 'xref_key' ) ]
     colnames( gdas.df ) <- c( 'V1', 'V2', 'V3' )
     unique( rbind( gdas.df, unipr.go.annos ) )
+  } else {
+    unipr.go.annos
   }
 }
 
