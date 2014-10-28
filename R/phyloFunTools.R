@@ -273,27 +273,40 @@ commandLineArguments <- function( trailing.args, default.args ) {
   )
 }
 
-sanitizeUniprotAccession <- function( protein.name ) {
+sanitizeUniprotAccession <- function( protein.name,
+  regex.priorities=list( '^UNIPROT:\\S+\\s+(\\S+)\\s'=2, '\\S+\\|(\\S+)\\|\\S+'=2 ) ) {
   # Sanitized protein accessions to be used with PhyloFun's pipeline programs,
-  # i.e. 'GBlocks'. Trims whitespaces and extracts word between pipes, if pipes
-  # are found.
+  # i.e. 'GBlocks'. Trims whitespaces and extracts teh valid Uniprot protein
+  # accession, if found to be matching any of the argument regular expressions.
   #
   # Args:
-  #  protein.name : The name of the protein, i.e. sp|MyAccession|MOUSE_SHEEP
+  #  protein.name     : The name of the protein, i.e.
+  #                     sp|MyAccession|MOUSE_SHEEP
+  #  regex.priorities : Regular expressions to be applied in the given order.
+  #                     If the first one matches, use it to extract the Uniprot
+  #                     accession, if it does not match, try the next one, and
+  #                     so forth… This argument is a list, where the names are
+  #                     the regular expressions and the values are the index of
+  #                     the match class to extract. See function str_match(…)
+  #                     for details. Note, that the regular expressions must be
+  #                     of PERL format.
   #
   # Returns: Returns the sanitied protein accession as character vector of
   # length one, i.e. 'MyAccession'.
   #   
   if ( is.null( protein.name ) )
     return( protein.name )
-  no.blanks <- '^\\s*(\\S+)\\s*'
-  ua <- str_match( protein.name, no.blanks )[[ 1, 2 ]]
-  between.pipes <- '\\S+\\|(\\S+)\\|\\S+'
-  if ( grepl( between.pipes, ua, perl=T ) ) {
-    str_match( ua, between.pipes )[[ 1, 2 ]]
-  } else {
-    ua
+  # Remove white space at start and end:
+  ua <- sub( '^\\s*', '', sub( '\\s*$', '', protein.name, perl=TRUE ),
+    perl=TRUE )
+  uniprot.acc <- ua
+  for ( regex in names( regex.priorities ) ) {
+    if ( grepl( regex, ua, perl=TRUE ) ) {
+      uniprot.acc <- str_match( ua, regex )[[ 1, regex.priorities[[regex]] ]]
+      break
+    }    
   }
+  uniprot.acc
 }
 
 uniqueHomologs <- function( path.2.homlgs.fasta,
