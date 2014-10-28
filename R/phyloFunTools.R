@@ -276,7 +276,7 @@ commandLineArguments <- function( trailing.args, default.args ) {
 sanitizeUniprotAccession <- function( protein.name,
   regex.priorities=list( '^UNIPROT:\\S+\\s+(\\S+)\\s'=2, '\\S+\\|(\\S+)\\|\\S+'=2 ) ) {
   # Sanitized protein accessions to be used with PhyloFun's pipeline programs,
-  # i.e. 'GBlocks'. Trims whitespaces and extracts teh valid Uniprot protein
+  # i.e. 'GBlocks'. Trims whitespaces and extracts the valid Uniprot protein
   # accession, if found to be matching any of the argument regular expressions.
   #
   # Args:
@@ -296,8 +296,8 @@ sanitizeUniprotAccession <- function( protein.name,
   #   
   if ( is.null( protein.name ) )
     return( protein.name )
-  # Remove white space at start and end:
-  ua <- sub( '^\\s*', '', sub( '\\s*$', '', protein.name, perl=TRUE ),
+  # Remove white space at start and end, as well as '>':
+  ua <- sub( '^\\s*>?\\s*', '', sub( '\\s*$', '', protein.name, perl=TRUE ),
     perl=TRUE )
   uniprot.acc <- ua
   for ( regex in names( regex.priorities ) ) {

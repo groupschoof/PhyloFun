@@ -92,9 +92,23 @@ checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession )
 # test NULL:
 checkTrue( is.null( sanitizeUniprotAccession( NULL ) ) )
 # test new format provided, when large numbers of accessions are downloaded:
+# … with leading whitespace:
 res.sanitizeUniprotAccession <- sanitizeUniprotAccession( '  UNIPROT:YNF5_SCHPO O13633 Uncharacterized J domain-containing protein C17A3.05c   ' )
 exp.sanitizeUniprotAccession <- 'O13633'
 checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession ) 
+# … without leading whitespace:
+res.sanitizeUniprotAccession <- sanitizeUniprotAccession( 'UNIPROT:YNF5_SCHPO O13633 Uncharacterized J domain-containing protein C17A3.05c' )
+exp.sanitizeUniprotAccession <- 'O13633'
+checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession ) 
+# … with leading '>':
+res.sanitizeUniprotAccession <- sanitizeUniprotAccession( '>UNIPROT:YNF5_SCHPO O13633 Uncharacterized J domain-containing protein C17A3.05c' )
+exp.sanitizeUniprotAccession <- 'O13633'
+checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession ) 
+# … with leading '> ':
+res.sanitizeUniprotAccession <- sanitizeUniprotAccession( '> UNIPROT:YNF5_SCHPO O13633 Uncharacterized J domain-containing protein C17A3.05c' )
+exp.sanitizeUniprotAccession <- 'O13633'
+checkEquals( res.sanitizeUniprotAccession, exp.sanitizeUniprotAccession ) 
+
 
 # Test uniqueHomologs
 print("Testing uniqueHomologs(...)")
