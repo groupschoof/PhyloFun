@@ -31,7 +31,9 @@ precision <- function( predicted.gos, true.gos, false.positives.funk=falsePositi
 }
 
 falsePositives <- function( predicted.gos, true.gos, 
-  go.con=connectToGeneOntology() ) {  
+  go.con=connectToGeneOntology(),
+  extend.go.annos.with.parents=getOption( "extend.go.annos.with.parents",
+  TRUE ) ) {  
   # Identifies those GO terms in 'predicted.gos' that are not equal to any term
   # in 'true.gos' nor are any of their parent terms.
   #
@@ -40,12 +42,18 @@ falsePositives <- function( predicted.gos, true.gos,
   #  true.gos      : The reference GO terms
   #  go.con        : A database connection to the Gene Ontology as returned by
   #                  function connectToGeneOntology().
+  #  extend.go.annos.with.parents : Default is TRUE, if set to FALSE, GO
+  #                  annotations will not be extended with parental GO terms.
   #
   # Returns: Those predicted GO terms that are false positives.
   #   
   true.gos.tbl <- goTermsForAccessionWithLevel( true.gos, con=go.con )
-  all.parents <- do.call( 'rbind', lapply( true.gos.tbl$id, parentGoTerms,
-    con=go.con ) )
+  all.parents <- if (extend.go.annos.with.parents) {
+    do.call( 'rbind', lapply( true.gos.tbl$id, parentGoTerms,
+      con=go.con ) )
+  } else {
+    true.gos.tbl
+  }
   fn.candidates <- setdiff( predicted.gos, true.gos )
   setdiff( fn.candidates, all.parents$acc )
 }
@@ -76,7 +84,9 @@ specificity <- function( predicted.gos, true.gos,
   length( true.negatives ) / ( length( fls.pos ) + length( true.negatives ) )
 }
 
-truesUpperBound <- function( true.gos, go.con=connectToGeneOntology() ) {
+truesUpperBound <- function( true.gos, go.con=connectToGeneOntology(),
+  extend.go.annos.with.parents=getOption( "extend.go.annos.with.parents",
+  TRUE ) ) {
   # For all Gene Ontology (GO) term accessions in 'true.gos' all parent and
   # descendent terms are selected and the whole set of those is returned.
   #
@@ -84,17 +94,23 @@ truesUpperBound <- function( true.gos, go.con=connectToGeneOntology() ) {
   #  true.gos : The GO term accessions to be considered the 'reference' 
   #  go.con   : A valid and open database connection to the Gene Ontology as
   #             returned by function 'connectToGeneOntology(…)'
+  #  extend.go.annos.with.parents : Default is TRUE, if set to FALSE, GO
+  #                  annotations will not be extended with parental GO terms.
   #
   # Returns: A table of all GO terms that are parent or descendents of the
   # provided 'true.gos', which are also included. The table has the same
   # columns as the one returned by function 'goTermsForAccessionWithLevel(…)'
   #   
-  true.gos.tbl     <- goTermsForAccession( true.gos, con=go.con )
-  all.parents      <- do.call( 'rbind', lapply( true.gos.tbl$id, parentGoTerms,
-    con=go.con ) )
-  all.descendents  <- do.call( 'rbind', lapply( true.gos.tbl$id, spawnedGoTerms,
-    con=go.con ) )
-  unique( rbind( true.gos.tbl, all.parents, all.descendents ) )
+  true.gos.tbl <- goTermsForAccession( true.gos, con=go.con )
+  if ( extend.go.annos.with.parents ) {
+    all.parents <- do.call( 'rbind', lapply( true.gos.tbl$id, parentGoTerms,
+      con=go.con ) )
+    all.descendents <- do.call( 'rbind', lapply( true.gos.tbl$id,
+      spawnedGoTerms, con=go.con ) )
+    unique( rbind( true.gos.tbl, all.parents, all.descendents ) )
+  } else {
+    true.gos.tbl
+  }
 }
 
 falsePositivesUpperBound <- function( predicted.gos, true.gos, 
